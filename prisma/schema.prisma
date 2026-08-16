@@ -1,14 +1,18 @@
 // SalesLeak database schema
-// Local dev uses SQLite. Every core table is scoped to a Company so this
-// can move to PostgreSQL + real multi-tenancy later without restructuring.
-
+// PostgreSQL. Every core table is scoped to a Company for multi-tenancy.
+//
+// Prisma 7.9.1 hard-rejects `url`/`directUrl` in this block — connection
+// URLs live in prisma.config.ts for the CLI, and directly in
+// src/lib/prisma.ts's driver adapter for the running app. See the comment
+// on prisma.config.ts for how the pooled-vs-direct split is handled without
+// schema-level directUrl support.
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // ---------- Enums ----------

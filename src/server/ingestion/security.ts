@@ -32,23 +32,3 @@ export function verifyHmacSignature(rawBody: string, signatureHeader: string | n
 export function isTimestampFresh(timestampMs: number, maxSkewMs = 5 * 60 * 1000): boolean {
   return Math.abs(Date.now() - timestampMs) <= maxSkewMs;
 }
-
-/**
- * In-memory sliding-window rate limiter, keyed by webhook token. Adequate
- * for a single-process local dev server; a real deployment behind multiple
- * instances would need a shared store (Redis) instead — noted in
- * ARCHITECTURE.md as the one piece of this that doesn't survive scaling out.
- */
-const requestLog = new Map<string, number[]>();
-
-export function checkRateLimit(key: string, limit = 60, windowMs = 60_000): boolean {
-  const now = Date.now();
-  const timestamps = (requestLog.get(key) ?? []).filter((t) => now - t < windowMs);
-  if (timestamps.length >= limit) {
-    requestLog.set(key, timestamps);
-    return false;
-  }
-  timestamps.push(now);
-  requestLog.set(key, timestamps);
-  return true;
-}

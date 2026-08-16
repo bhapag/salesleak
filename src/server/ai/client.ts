@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { anthropicProvider } from "./providers/anthropic";
 import { validateObject, extractJson, type ObjectSchema } from "./schema";
 import type { AIProvider, AIGenerateOutcome } from "./types";
+import { logger } from "@/lib/logger";
 
 /**
  * The one place a provider is chosen. Every feature module calls
@@ -50,9 +51,14 @@ async function logUsage(params: {
         errorMessage: params.errorMessage?.slice(0, 500) ?? null,
       },
     });
-  } catch {
+  } catch (err) {
     // Usage logging is best-effort — never let a logging failure take down
-    // an otherwise-successful (or already-failed) AI call.
+    // an otherwise-successful (or already-failed) AI call. Still surfaced
+    // via the logger so a struggling database doesn't fail silently.
+    logger.databaseFailure("Failed to write AiUsageLog row.", {
+      companyId: params.companyId,
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 }
 
@@ -126,6 +132,7 @@ export async function generateStructured<TInput, TOutput extends Record<string, 
     return { ok: true, data: validated.value as TOutput, mocked: false };
   } catch (err) {
     const message = err instanceof Error ? err.message : "AI request failed.";
+    logger.aiFailure(message, { companyId: params.companyId, feature: params.feature, provider: provider.name });
     await logUsage({
       companyId: params.companyId,
       feature: params.feature,

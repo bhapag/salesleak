@@ -3,7 +3,9 @@ import type { LeadSource } from "@/generated/prisma/client";
 import { ingestLead } from "./pipeline";
 import { getAdapterBySlug } from "./connectors/registry";
 import type { ProviderAdapter } from "./connectors/types";
-import { verifyHmacSignature, checkRateLimit } from "./security";
+import { verifyHmacSignature } from "./security";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { logger } from "@/lib/logger";
 
 export type WebhookHandlerResult = {
   httpStatus: number;
@@ -46,6 +48,7 @@ export async function processProviderPayload(
   try {
     rawPayload = JSON.parse(rawBodyText);
   } catch {
+    logger.ingestionFailure("Webhook payload is not valid JSON.", { companyId: company.id, provider: adapter.type });
     await prisma.failedIngestion.create({
       data: {
         companyId: company.id,
@@ -67,6 +70,7 @@ export async function processProviderPayload(
   });
 
   if (!parsed.ok) {
+    logger.ingestionFailure("Webhook payload failed to parse.", { companyId: company.id, provider: adapter.type, error: parsed.error });
     await prisma.failedIngestion.create({
       data: {
         companyId: company.id,
@@ -95,6 +99,11 @@ export async function processProviderPayload(
   });
 
   if (result.status === "invalid") {
+    logger.ingestionFailure("Webhook payload could not become a lead.", {
+      companyId: company.id,
+      provider: adapter.type,
+      errors: result.errors?.join("; "),
+    });
     await prisma.failedIngestion.create({
       data: {
         companyId: company.id,
@@ -145,7 +154,8 @@ export async function handleWebhookRequest(
     return { httpStatus: 404, body: { error: "Unknown provider." } };
   }
 
-  if (!checkRateLimit(token)) {
+  if (!checkRateLimit(token, 60, 60_000)) {
+    logger.webhookFailure("Webhook rate limit exceeded.", { provider: providerSlug });
     return { httpStatus: 429, body: { error: "Too many requests." } };
   }
 
@@ -155,12 +165,14 @@ export async function handleWebhookRequest(
   if (!integration) {
     // Same response whether the token is wrong, revoked, or for the wrong
     // provider slug — never confirm a token's existence to an unauthenticated caller.
+    logger.webhookFailure("Webhook token not recognized.", { provider: providerSlug });
     return { httpStatus: 404, body: { error: "Not found." } };
   }
 
   if (integration.signingSecret) {
     const signature = headers.get("x-webhook-signature");
     if (!verifyHmacSignature(rawBodyText, signature, integration.signingSecret)) {
+      logger.webhookFailure("Webhook signature verification failed.", { companyId: integration.companyId, provider: providerSlug });
       return { httpStatus: 401, body: { error: "Invalid signature." } };
     }
   }

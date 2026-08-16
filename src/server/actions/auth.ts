@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword, verifyPassword } from "@/server/auth/password";
 import { createSession, destroySession } from "@/server/auth/session";
 import { getDefaultIntegrationRows } from "@/server/data/ingestion";
+import { logger } from "@/lib/logger";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 export type LoginResult = { success: true } | { success: false; error: string };
 export type SignupInput = { companyName: string; ownerName: string; email: string; password: string };
@@ -24,6 +26,12 @@ export async function signup(input: SignupInput): Promise<SignupResult> {
   if (!ownerName) return { success: false, error: "Your name is required." };
   if (!EMAIL_RE.test(email)) return { success: false, error: "Enter a valid email address." };
   if (input.password.length < 8) return { success: false, error: "Password must be at least 8 characters." };
+
+  const ip = await getClientIp();
+  if (!checkRateLimit(`signup:${ip}`, 5, 60 * 60_000)) {
+    logger.authFailure("Signup rate limit exceeded.", { ip });
+    return { success: false, error: "Too many signup attempts. Please try again later." };
+  }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return { success: false, error: "An account with this email already exists." };
@@ -51,9 +59,15 @@ export async function login(email: string, password: string): Promise<LoginResul
     return { success: false, error: "Email and password are required." };
   }
 
+  if (!checkRateLimit(`login:${trimmedEmail}`, 8, 5 * 60_000)) {
+    logger.authFailure("Login rate limit exceeded.", { email: trimmedEmail });
+    return { success: false, error: "Too many attempts. Please try again in a few minutes." };
+  }
+
   const user = await prisma.user.findUnique({ where: { email: trimmedEmail } });
 
   if (!user || !user.isActive || !verifyPassword(password, user.passwordHash)) {
+    logger.authFailure("Login failed.", { email: trimmedEmail, reason: !user ? "no_such_user" : !user.isActive ? "inactive_user" : "bad_password" });
     return { success: false, error: "Invalid email or password." };
   }
 

@@ -1,10 +1,16 @@
 import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { hashPassword } from "../src/server/auth/password";
 
-const adapter = new PrismaLibSql({
-  url: process.env.DATABASE_URL ?? "file:./dev.db",
-});
+// This seeds two fictional demo companies with fake accounts and a shared
+// known password — never run it against a database holding real customer
+// data. `prisma migrate deploy` (schema only) is the production path;
+// this script is dev/staging-only, per DEPLOYMENT.md.
+if (process.env.NODE_ENV === "production") {
+  throw new Error("Refusing to run the demo seed against a production database (NODE_ENV=production).");
+}
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 // Every seeded demo account (both companies) uses this password — shown on
