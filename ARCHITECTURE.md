@@ -2,14 +2,24 @@
 
 ## Stack
 
-- **Next.js (App Router, TypeScript)** — server components for data fetching, server actions for mutations, no separate API layer for internal CRUD.
+- **Next.js (App Router, TypeScript)** — server components for data fetching, server actions for mutations, no separate API layer for internal CRUD (except the one webhook route).
 - **Tailwind CSS** — styling.
-- **Prisma 7 + SQLite** — local dev database. Schema is written to be provider-agnostic; moving to PostgreSQL later is a `datasource` + `prisma.config.ts` change, not a schema rewrite.
+- **Prisma 7 + PostgreSQL** (Supabase in staging/production) — see "PostgreSQL & connection architecture" below for the pooled-vs-direct split and why it's not the "obvious" `directUrl` config.
 - **Local authentication, DB-backed sessions.** Login/logout, scrypt password hashing, and a `Session` table (random token in an httpOnly cookie) — no JWTs, no third-party auth provider. Every tenant-scoped query is filtered server-side by `session.companyId`. See "Authentication & multi-tenancy" below.
+- **Deployed on Vercel**, staging environment only so far (no custom domain). See DEPLOYMENT.md for the operational how-to; this file covers the how-it-works.
 
-## Why SQLite via `@prisma/adapter-libsql`, not `better-sqlite3`
+## PostgreSQL & connection architecture
 
-Prisma 7 requires a JS driver adapter for SQLite (no bundled native engine). The Prisma-recommended adapter, `better-sqlite3`, needs a native C++ build via node-gyp, which requires Visual Studio Build Tools — not installed on this machine, and not worth installing for a local dev database. `@prisma/adapter-libsql` (`@libsql/client`) is used instead: it ships prebuilt N-API binaries, needs no local compilation, and reads/writes the same `dev.db` SQLite file. See `src/lib/prisma.ts`.
+Through Phase 10 this project used SQLite (`@prisma/adapter-libsql`) for local dev, since this machine has no C++ build toolchain and the Prisma-recommended `better-sqlite3` needs one. Phase 11 moved fully to PostgreSQL — `pg` is pure JS with no native build step, so the same toolchain constraint that ruled out `better-sqlite3` was a non-issue here.
+
+**Driver adapter**: `src/lib/prisma.ts` constructs `new PrismaPg({ connectionString: process.env.DATABASE_URL })` and passes it to `PrismaClient({ adapter })` — this is the app's *only* source of truth for its database connection at runtime; nothing about how the Prisma CLI is configured (below) affects it.
+
+**Pooled vs. direct connections, and why the split is done by hand.** Supabase (like most managed Postgres) provides two connection strings: a *pooled* one (PgBouncer in transaction mode, port `6543`) safe for many concurrent short-lived connections — exactly what a serverless deployment's app runtime needs — and a *direct* one (port `5432`) that a transaction-mode pooler can't substitute for when running DDL, because migrations need prepared statements the pooler doesn't support. The "obvious" Prisma mechanism for this is `datasource db { url = env("DATABASE_URL") directUrl = env("DIRECT_URL") }` in `schema.prisma` — but the installed Prisma 7.9.1 **hard-rejects** `url`/`directUrl` in that block entirely (a real, verified-by-running-it error: `P1012 ... property 'url' is no longer supported in schema files`), directing you instead to `prisma.config.ts` — whose `datasource` type (checked directly against `node_modules/@prisma/config`'s shipped `.d.ts`) only has `url` and `shadowDatabaseUrl`, no `directUrl`, despite some external docs describing one. So:
+
+- `prisma.config.ts`'s one `url` always points at the **direct** connection (`DIRECT_URL`, falling back to `DATABASE_URL` for a plain local Postgres with no pooler in front of it) — this is what `prisma migrate`/`db seed`/`studio` use.
+- The running app's driver adapter reads `DATABASE_URL` (the **pooled** connection) directly from `process.env`, entirely independent of `prisma.config.ts`.
+
+Both env vars are documented in `.env.example` and DEPLOYMENT.md. If a future Prisma release adds real `directUrl` support to `prisma.config.ts`, this hand-split can be simplified — but there's no urgency, since the current setup is correct and this comment (mirrored in `prisma.config.ts` and `schema.prisma`) explains why it looks unusual.
 
 ## Folder structure
 
@@ -76,6 +86,9 @@ src/
                                (everything else is server actions). POST-only;
                                all logic lives in webhookHandler.ts (see below)
                                — this file just adapts Request/Response to it
+      health/route.ts           — GET /api/health (Phase 11): app+DB liveness
+                               only (`SELECT 1`), no credentials/env/customer
+                               data in the response ever
     website-form/[token]/page.tsx — public, unauthenticated: the Website Forms
                                connector's actual embeddable form AND the local
                                dev test page for it (same page, same POST target)
@@ -115,6 +128,21 @@ src/
                               inside AddLeadCard
   lib/
     prisma.ts           — Prisma client singleton (adapter-wired)
+    env.ts                — validateEnv() (Phase 11): checked at server
+                          startup via instrumentation.ts, deliberately never
+                          imported by prisma.ts itself (would break `next
+                          build`'s page-data collection — see the PostgreSQL
+                          section above)
+    logger.ts              — structured JSON-line logging (Phase 11):
+                          auth/database/ingestion/webhook/AI failure
+                          categories, defensive key-based secret redaction
+    rateLimit.ts             — checkRateLimit() + getClientIp() (Phase 11):
+                          generalized from the Phase 8 webhook-only rate
+                          limiter, now shared with login()/signup()
+    appUrl.ts                 — getAppBaseUrl() (Phase 11): forward-looking
+                          server-side base-URL helper; nothing currently
+                          requires it since the webhook-URL display already
+                          derives from window.location.origin client-side
     csv.ts               — hand-rolled CSV parser (quoted fields, embedded
                           commas/newlines, ragged rows — no new dependency)
     csvMapping.ts         — CSV-column ↔ SalesLeak-field mapping: synonym-based
@@ -237,7 +265,10 @@ src/
                               via router.push after seeing success; signup creates the
                               Company + Owner User + default Integration rows via
                               getDefaultIntegrationRows(), then createSession()),
-                              logout (calls redirect() directly — safe here)
+                              logout (calls redirect() directly — safe here).
+                              Both login (8/5min, per email) and signup (5/hour,
+                              per IP) are rate-limited (Phase 11, checkRateLimit())
+                              and log a logger.authFailure() on rejection
       onboarding.ts           — saveOnboardingSettings (company details + all
                               workflow-settings fields in one write, called once when
                               the wizard leaves the follow-up-defaults step),
@@ -364,6 +395,11 @@ src/
                                 Takes both companyId and userId (for the unread
                                 notification count) rather than resolving a user itself.
   generated/prisma/     — generated Prisma client (gitignored, regenerated on install)
+  instrumentation.ts     — register() (Phase 11): env validation at real
+                          server startup, never during `next build`.
+                          onRequestError(): catch-all structured logging for
+                          anything uncaught, across Server Components/Route
+                          Handlers/Server Actions
 ```
 
 ## Data model notes
@@ -482,15 +518,31 @@ Session deletion is how "deactivate a user" becomes "log them out immediately," 
 
 **Demo data reset** deliberately does not refactor `seed.ts` into an importable function — it already works, is a large standalone script with its own `PrismaClient` instance, and "don't rebuild working functionality" applies here too. Spawning it as a child process (`npx prisma db seed`) is a few lines instead of a risky refactor, and is safe specifically *because* the whole feature is hard-gated to non-production.
 
+## Production readiness (Phase 11)
+
+**Environment validation happens at server startup, not build time.** `src/lib/env.ts`'s `validateEnv()` is called from `src/instrumentation.ts`'s `register()`, which Next.js guarantees runs once when a server instance starts and never during `next build`. This split exists because of a real bug hit during development: an earlier version validated `DATABASE_URL` eagerly at the top of `src/lib/prisma.ts`, and `next build`'s "collecting page data" step imports/partially-evaluates route modules for pages that touch the database at render time (e.g. `/login`'s demo-account query) even when nothing is being served yet — the eager throw failed the build itself, not a real request. Moving the check to `instrumentation.ts` fixed this: `register()` still fails loudly (throws, refusing to serve traffic) if required config is missing **and** `NODE_ENV=production`, but never runs during a build.
+
+**Structured logging** (`src/lib/logger.ts`) writes single-line JSON to stdout/stderr — no paid log aggregator, since Vercel (and most hosts) capture process output automatically. Five category helpers (`authFailure`, `databaseFailure`, `ingestionFailure`, `webhookFailure`, `aiFailure`) plus a generic `serverError`, each running values through a defensive key-based redaction pass (`password`, `token`, `secret`, `apikey`, etc. — case-insensitive) before logging, as a second line of defense beyond "only ever build `meta` from named whitelisted fields" (the same discipline already used for AI prompt inputs). `instrumentation.ts`'s `onRequestError` hook calls `logger.serverError` for anything that reaches Next.js as an uncaught error across Server Components, Route Handlers, and Server Actions — this is what actually caught and logged the real bug found during Phase 11's staging regression test (a follow-up scheduled with no due date threw `Error: Due date is required.` inside a Server Action; the error boundary showed a generic message with no stack trace, and `vercel logs` showed the exact structured log line with full context and zero secrets — see ROADMAP.md's Phase 11 entry).
+
+**Rate limiting** (`src/lib/rateLimit.ts`) is the same in-memory sliding-window mechanism Phase 8 built for webhooks, generalized (moved out of `src/server/ingestion/security.ts`, which now holds only webhook-specific concerns — HMAC verification, timestamp freshness) and reused by `login()`/`signup()` in `src/server/actions/auth.ts`. Same caveat as before: correct behavior on a single warm server instance, doesn't share state across concurrent instances — acceptable for a pilot-scale deployment, would need Redis to survive real horizontal scaling.
+
+**Security headers** (`next.config.ts`) are applied via two `headers()` rules rather than one: a strict rule (CSP, `X-Frame-Options: SAMEORIGIN`) matched against `/((?!website-form).*)` — a negative-lookahead path pattern that excludes the public, deliberately-embeddable `/website-form/[token]` page — and a second, unconditional rule (`X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`) applied everywhere including that page. The CSP itself skips nonces on purpose: nonce-based CSP requires every page to be dynamically rendered (no static optimization), which buys nothing here since the app is already all-dynamic behind `requireSession()`, but nonces would still add proxy/middleware complexity for zero marginal benefit — `'unsafe-inline'` for script/style is the documented Next.js fallback and matches what the framework itself injects for hydration.
+
+**`GET /api/health`** (`src/app/api/health/route.ts`) runs one `SELECT 1` through the same Prisma client the app uses and returns only `{status: "ok" | "error"}` — deliberately nothing else, so it can be pointed at by an uptime monitor without that monitor ever seeing anything sensitive.
+
+**Deployment model**: Vercel, deployed via CLI directly from the local filesystem (`vercel link` + `vercel deploy --prod`) rather than a connected GitHub repository — no CI/CD pipeline exists yet, deploys are manual. `.vercelignore` explicitly excludes `.env`/`.env.local`/`.env.*.local`, because `vercel deploy`'s upload step does **not** reliably honor `.gitignore` for env files the way `git` does — it uploads them and only warns ("Detected .env file, it is strongly recommended to use Vercel's env handling instead") rather than refusing. This was caught during the first real deployment (a 3.1MB upload including the local `.env` with real Supabase credentials; fixed and redeployed at 435B with no warning) — see DEPLOYMENT.md for the full incident and the general rule it implies for any future env-adjacent tooling change.
+
 ## Local dev workflow
 
 ```bash
 npm run dev                 # start the app at http://localhost:3000, opens to /login
 npx prisma migrate dev      # create/apply a migration after editing schema.prisma
-npx prisma db seed          # reset sample data (two companies, passwords included)
-npx prisma studio           # inspect the SQLite database visually
+npx prisma db seed          # reset sample data (two companies, passwords included) — refuses to run if NODE_ENV=production
+npx prisma studio           # inspect the PostgreSQL database visually
 ```
 
-Demo accounts (all companies, password `password123`) are listed on `/login` itself when `NODE_ENV !== "production"`.
+Requires a real PostgreSQL `DATABASE_URL`/`DIRECT_URL` even for local dev — see DEPLOYMENT.md for Supabase setup. Demo accounts (all companies, password `password123`) are listed on `/login` itself when `NODE_ENV !== "production"`.
 
-AI features run in development/mock mode automatically — no setup needed. To activate the real provider, set `ANTHROPIC_API_KEY` in `.env` (and optionally `AI_MODEL`, default `claude-sonnet-5`); every AI surface starts making real calls on the next request, no code change required.
+AI features run in development/mock mode automatically — no setup needed. To activate the real provider, set `ANTHROPIC_API_KEY` in `.env` (and optionally `AI_MODEL`, default `claude-sonnet-5`); every AI surface starts making real calls on the next request, no code change required. The staging deployment deliberately leaves this unset.
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the full environment-variable reference, Vercel deployment steps, migration/seed commands, and common failure modes.

@@ -37,7 +37,7 @@ SalesLeak is multi-tenant: every authenticated user belongs to exactly one `Comp
 - **Sales Manager** — sees and manages the whole team's leads, quotations, tasks, and customers (same data scope as Owner); can reassign leads; can view Sales Process Health and Integrations; cannot manage company settings, workflow configuration, or team membership.
 - **Salesperson** — primarily works My Day: their own assigned leads, tasks, and quotations, and the customers relevant to those leads. Cannot see Team, Company Settings, Sales Process Health, or Integrations pages.
 
-Authentication is real (hashed passwords, server-side sessions) but still entirely local — no email invitations, no production hosting yet. A new company signs up at `/signup` (creates the Company and its Owner) and is walked through a skippable onboarding wizard before reaching the dashboard. See [ROADMAP.md](ROADMAP.md) Phases 6 and 10.
+Authentication is real (hashed passwords, server-side sessions). A new company signs up at `/signup` (creates the Company and its Owner) and is walked through a skippable onboarding wizard before reaching the dashboard. As of Phase 11, this runs on a real staging deployment (Vercel + PostgreSQL) — see [ROADMAP.md](ROADMAP.md) Phases 6, 10, and 11 — though still no email invitations and no custom domain yet.
 
 ## Getting a new company set up
 
@@ -92,6 +92,6 @@ AI never sets pricing, sends a quotation or message, marks a lead Won/Lost, reas
 
 ## Explicitly out of scope for now
 
-Live credentials/API access for IndiaMART, and any real connection at all to Justdial/ExportersIndia/TradeIndia/WhatsApp/Gmail, autonomous AI actions (messaging, calling, quotation sending, pricing decisions), payments, billing/subscriptions, production hosting/deployment, and ERP/accounting/inventory features. These are deliberately deferred — see [ROADMAP.md](ROADMAP.md).
+Live credentials/API access for IndiaMART, and any real connection at all to Justdial/ExportersIndia/TradeIndia/WhatsApp/Gmail, autonomous AI actions (messaging, calling, quotation sending, pricing decisions), payments, billing/subscriptions, a custom domain, and ERP/accounting/inventory features. These are deliberately deferred — see [ROADMAP.md](ROADMAP.md). (As of Phase 11, SalesLeak *does* run on real production infrastructure — PostgreSQL + Vercel — just not yet with a paid AI provider, live connector credentials, or a custom domain.)
 
 Integrations exist only to make enquiry capture easier — SalesLeak's value stays in surfacing which of those captured enquiries need action before revenue is lost, not in how many sources feed it.
