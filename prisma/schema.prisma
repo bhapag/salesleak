@@ -1,0 +1,523 @@
+// SalesLeak database schema
+// Local dev uses SQLite. Every core table is scoped to a Company so this
+// can move to PostgreSQL + real multi-tenancy later without restructuring.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ---------- Enums ----------
+
+enum UserRole {
+  OWNER
+  SALES_MANAGER
+  SALESPERSON
+}
+
+enum LeadSource {
+  INDIAMART
+  JUSTDIAL
+  EXPORTERS_INDIA
+  TRADEINDIA
+  WHATSAPP
+  EMAIL
+  WEBSITE
+  PHONE
+  REFERRAL
+  CSV_IMPORT
+  MANUAL
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  QUOTATION_SENT
+  NEGOTIATION
+  WON
+  LOST
+}
+
+enum LeadPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ActivityType {
+  CALL
+  EMAIL
+  WHATSAPP
+  MEETING
+  NOTE
+  STATUS_CHANGE
+}
+
+enum TaskStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum QuotationStatus {
+  DRAFT
+  SENT
+  FOLLOWED_UP
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum IntegrationType {
+  INDIAMART
+  JUSTDIAL
+  EXPORTERS_INDIA
+  TRADEINDIA
+  WHATSAPP
+  EMAIL
+  WEBSITE
+  CSV_IMPORT
+  MANUAL
+}
+
+enum IntegrationStatus {
+  NOT_CONNECTED
+  CONNECTED
+  COMING_SOON
+  REQUIRES_SETUP
+  TEST_MODE
+  ERROR
+}
+
+enum IngestionRecordStatus {
+  CREATED
+  DUPLICATE
+  INVALID
+}
+
+enum FailedIngestionStatus {
+  PENDING
+  RETRIED
+  RESOLVED
+  DISMISSED
+}
+
+enum AiInsightKind {
+  LEAD_INSIGHTS
+  CUSTOMER_SUMMARY
+  SALES_BRIEF
+}
+
+// ---------- Core tenant ----------
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  city      String?
+  state     String?
+  industry  String?
+  phone     String?
+  email     String?
+  timezone  String   @default("Asia/Kolkata")
+  currency  String   @default("INR")
+
+  // Onboarding + sales-workflow settings (Phase 10). Deliberately a short,
+  // fixed list of levers — not a workflow builder. onboardedAt null means a
+  // freshly signed-up company hasn't finished (or skipped) the onboarding
+  // wizard yet; every seeded demo company has it set so they're never routed
+  // there.
+  onboardedAt         DateTime?
+  highValueThreshold  Float        @default(50000)
+  staleQuotationDays  Int          @default(10)
+  defaultFollowUpDays Int          @default(3)
+  defaultPriority     LeadPriority @default(MEDIUM)
+  lostReasonPresets   String? // JSON string array
+  activeLeadSources   String? // JSON array of LeadSource values the company actually uses
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users            User[]
+  customers        Customer[]
+  leads            Lead[]
+  products         Product[]
+  integrations     Integration[]
+  notifications    Notification[]
+  auditLogs        AuditLog[]
+  ingestionBatches IngestionBatch[]
+  ingestionRecords IngestionRecord[]
+  failedIngestions FailedIngestion[]
+  aiInsights       AiInsight[]
+  aiUsageLogs      AiUsageLog[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  companyId    String
+  name         String
+  email        String   @unique
+  role         UserRole @default(SALESPERSON)
+  passwordHash String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company          Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  assignedLeads    Lead[]           @relation("LeadOwner")
+  activities       Activity[]
+  tasks            Task[]
+  notifications    Notification[]
+  auditLogs        AuditLog[]
+  sessions         Session[]
+  ingestionBatches IngestionBatch[]
+
+  @@index([companyId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+model Customer {
+  id            String   @id @default(cuid())
+  companyId     String
+  name          String
+  companyName   String?
+  contactPerson String?
+  phone         String?
+  email         String?
+  city          String?
+  state         String?
+  gstNumber     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  leads            Lead[]
+  ingestionRecords IngestionRecord[]
+
+  @@index([companyId])
+}
+
+model Lead {
+  id                 String       @id @default(cuid())
+  companyId          String
+  customerId         String
+  ownerId            String?
+  source             LeadSource
+  status             LeadStatus   @default(NEW)
+  priority           LeadPriority @default(MEDIUM)
+  title              String
+  description        String?
+  product            String?
+  quantity           String?
+  estimatedValue     Float?
+  nextAction         String?
+  nextActionDeadline DateTime?
+  lostReason         String?
+  wonAt              DateTime?
+  lostAt             DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer         Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  owner            User?             @relation("LeadOwner", fields: [ownerId], references: [id])
+  activities       Activity[]
+  tasks            Task[]
+  quotations       Quotation[]
+  ingestionRecords IngestionRecord[]
+
+  @@index([companyId])
+  @@index([customerId])
+  @@index([ownerId])
+  @@index([status])
+}
+
+model Activity {
+  id        String       @id @default(cuid())
+  leadId    String
+  userId    String?
+  type      ActivityType
+  notes     String?
+  createdAt DateTime     @default(now())
+
+  lead Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([leadId])
+}
+
+model Task {
+  id           String     @id @default(cuid())
+  leadId       String
+  assignedToId String?
+  title        String
+  dueDate      DateTime
+  status       TaskStatus @default(PENDING)
+  completedAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  lead       Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  assignedTo User? @relation(fields: [assignedToId], references: [id])
+
+  @@index([leadId])
+  @@index([assignedToId])
+  @@index([dueDate])
+}
+
+model Product {
+  id           String   @id @default(cuid())
+  companyId    String
+  name         String
+  sku          String?
+  unit         String?
+  defaultPrice Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company        Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  quotationItems QuotationItem[]
+
+  @@index([companyId])
+}
+
+model Quotation {
+  id              String          @id @default(cuid())
+  leadId          String
+  quotationNumber String
+  value           Float
+  status          QuotationStatus @default(DRAFT)
+  nextAction      String?
+  sentAt          DateTime?
+  validUntil      DateTime?
+  followUpDate    DateTime?
+  wonAt           DateTime?
+  lostAt          DateTime?
+  lostReason      String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  lead  Lead            @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  items QuotationItem[]
+
+  @@index([leadId])
+  @@index([status])
+}
+
+model QuotationItem {
+  id          String  @id @default(cuid())
+  quotationId String
+  productId   String?
+  description String
+  quantity    Float   @default(1)
+  unitPrice   Float
+  total       Float
+
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  product   Product?  @relation(fields: [productId], references: [id])
+
+  @@index([quotationId])
+}
+
+model Integration {
+  id            String            @id @default(cuid())
+  companyId     String
+  type          IntegrationType
+  status        IntegrationStatus @default(NOT_CONNECTED)
+  enabled       Boolean           @default(false)
+  config        String?
+  webhookToken  String?           @unique
+  signingSecret String?
+  totalReceived Int               @default(0)
+  lastSyncAt    DateTime?
+  lastSuccessAt DateTime?
+  lastError     String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+}
+
+// ---------- Universal lead ingestion ----------
+// One IngestionBatch per ingestion event (a CSV upload, a manual add, and
+// eventually a webhook/API sync) with per-row IngestionRecords underneath.
+// Every source — real or future — normalizes into the same shape here before
+// a Lead is ever created, so no connector writes to Lead/Customer directly.
+
+model IngestionBatch {
+  id                String     @id @default(cuid())
+  companyId         String
+  source            LeadSource
+  triggeredById     String?
+  fileName          String?
+  recordsReceived   Int        @default(0)
+  recordsCreated    Int        @default(0)
+  duplicatesSkipped Int        @default(0)
+  invalidRows       Int        @default(0)
+  errorMessage      String?
+  createdAt         DateTime   @default(now())
+
+  company     Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  triggeredBy User?             @relation(fields: [triggeredById], references: [id])
+  records     IngestionRecord[]
+
+  @@index([companyId])
+}
+
+model IngestionRecord {
+  id             String                @id @default(cuid())
+  batchId        String
+  companyId      String
+  source         LeadSource
+  externalLeadId String?
+  customerName   String?
+  companyName    String?
+  phone          String?
+  email          String?
+  city           String?
+  state          String?
+  requirement    String?
+  product        String?
+  quantity       String?
+  estimatedValue Float?
+  receivedAt     DateTime              @default(now())
+  rawData        String?
+  status         IngestionRecordStatus
+  reason         String?
+  leadId         String?
+  customerId     String?
+  createdAt      DateTime              @default(now())
+
+  batch    IngestionBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  company  Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  lead     Lead?          @relation(fields: [leadId], references: [id])
+  customer Customer?      @relation(fields: [customerId], references: [id])
+
+  @@index([batchId])
+  @@index([companyId])
+  @@index([source, externalLeadId])
+}
+
+// External data that could NOT become a lead — never silently discarded.
+// Distinct from IngestionRecord(status: INVALID), which is a read-only audit
+// row: this is an actionable work queue an Owner/Manager can inspect, correct
+// non-destructively, and retry, or explicitly dismiss.
+model FailedIngestion {
+  id                String                @id @default(cuid())
+  companyId         String
+  provider          LeadSource
+  rawPayload        String
+  normalizedPayload String?
+  errorMessage      String
+  status            FailedIngestionStatus @default(PENDING)
+  retryCount        Int                   @default(0)
+  resolvedLeadId    String?
+  resolvedAt        DateTime?
+  createdAt         DateTime              @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([status])
+}
+
+// ---------- AI intelligence layer ----------
+// Cached, structured AI output — never the source of truth for anything (the
+// deterministic risk/status logic in src/lib/*.ts remains that). One row per
+// (company, kind, entity); sourceVersion is a cheap composite fingerprint of
+// the data that fed the last generation, so a repeat view can skip calling
+// the AI provider entirely when nothing relevant has changed.
+
+model AiInsight {
+  id            String        @id @default(cuid())
+  companyId     String
+  kind          AiInsightKind
+  entityType    String
+  entityId      String
+  content       String
+  sourceVersion String
+  mocked        Boolean       @default(false)
+  provider      String?
+  model         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, kind, entityType, entityId])
+  @@index([companyId])
+}
+
+// Minimal usage/cost tracking — no billing math, just "did this call happen,
+// did it succeed, was it mocked, how long did it take."
+model AiUsageLog {
+  id           String   @id @default(cuid())
+  companyId    String
+  feature      String
+  provider     String
+  mocked       Boolean  @default(false)
+  success      Boolean
+  latencyMs    Int
+  errorMessage String?
+  createdAt    DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  companyId  String
+  userId     String?
+  type       String
+  message    String
+  entityType String?
+  entityId   String?
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id])
+
+  @@unique([companyId, type, entityType, entityId, userId])
+  @@index([companyId])
+  @@index([userId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  companyId  String
+  userId     String?
+  action     String
+  entityType String
+  entityId   String
+  metadata   String?
+  createdAt  DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id])
+
+  @@index([companyId])
+  @@index([entityType, entityId])
+}
