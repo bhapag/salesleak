@@ -1,0 +1,9 @@
+# Vercel's CLI does not reliably respect .gitignore for env files during
+# `vercel deploy` uploads — it uploads .env by default and only warns
+# ("Detected .env file, it is strongly recommended to use Vercel's env
+# handling instead"). Environment variables are configured via `vercel env
+# add` instead (see DEPLOYMENT.md), so the local .env file must never be
+# part of the uploaded deployment source.
+.env
+.env.local
+.env.*.local
