@@ -62,18 +62,32 @@ export type DashboardData = {
   workToday: WorkToday;
 };
 
-export async function getDashboardData(companyId: string, userId: string): Promise<DashboardData> {
+/**
+ * ownerScope mirrors the same parameter used by /leads, /quotations, and
+ * /customers (see getOwnerScope in permissions.ts): undefined for Owner/Sales
+ * Manager (whole company), or a userId to restrict a Salesperson's dashboard
+ * to their own leads/quotations/customers, consistent with every other list
+ * page in the app. teamSnapshot (named peers' individual figures) is the one
+ * piece of company-wide data /team itself restricts to Owner/Sales Manager,
+ * so it's only fetched/returned when ownerScope is unset.
+ */
+export async function getDashboardData(companyId: string, userId: string, ownerScope?: string): Promise<DashboardData> {
   const now = new Date();
   const today = startOfDay(now);
 
-  const [leads, quotations, tasks, customers, teamSnapshot, userNotifications] = await Promise.all([
+  const [allLeads, allQuotations, allTasks, allCustomers, teamSnapshot, userNotifications] = await Promise.all([
     getLeadsForCompany(companyId),
     getQuotationsForCompany(companyId),
-    prisma.task.findMany({ where: { status: "PENDING", lead: { companyId } } }),
+    prisma.task.findMany({ where: { status: "PENDING", lead: { companyId, ...(ownerScope ? { ownerId: ownerScope } : {}) } } }),
     getCustomersForCompany(companyId),
-    getTeamOverview(companyId),
+    ownerScope ? Promise.resolve([]) : getTeamOverview(companyId),
     getNotificationsForUser(companyId, userId),
   ]);
+
+  const leads = ownerScope ? allLeads.filter((l) => l.ownerId === ownerScope) : allLeads;
+  const quotations = ownerScope ? allQuotations.filter((q) => q.lead.ownerId === ownerScope) : allQuotations;
+  const tasks = allTasks;
+  const customers = ownerScope ? allCustomers.filter((c) => c.assignedSalesperson?.id === ownerScope) : allCustomers;
 
   const unreadNotificationCount = userNotifications.filter((n) => !n.isRead).length;
 

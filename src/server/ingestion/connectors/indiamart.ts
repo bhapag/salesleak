@@ -1,12 +1,19 @@
 import type { ProviderAdapter, ParseResult } from "./types";
 
 /**
- * IndiaMART's "Buy Lead" push API delivers leads as a flat JSON object with
- * this general shape (field names as commonly documented for their lead-push
- * webhook). This adapter is built against that documented shape — it has
- * never talked to a live IndiaMART account, since no credentials/access have
- * been provided. See ARCHITECTURE.md for what changes once real access
- * exists (almost certainly nothing beyond field-name corrections here).
+ * IndiaMART's Lead Manager Push API delivers leads as a flat JSON object with
+ * this general shape. Field names match IndiaMART's own published Push API
+ * documentation (help.indiamart.com — "Integration of IndiaMART's Lead
+ * Manager CRM Push API with Third Party CRMs", checked directly during
+ * Phase 13 research, not guessed) — UNIQUE_QUERY_ID, SENDER_NAME,
+ * SENDER_MOBILE, SENDER_EMAIL, SENDER_COMPANY, QUERY_PRODUCT_NAME,
+ * QUERY_MESSAGE are all documented Push API fields. This adapter has still
+ * never talked to a live IndiaMART account, since going live requires the
+ * seller to configure our webhook URL in their own IndiaMART seller panel
+ * (see IntegrationCard.tsx's IndiaMART checklist) — no credentials/access
+ * have been provided this phase either. See ARCHITECTURE.md for what
+ * changes once real access exists (almost certainly nothing beyond
+ * field-name corrections here, given the above).
  */
 export type IndiaMartPayload = {
   UNIQUE_QUERY_ID?: string;

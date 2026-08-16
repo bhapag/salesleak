@@ -16,11 +16,16 @@ export function RelatedListsCard({ customer }: { customer: CustomerDetail }) {
         ) : (
           <ul className="flex flex-col divide-y divide-slate-100">
             {customer.leads.map((lead) => (
-              <li key={lead.id} className="py-2.5">
-                <Link href={`/leads/${lead.id}`} className="flex items-center justify-between gap-2 hover:underline">
+              <li key={lead.id} className="flex items-center justify-between gap-2 py-2.5">
+                <Link href={`/leads/${lead.id}`} className="flex min-w-0 flex-1 items-center justify-between gap-2 hover:underline">
                   <span className="min-w-0 truncate text-sm text-slate-800">{lead.title}</span>
                   <StatusBadge status={lead.status} />
                 </Link>
+                {lead.status !== "WON" && lead.status !== "LOST" && (
+                  <Link href={`/leads/${lead.id}?newQuotation=1`} className="shrink-0 text-xs font-medium text-slate-500 hover:text-slate-900 hover:underline">
+                    + Quote
+                  </Link>
+                )}
               </li>
             ))}
           </ul>

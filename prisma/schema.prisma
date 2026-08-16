@@ -118,6 +118,20 @@ enum AiInsightKind {
   SALES_BRIEF
 }
 
+enum SubscriptionPlan {
+  FOUNDING
+  STARTER
+  GROWTH
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
 // ---------- Core tenant ----------
 
 model Company {
@@ -159,6 +173,7 @@ model Company {
   failedIngestions FailedIngestion[]
   aiInsights       AiInsight[]
   aiUsageLogs      AiUsageLog[]
+  subscription     Subscription?
 }
 
 model User {
@@ -524,4 +539,42 @@ model AuditLog {
 
   @@index([companyId])
   @@index([entityType, entityId])
+}
+
+// ---------- Billing (Phase 14) ----------
+// One row per Company (1:1) — deliberately a separate model rather than more
+// columns on Company, so billing stays a self-contained concern (mirrors
+// AiInsight/AiUsageLog living apart from the business tables they describe).
+// billingCustomerId/billingSubscriptionId are Stripe's own ids, only ever
+// written server-side from a verified webhook or a server action — never
+// accepted as client input.
+model Subscription {
+  id        String             @id @default(cuid())
+  companyId String             @unique
+  plan      SubscriptionPlan   @default(STARTER)
+  status    SubscriptionStatus @default(TRIAL)
+
+  trialStart DateTime?
+  trialEnd   DateTime?
+
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean   @default(false)
+  cancelledAt        DateTime?
+
+  // Null until a real Stripe checkout actually happens — "stripe" is the only
+  // value used today, kept as a free string so a future provider doesn't need
+  // a schema migration to add.
+  billingProvider       String?
+  billingCustomerId     String?
+  billingSubscriptionId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([billingCustomerId])
+  @@index([billingSubscriptionId])
 }

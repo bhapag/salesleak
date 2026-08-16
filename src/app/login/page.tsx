@@ -6,6 +6,13 @@ import { prisma } from "@/lib/prisma";
 
 const DEMO_PASSWORD = "password123";
 
+// The only companies prisma/seed.ts actually creates with the shared demo
+// password. Any other company in a local database — including ones created
+// by testing the real /signup flow, like "Staging Test Industries" was in
+// an earlier phase — has its own real password and must never be listed
+// here claiming otherwise.
+const SEEDED_DEMO_COMPANY_NAMES = ["Shree Balaji Industrial Equipments Pvt. Ltd.", "Om Precision Tools & Dies Pvt. Ltd."];
+
 export default async function LoginPage() {
   const session = await getSession();
   if (session) redirect("/");
@@ -13,7 +20,7 @@ export default async function LoginPage() {
   const showDemoAccounts = process.env.NODE_ENV !== "production";
   const demoUsers = showDemoAccounts
     ? await prisma.user.findMany({
-        where: { isActive: true },
+        where: { isActive: true, company: { name: { in: SEEDED_DEMO_COMPANY_NAMES } } },
         include: { company: true },
         orderBy: [{ companyId: "asc" }, { role: "asc" }],
       })

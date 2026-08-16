@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { getQuotationsForCompany } from "@/server/data/quotations";
+import { getQuotationsForCompany, getLeadPickerOptions, getSuggestedQuotationNumber } from "@/server/data/quotations";
+import { getProductsForCompany } from "@/server/data/products";
 import { QuotationsTable } from "@/components/quotations/QuotationsTable";
+import { CreateQuotationEntry } from "@/components/quotations/CreateQuotationEntry";
 import { requireSession } from "@/server/auth/session";
 import { getOwnerScope } from "@/server/auth/permissions";
 
@@ -8,9 +10,12 @@ export default async function QuotationsPage() {
   const session = await requireSession();
   const ownerScope = getOwnerScope(session);
 
-  const [allQuotations, users] = await Promise.all([
+  const [allQuotations, users, leadOptions, products, suggestedQuotationNumber] = await Promise.all([
     getQuotationsForCompany(session.companyId),
     prisma.user.findMany({ where: { companyId: session.companyId }, orderBy: { name: "asc" } }),
+    getLeadPickerOptions(session.companyId, ownerScope),
+    getProductsForCompany(session.companyId),
+    getSuggestedQuotationNumber(session.companyId),
   ]);
 
   // Salespeople see only quotations on their own leads; Owner/Sales Manager see everyone's.
@@ -25,7 +30,13 @@ export default async function QuotationsPage() {
         </p>
       </header>
 
-      <main className="px-4 py-6 sm:px-8">
+      <main className="flex flex-col gap-4 px-4 py-6 sm:px-8">
+        <CreateQuotationEntry
+          leads={leadOptions}
+          products={products}
+          suggestedQuotationNumber={suggestedQuotationNumber}
+          actingUserId={session.userId}
+        />
         <QuotationsTable quotations={quotations} users={users.map((u) => ({ id: u.id, name: u.name }))} />
       </main>
     </div>

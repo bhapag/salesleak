@@ -18,6 +18,8 @@ const navItems = [
   { href: "/team", label: "Team", icon: TeamIcon, roles: MANAGEMENT_ROLES },
   { href: "/health", label: "Health", icon: HealthIcon, roles: MANAGEMENT_ROLES },
   { href: "/settings/integrations", label: "Integrations", icon: IntegrationsIcon, roles: MANAGEMENT_ROLES },
+  { href: "/settings/pilot-readiness", label: "Pilot Readiness", icon: PilotReadinessIcon, roles: ["OWNER"] as Role[] },
+  { href: "/settings/billing", label: "Billing", icon: BillingIcon, roles: ["OWNER"] as Role[] },
   { href: "/settings/company", label: "Settings", icon: SettingsIcon, roles: ["OWNER"] as Role[] },
 ];
 
@@ -78,7 +80,6 @@ export function Sidebar({ companyName, role }: { companyName: string; role: Role
           <span className="truncate text-xs text-slate-500">{companyName}</span>
         </div>
         {navLinks}
-        <div className="mt-auto px-5 py-4 text-xs text-slate-400">Local workspace</div>
       </aside>
     </>
   );
@@ -165,6 +166,25 @@ function HealthIcon(props: React.SVGProps<SVGSVGElement>) {
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" {...props}>
       <path d="M10 17s-6.2-3.8-6.2-8.4a3.6 3.6 0 016.2-2.5 3.6 3.6 0 016.2 2.5C16.2 13.2 10 17 10 17z" strokeLinejoin="round" />
       <path d="M6 9.5h2l1-2 1.5 4L11.5 9h2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function PilotReadinessIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" {...props}>
+      <rect x="3" y="3" width="14" height="14" rx="2" />
+      <path d="M6.5 10.2l2.2 2.2 4.8-4.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function BillingIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" {...props}>
+      <rect x="2.5" y="4.5" width="15" height="11" rx="1.5" />
+      <path d="M2.5 8h15" strokeLinecap="round" />
+      <path d="M5.5 12h3" strokeLinecap="round" />
     </svg>
   );
 }

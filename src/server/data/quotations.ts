@@ -47,6 +47,7 @@ export async function getQuotationDetail(quotationId: string, companyId: string)
           owner: true,
           company: { select: { lostReasonPresets: true } },
           activities: { include: { user: true }, orderBy: { createdAt: "desc" } },
+          quotations: { select: { id: true, status: true } },
         },
       },
     },
@@ -72,3 +73,28 @@ export async function getQuotationDetail(quotationId: string, companyId: string)
 }
 
 export type QuotationDetail = NonNullable<Awaited<ReturnType<typeof getQuotationDetail>>>;
+
+/** Lead options for the Quotations-page "pick a lead, then build the quote" flow — excludes Lost leads, nothing to quote there. */
+export async function getLeadPickerOptions(companyId: string, ownerScope?: string) {
+  const leads = await prisma.lead.findMany({
+    where: { companyId, status: { not: "LOST" }, ...(ownerScope ? { ownerId: ownerScope } : {}) },
+    include: { customer: { select: { name: true } }, owner: { select: { name: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+  return leads.map((l) => ({
+    id: l.id,
+    title: l.title,
+    customerName: l.customer.name,
+    status: l.status,
+    ownerId: l.ownerId,
+    ownerName: l.owner?.name ?? null,
+  }));
+}
+
+export type LeadPickerOption = Awaited<ReturnType<typeof getLeadPickerOptions>>[number];
+
+/** A sensible pre-filled quotation number the user can freely edit — no uniqueness is enforced (matches existing schema), this is just a helpful default. */
+export async function getSuggestedQuotationNumber(companyId: string): Promise<string> {
+  const count = await prisma.quotation.count({ where: { lead: { companyId } } });
+  return `QT-${new Date().getFullYear()}-${String(count + 1).padStart(4, "0")}`;
+}

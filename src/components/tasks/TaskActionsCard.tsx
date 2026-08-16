@@ -65,14 +65,22 @@ export function TaskActionsCard({ task, actingUserId }: { task: WorkQueueTask; a
   }
 
   function handleUpdateNextAction() {
+    if (!nextAction.trim()) {
+      setError("Next action is required.");
+      return;
+    }
+    if (!deadline) {
+      setError("Deadline is required.");
+      return;
+    }
     setError(null);
     startTransition(async () => {
-      try {
-        await updateNextAction(task.leadId, nextAction, deadline, actingUserId);
-        setActiveForm(null);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Something went wrong.");
+      const result = await updateNextAction(task.leadId, nextAction, deadline, actingUserId);
+      if (!result.success) {
+        setError(result.error);
+        return;
       }
+      setActiveForm(null);
     });
   }
 

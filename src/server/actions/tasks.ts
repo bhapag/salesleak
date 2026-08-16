@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/format";
 import { requireSession } from "@/server/auth/session";
 import { ForbiddenError } from "@/server/auth/permissions";
+import { assertMutationAllowed } from "@/server/billing/entitlements";
 
 function revalidateWorkQueue(leadId: string) {
   revalidatePath("/");
@@ -16,6 +17,7 @@ function revalidateWorkQueue(leadId: string) {
 
 export async function rescheduleTask(taskId: string, newDueDate: string, actingUserId: string | null) {
   const session = await requireSession();
+  await assertMutationAllowed(session);
   if (!newDueDate) throw new Error("A new due date is required.");
 
   const task = await prisma.task.findFirst({ where: { id: taskId, lead: { companyId: session.companyId } } });

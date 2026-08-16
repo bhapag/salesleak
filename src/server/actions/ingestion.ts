@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { LeadSource, LeadPriority } from "@/generated/prisma/client";
 import { requireSession } from "@/server/auth/session";
+import { assertMutationAllowed } from "@/server/billing/entitlements";
 import { ingestLead } from "@/server/ingestion/pipeline";
 import type { NormalizedLeadInput } from "@/server/ingestion/types";
 
@@ -70,6 +71,16 @@ function toNormalizedInput(form: ManualLeadFormInput): NormalizedLeadInput {
  */
 export async function createManualLead(form: ManualLeadFormInput, forceCreate = false): Promise<ManualLeadResult> {
   const session = await requireSession();
+
+  // createManualLead never throws for an ordinary blocked case — its caller
+  // (AddLeadCard) has no try/catch, only a status-based branch — so a lapsed
+  // subscription is surfaced the same way as any other validation failure
+  // rather than becoming an uncaught error.
+  try {
+    await assertMutationAllowed(session);
+  } catch (e) {
+    return { status: "invalid", errors: [e instanceof Error ? e.message : "This workspace's subscription needs attention."] };
+  }
 
   if (!form.customerName.trim()) return { status: "invalid", errors: ["Customer or company name is required."] };
   if (!form.nextAction.trim()) return { status: "invalid", errors: ["Next action is required."] };
@@ -153,6 +164,7 @@ export type CsvImportSummary = {
  */
 export async function importCsvLeads(fileName: string, defaultSource: LeadSource, rows: CsvImportRow[]): Promise<CsvImportSummary> {
   const session = await requireSession();
+  await assertMutationAllowed(session);
   if (rows.length === 0) throw new Error("No rows to import.");
   if (rows.length > 2000) throw new Error("CSV import is limited to 2000 rows at a time.");
 

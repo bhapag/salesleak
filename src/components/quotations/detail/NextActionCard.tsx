@@ -36,14 +36,22 @@ export function NextActionCard({ quotation, actingUserId }: { quotation: Quotati
   }
 
   function handleSave() {
+    if (!nextAction.trim()) {
+      setError("Next action is required.");
+      return;
+    }
+    if (!followUpDate) {
+      setError("Follow-up deadline is required.");
+      return;
+    }
     setError(null);
     startTransition(async () => {
-      try {
-        await updateQuotationNextAction(quotation.id, nextAction, followUpDate, actingUserId);
-        setEditing(false);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Something went wrong.");
+      const result = await updateQuotationNextAction(quotation.id, nextAction, followUpDate, actingUserId);
+      if (!result.success) {
+        setError(result.error);
+        return;
       }
+      setEditing(false);
     });
   }
 

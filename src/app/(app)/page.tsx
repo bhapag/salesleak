@@ -3,14 +3,16 @@ import { getDashboardData } from "@/server/data/metrics";
 import { getCachedInsight } from "@/server/data/ai";
 import { formatCurrency } from "@/lib/format";
 import { requireSession } from "@/server/auth/session";
+import { getOwnerScope } from "@/server/auth/permissions";
 import { AiSalesBrief, type SalesBriefData } from "@/components/ai/AiSalesBrief";
 import type { SalesBriefResult } from "@/server/ai/features/salesBrief";
 
 export default async function Home() {
   const session = await requireSession();
+  const ownerScope = getOwnerScope(session);
 
   const [{ stats, moneyAtRisk, attentionItems, teamSnapshot, repeatOpportunities, workToday }, cachedBrief] = await Promise.all([
-    getDashboardData(session.companyId, session.userId),
+    getDashboardData(session.companyId, session.userId, ownerScope),
     getCachedInsight(session.companyId, "SALES_BRIEF", "Company", session.companyId),
   ]);
 
@@ -44,22 +46,24 @@ export default async function Home() {
       </header>
 
       <main className="flex flex-col gap-6 px-4 py-8 sm:px-8">
-        {/* Quick links: team workload, today's work, notifications */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {/* Quick links: today's work, notifications, and (Owner/Sales Manager only) team workload */}
+        <div className={`grid grid-cols-2 gap-3 ${ownerScope ? "sm:grid-cols-3" : "sm:grid-cols-4"}`}>
           <Link href="/my-day" className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm hover:border-slate-300">
             <p className="text-xs text-slate-500">Today&apos;s Work</p>
             <p className="mt-0.5 text-lg font-semibold text-slate-900">{workToday.todaysWorkCount}</p>
           </Link>
           <Link href="/tasks" className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm hover:border-slate-300">
-            <p className="text-xs text-slate-500">Overdue Across Team</p>
+            <p className="text-xs text-slate-500">{ownerScope ? "Overdue Follow-ups" : "Overdue Across Team"}</p>
             <p className={`mt-0.5 text-lg font-semibold ${workToday.teamOverdueCount > 0 ? "text-red-600" : "text-slate-900"}`}>
               {workToday.teamOverdueCount}
             </p>
           </Link>
-          <Link href="/team" className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm hover:border-slate-300">
-            <p className="text-xs text-slate-500">Team Workload</p>
-            <p className="mt-0.5 text-lg font-semibold text-slate-900">{teamSnapshot.length} people →</p>
-          </Link>
+          {!ownerScope && (
+            <Link href="/team" className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm hover:border-slate-300">
+              <p className="text-xs text-slate-500">Team Workload</p>
+              <p className="mt-0.5 text-lg font-semibold text-slate-900">{teamSnapshot.length} people →</p>
+            </Link>
+          )}
           <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
             <p className="text-xs text-slate-500">Unread Notifications</p>
             <p className={`mt-0.5 text-lg font-semibold ${workToday.unreadNotificationCount > 0 ? "text-blue-600" : "text-slate-900"}`}>
@@ -179,7 +183,8 @@ export default async function Home() {
           </div>
         )}
 
-        {/* TEAM SNAPSHOT */}
+        {/* TEAM SNAPSHOT — Owner/Sales Manager only, matching /team's own access rule */}
+        {!ownerScope && (
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
             <div>
@@ -221,6 +226,7 @@ export default async function Home() {
             </table>
           </div>
         </div>
+        )}
       </main>
     </div>
   );

@@ -104,7 +104,8 @@ export async function approveNextActionSuggestion(leadId: string, actingUserId: 
   const insights = JSON.parse(cached.content) as LeadInsights;
   const dueDate = new Date(Date.now() + Math.max(1, insights.suggestedDeadlineDays || 3) * DAY_MS);
 
-  await scheduleFollowUp(leadId, insights.nextActionSuggestion, dueDate.toISOString(), lead.ownerId, actingUserId);
+  const result = await scheduleFollowUp(leadId, insights.nextActionSuggestion, dueDate.toISOString(), lead.ownerId, actingUserId);
+  if (!result.success) throw new Error(result.error);
 }
 
 // ---------- Customer Summary ----------

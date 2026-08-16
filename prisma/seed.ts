@@ -113,6 +113,12 @@ async function main() {
       onboardedAt: new Date(), // seeded companies skip the onboarding wizard
     },
   });
+  // Seeded demo companies get FOUNDING/ACTIVE, never TRIAL — a real signup
+  // via /signup is the only path that starts a trial (see auth.ts). This is
+  // what keeps a demo reset from ever locking the demo accounts out.
+  await prisma.subscription.create({
+    data: { companyId: company.id, plan: "FOUNDING", status: "ACTIVE", currentPeriodStart: new Date() },
+  });
 
   const passwordHash = hashPassword(DEMO_PASSWORD);
 
@@ -875,6 +881,9 @@ async function main() {
       email: "info@omprecision.in",
       onboardedAt: new Date(),
     },
+  });
+  await prisma.subscription.create({
+    data: { companyId: company2.id, plan: "FOUNDING", status: "ACTIVE", currentPeriodStart: new Date() },
   });
 
   const owner2 = await prisma.user.create({

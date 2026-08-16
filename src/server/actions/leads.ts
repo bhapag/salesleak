@@ -7,6 +7,7 @@ import { notifyNewLeadAssigned } from "@/server/data/notifications";
 import { requireSession } from "@/server/auth/session";
 import { ForbiddenError } from "@/server/auth/permissions";
 import type { AuthSession } from "@/server/auth/session";
+import { assertMutationAllowed } from "@/server/billing/entitlements";
 
 function revalidateLead(leadId: string) {
   revalidatePath("/");
@@ -22,6 +23,11 @@ function revalidateLead(leadId: string) {
 // server-side enforcement point; nothing upstream (UI, client state) is
 // trusted for tenant isolation.
 async function getOwnedLead(leadId: string, session: AuthSession) {
+  // Same chokepoint as tenant isolation above — every write action for an
+  // existing lead routes through here, so this is the one place Phase 14's
+  // "read-only once a subscription lapses" rule needs to be enforced for
+  // that whole family of actions (see src/server/billing/entitlements.ts).
+  await assertMutationAllowed(session);
   const lead = await prisma.lead.findFirst({ where: { id: leadId, companyId: session.companyId } });
   if (!lead) throw new ForbiddenError();
   return lead;
@@ -100,18 +106,24 @@ export async function assignSalesperson(leadId: string, ownerId: string | null, 
   revalidateLead(leadId);
 }
 
+export type LeadActionResult = { success: true } | { success: false; error: string };
+
+// Returns a result object rather than throwing for ordinary validation
+// failures — Next.js redacts thrown Server Action error messages in
+// production, so a plain throw here would reach the client as a generic,
+// unhelpful message instead of "Deadline is required."
 export async function updateNextAction(
   leadId: string,
   nextAction: string,
   nextActionDeadline: string,
   actingUserId: string | null
-) {
+): Promise<LeadActionResult> {
   const session = await requireSession();
   await getOwnedLead(leadId, session);
 
   const trimmedAction = nextAction.trim();
-  if (!trimmedAction) throw new Error("Next action is required.");
-  if (!nextActionDeadline) throw new Error("Deadline is required.");
+  if (!trimmedAction) return { success: false, error: "Next action is required." };
+  if (!nextActionDeadline) return { success: false, error: "Deadline is required." };
 
   await prisma.lead.update({
     where: { id: leadId },
@@ -122,6 +134,7 @@ export async function updateNextAction(
   });
 
   revalidateLead(leadId);
+  return { success: true };
 }
 
 export async function scheduleFollowUp(
@@ -130,13 +143,13 @@ export async function scheduleFollowUp(
   dueDate: string,
   assignedToId: string | null,
   actingUserId: string | null
-) {
+): Promise<LeadActionResult> {
   const session = await requireSession();
   await getOwnedLead(leadId, session);
 
   const trimmedTitle = title.trim();
-  if (!trimmedTitle) throw new Error("Follow-up title is required.");
-  if (!dueDate) throw new Error("Due date is required.");
+  if (!trimmedTitle) return { success: false, error: "Follow-up title is required." };
+  if (!dueDate) return { success: false, error: "Due date is required." };
 
   await prisma.task.create({
     data: { leadId, title: trimmedTitle, dueDate: new Date(dueDate), assignedToId },
@@ -146,6 +159,7 @@ export async function scheduleFollowUp(
   });
 
   revalidateLead(leadId);
+  return { success: true };
 }
 
 export async function completeTask(taskId: string, leadId: string, actingUserId: string | null) {

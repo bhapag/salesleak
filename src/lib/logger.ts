@@ -10,7 +10,7 @@
  * discipline already used for AI prompt inputs (see ARCHITECTURE.md).
  */
 
-type LogCategory = "auth" | "database" | "ingestion" | "webhook" | "ai" | "server";
+type LogCategory = "auth" | "database" | "ingestion" | "webhook" | "ai" | "server" | "billing";
 
 type LogMeta = Record<string, string | number | boolean | null | undefined>;
 
@@ -55,4 +55,5 @@ export const logger = {
   webhookFailure: (message: string, meta?: LogMeta) => write("warn", "webhook", message, meta),
   aiFailure: (message: string, meta?: LogMeta) => write("warn", "ai", message, meta),
   serverError: (message: string, meta?: LogMeta) => write("error", "server", message, meta),
+  billingFailure: (message: string, meta?: LogMeta) => write("warn", "billing", message, meta),
 };

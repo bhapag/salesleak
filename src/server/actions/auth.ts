@@ -7,6 +7,7 @@ import { createSession, destroySession } from "@/server/auth/session";
 import { getDefaultIntegrationRows } from "@/server/data/ingestion";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
+import { DEFAULT_TRIAL_DAYS } from "@/lib/plans";
 
 export type LoginResult = { success: true } | { success: false; error: string };
 export type SignupInput = { companyName: string; ownerName: string; email: string; password: string };
@@ -41,8 +42,29 @@ export async function signup(input: SignupInput): Promise<SignupResult> {
     data: { companyId: company.id, name: ownerName, email, role: "OWNER", passwordHash: hashPassword(input.password) },
   });
   await prisma.integration.createMany({ data: getDefaultIntegrationRows(company.id) });
+
+  // Every real signup starts a trial — never ACTIVE/FOUNDING, those are only
+  // ever set by an actual Stripe checkout, the dev-only tool, or the
+  // operator-run founding-plan script. See src/lib/plans.ts for the trial
+  // length and src/server/billing/entitlements.ts for how it's enforced.
+  const trialStart = new Date();
+  const trialEnd = new Date(trialStart.getTime() + DEFAULT_TRIAL_DAYS * 24 * 60 * 60 * 1000);
+  await prisma.subscription.create({
+    data: { companyId: company.id, plan: "STARTER", status: "TRIAL", trialStart, trialEnd },
+  });
+
   await prisma.auditLog.create({
     data: { companyId: company.id, userId: user.id, action: "COMPANY_CREATED", entityType: "Company", entityId: company.id },
+  });
+  await prisma.auditLog.create({
+    data: {
+      companyId: company.id,
+      userId: user.id,
+      action: "TRIAL_STARTED",
+      entityType: "Subscription",
+      entityId: company.id,
+      metadata: JSON.stringify({ trialDays: DEFAULT_TRIAL_DAYS, trialEnd: trialEnd.toISOString() }),
+    },
   });
 
   await createSession(user.id);

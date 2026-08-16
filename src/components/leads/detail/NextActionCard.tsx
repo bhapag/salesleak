@@ -29,14 +29,22 @@ export function NextActionCard({ lead, actingUserId }: { lead: LeadDetail; actin
   }
 
   function handleSave() {
+    if (!nextAction.trim()) {
+      setError("Next action is required.");
+      return;
+    }
+    if (!deadline) {
+      setError("Deadline is required.");
+      return;
+    }
     setError(null);
     startTransition(async () => {
-      try {
-        await updateNextAction(lead.id, nextAction, deadline, actingUserId);
-        setEditing(false);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Something went wrong.");
+      const result = await updateNextAction(lead.id, nextAction, deadline, actingUserId);
+      if (!result.success) {
+        setError(result.error);
+        return;
       }
+      setEditing(false);
     });
   }
 

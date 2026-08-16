@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import type { IntegrationType } from "@/generated/prisma/client";
 import { requireSession } from "@/server/auth/session";
 import { canManageTeam, ForbiddenError } from "@/server/auth/permissions";
+import { assertMutationAllowed } from "@/server/billing/entitlements";
 import { generateWebhookToken, generateSigningSecret } from "@/server/ingestion/security";
 import { getAdapterByType } from "@/server/ingestion/connectors/registry";
 import { processProviderPayload } from "@/server/ingestion/webhookHandler";
@@ -175,6 +176,7 @@ export async function retryFailedIngestion(
 ): Promise<{ status: "created" | "duplicate" | "invalid"; errors?: string[] }> {
   const session = await requireSession();
   if (!canManageTeam(session.role)) throw new ForbiddenError("Only the Owner and Sales Managers can retry failed imports.");
+  await assertMutationAllowed(session);
 
   const failure = await prisma.failedIngestion.findFirst({ where: { id, companyId: session.companyId } });
   if (!failure) throw new ForbiddenError();
@@ -245,6 +247,7 @@ export async function retryFailedIngestion(
 export async function dismissFailedIngestion(id: string): Promise<void> {
   const session = await requireSession();
   if (!canManageTeam(session.role)) throw new ForbiddenError("Only the Owner and Sales Managers can dismiss failed imports.");
+  await assertMutationAllowed(session);
 
   const failure = await prisma.failedIngestion.findFirst({ where: { id, companyId: session.companyId } });
   if (!failure) throw new ForbiddenError();

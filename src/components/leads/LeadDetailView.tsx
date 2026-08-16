@@ -11,6 +11,7 @@ import { StatusAssignmentCard } from "@/components/leads/detail/StatusAssignment
 import { CloseDealCard } from "@/components/leads/detail/CloseDealCard";
 import { AiLeadInsightsCard, type LeadInsightsData } from "@/components/ai/AiLeadInsightsCard";
 import { formatCurrency } from "@/lib/format";
+import type { ProductOption } from "@/server/data/products";
 
 type UserOption = { id: string; name: string; role: string };
 
@@ -19,11 +20,17 @@ export function LeadDetailView({
   users,
   currentUserId,
   initialInsight,
+  products,
+  suggestedQuotationNumber,
+  autoOpenQuotationForm = false,
 }: {
   lead: LeadDetail;
   users: UserOption[];
   currentUserId: string;
   initialInsight: LeadInsightsData | null;
+  products: ProductOption[];
+  suggestedQuotationNumber: string;
+  autoOpenQuotationForm?: boolean;
 }) {
   const actingUserId = currentUserId;
 
@@ -53,7 +60,13 @@ export function LeadDetailView({
             <OverviewCard lead={lead} />
             <NextActionCard lead={lead} actingUserId={actingUserId || null} />
             <FollowUpsCard lead={lead} users={users} actingUserId={actingUserId || null} />
-            <QuotationsCard lead={lead} />
+            <QuotationsCard
+              lead={lead}
+              products={products}
+              suggestedQuotationNumber={suggestedQuotationNumber}
+              actingUserId={actingUserId || null}
+              autoOpen={autoOpenQuotationForm}
+            />
             <ActivityTimeline lead={lead} actingUserId={actingUserId || null} />
           </div>
 

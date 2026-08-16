@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/Sidebar";
 import { AppHeader } from "@/components/header/AppHeader";
+import { SubscriptionBanner } from "@/components/billing/SubscriptionBanner";
 import { requireSession } from "@/server/auth/session";
+import { getSubscriptionState } from "@/server/billing/entitlements";
 import { prisma } from "@/lib/prisma";
 
 export default async function AppShellLayout({ children }: { children: React.ReactNode }) {
@@ -12,11 +14,14 @@ export default async function AppShellLayout({ children }: { children: React.Rea
     if (!company?.onboardedAt) redirect("/onboarding");
   }
 
+  const subscriptionState = await getSubscriptionState(session.companyId);
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 md:flex-row">
       <Sidebar companyName={session.companyName} role={session.role} />
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader session={session} />
+        <SubscriptionBanner state={subscriptionState} isOwner={session.role === "OWNER"} />
         <div className="min-w-0 flex-1">{children}</div>
       </div>
     </div>

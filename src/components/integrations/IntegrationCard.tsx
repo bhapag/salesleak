@@ -72,7 +72,20 @@ export function IntegrationCard({ connector }: { connector: ConnectorView }) {
         <p className="mt-1.5 text-xs text-slate-500">{connector.description}</p>
 
         {connector.type === "INDIAMART" && (
-          <p className="mt-2 text-xs font-medium text-sky-700">Test Mode / Credentials Required — no live IndiaMART account is connected.</p>
+          <div className="mt-2 rounded-lg border border-sky-200 bg-sky-50 p-2.5">
+            <p className="text-xs font-medium text-sky-800">Test Mode / Credentials Required — no live IndiaMART account is connected.</p>
+            <p className="mt-1.5 text-[11px] font-medium text-sky-700">To go live (per IndiaMART&apos;s own Push API documentation):</p>
+            <ul className="mt-1 list-disc space-y-0.5 pl-4 text-[11px] text-sky-700">
+              <li>An active <span className="font-medium">paid</span> IndiaMART seller account — the Push API is an add-on to an existing paid plan, not sold on its own.</li>
+              <li>
+                In the seller panel (seller.indiamart.com → Lead Manager → Import/Export Leads → Push API), paste the webhook URL below as the
+                &quot;Integration URL&quot; and confirm via the OTP sent to the account&apos;s registered mobile number.
+              </li>
+              <li>No IndiaMART-issued API key needs to be entered into SalesLeak for this — the direction is reversed: IndiaMART calls this webhook, using the random token already in the URL below as the only credential.</li>
+              <li>One real test enquiry, verified end-to-end in this queue, with field mapping corrected if the live payload differs from what this adapter assumes.</li>
+            </ul>
+            <p className="mt-1.5 text-[11px] text-sky-700">Until this is done, this stays in Test Mode — it will never be shown as &quot;Connected.&quot;</p>
+          </div>
         )}
 
         {connector.webhookCapable && (
@@ -177,7 +190,7 @@ export function IntegrationCard({ connector }: { connector: ConnectorView }) {
             Add a lead →
           </Link>
         )}
-        {!connector.functional && <p className="text-xs text-slate-400">Not available yet in this local build.</p>}
+        {!connector.functional && <p className="text-xs text-slate-400">Coming soon.</p>}
       </div>
 
       {testResult && <TestResultPanel result={testResult} />}

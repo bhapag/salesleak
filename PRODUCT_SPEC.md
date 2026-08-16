@@ -23,7 +23,7 @@ Everything in the product — dashboards, list views, badges, filters — exists
 ## Lead sources and ingestion
 
 - CSV/Excel import, Manual entry, IndiaMART (**Test Mode**), and Website Forms (**Connected**) — working today. All four go through the same universal ingestion pipeline every source uses: normalize → validate → detect possible duplicates → create or update the customer → create the lead → notify.
-- IndiaMART is explicitly labeled **Test Mode / Credentials Required** — the connector architecture is real and testable end to end, but no live IndiaMART account is connected, since no credentials/access have been provided. Website Forms is genuinely live: submitting the real public form creates a real lead.
+- IndiaMART is explicitly labeled **Test Mode / Credentials Required** — the connector architecture is real and testable end to end, but no live IndiaMART account is connected. Going live is entirely an action on the business's own IndiaMART seller account (pointing their Push API's "Integration URL" at SalesLeak's existing webhook URL), not a value SalesLeak needs to be given — see the Integrations page's IndiaMART checklist for the exact, IndiaMART-documented steps. Website Forms is genuinely live: submitting the real public form creates a real lead.
 - Justdial, ExportersIndia, TradeIndia, WhatsApp, Gmail — still **Coming Soon**. No live API is connected for any of these yet.
 - Phone calls and referrals are logged as a source choice on manual entry, not separate connectors.
 
@@ -35,9 +35,13 @@ SalesLeak is multi-tenant: every authenticated user belongs to exactly one `Comp
 
 - **Owner** — full visibility across the business: every salesperson's leads, quotations, and customers; team management (add/edit/deactivate users, change roles); company settings and sales workflow configuration; completes onboarding for a new company.
 - **Sales Manager** — sees and manages the whole team's leads, quotations, tasks, and customers (same data scope as Owner); can reassign leads; can view Sales Process Health and Integrations; cannot manage company settings, workflow configuration, or team membership.
-- **Salesperson** — primarily works My Day: their own assigned leads, tasks, and quotations, and the customers relevant to those leads. Cannot see Team, Company Settings, Sales Process Health, or Integrations pages.
+- **Salesperson** — primarily works My Day: their own assigned leads, tasks, and quotations, and the customers relevant to those leads. Cannot see Team, Company Settings, Sales Process Health, or Integrations pages — and, as of Phase 15, the Dashboard applies the same scoping: a Salesperson's home page reflects only their own numbers, with no company-wide Team Snapshot section.
 
 Authentication is real (hashed passwords, server-side sessions). A new company signs up at `/signup` (creates the Company and its Owner) and is walked through a skippable onboarding wizard before reaching the dashboard. As of Phase 11, this runs on a real staging deployment (Vercel + PostgreSQL) — see [ROADMAP.md](ROADMAP.md) Phases 6, 10, and 11 — though still no email invitations and no custom domain yet.
+
+## Subscription & billing
+
+Every company has a subscription (Owner-only, `/settings/billing`): a new signup gets a **14-day free trial** with full functionality, shown as a days-remaining banner across the app. If a trial lapses without upgrading, the workspace becomes **read-only** — every salesperson keeps seeing their data exactly as it was, but can no longer create or edit leads, quotations, or follow-ups until the Owner reactivates. Data is never deleted, and export always keeps working, specifically so nobody's business records are ever held hostage by a billing lapse. Three plans exist (Starter, Growth, and a directly-assigned Founding tier for our first pilot customers) with simple, transparent, centrally-configured pricing — no hidden tiers, no fake enterprise pricing. Billing runs on Stripe behind a provider abstraction; until a real Stripe account is connected, the Billing page honestly shows itself as not-yet-connected rather than faking a checkout. See [ARCHITECTURE.md](ARCHITECTURE.md) and [ROADMAP.md](ROADMAP.md) Phase 14 for how this is enforced and what activating real billing requires.
 
 ## Getting a new company set up
 
@@ -48,6 +52,12 @@ The handful of workflow settings gathered during onboarding (high-value opportun
 ## Sales Process Health
 
 A dedicated page (Owner + Sales Manager) for spotting sales-*data* problems before they cost a deal — not a technical/server-health page. It surfaces: leads with no owner, no next action, or no deadline; quotations with no follow-up scheduled; customers with incomplete contact information; possible duplicate customer records; and failed ingestions — each with a real count and a direct link to the affected records. A global search (header, Ctrl/Cmd+K) finds any customer, lead, or quotation by name, company name, phone, or email, always scoped to the searcher's own company.
+
+## Pilot readiness & data export
+
+A separate, Owner-only **Pilot Readiness** page (`/settings/pilot-readiness`) is a setup-completeness checklist, not a data-quality monitor — is the sales team added, are lead sources configured, are workflow settings customized, is at least one connector set up — alongside a few of the same operational counts Sales Process Health already tracks (unassigned leads, failed ingestions, overdue follow-ups), so a brand-new Owner has one place to confirm the workspace is actually ready to run on before relying on it day to day.
+
+An Owner can also export the company's **customers, leads, and quotations as CSV** from Company Settings — for the business's own records or backup, not a full data-portability/restore system. Every export is scoped to the exporting company only.
 
 ## What "at risk" means
 
@@ -66,6 +76,8 @@ Lost leads always carry a mandatory lost reason so patterns in why deals are los
 SalesLeak's funnel doesn't end at Won — it continues: **Enquiry → Contact → Requirement → Quotation → Follow-up → Negotiation → Won/Lost → Repeat Order.** A won deal is a customer relationship, not just a closed ticket, and B2B industrial buyers tend to reorder on a cadence (consumables, spares, recurring production inputs). Missing that reorder window is lost revenue just as much as a forgotten follow-up is.
 
 Repeat-order detection is a **simple, rule-based estimate** — not AI, not a guarantee. For a customer with 2+ historical won orders, SalesLeak estimates the average time between those orders and compares it to how long it's been since the last one, producing a signal (Normal / Due Soon / Repeat Order Due / Overdue-Dormant). It is always presented as an opportunity signal to go check on, never as a certainty.
+
+A quotation and its linked lead can be closed independently — a won or lost quotation never *automatically* closes the lead, since a lead can carry more than one quotation and losing one shouldn't silently declare the whole opportunity dead. Closing a quotation offers an explicit, unchecked-by-default "also mark the lead Won/Lost" option; marking a lead Lost this way is only ever offered when no other quotation on that lead is still open.
 
 ## Customer status
 
@@ -92,6 +104,10 @@ AI never sets pricing, sends a quotation or message, marks a lead Won/Lost, reas
 
 ## Explicitly out of scope for now
 
-Live credentials/API access for IndiaMART, and any real connection at all to Justdial/ExportersIndia/TradeIndia/WhatsApp/Gmail, autonomous AI actions (messaging, calling, quotation sending, pricing decisions), payments, billing/subscriptions, a custom domain, and ERP/accounting/inventory features. These are deliberately deferred — see [ROADMAP.md](ROADMAP.md). (As of Phase 11, SalesLeak *does* run on real production infrastructure — PostgreSQL + Vercel — just not yet with a paid AI provider, live connector credentials, or a custom domain.)
+Live credentials/API access for IndiaMART, and any real connection at all to Justdial/ExportersIndia/TradeIndia/WhatsApp/Gmail, autonomous AI actions (messaging, calling, quotation sending, pricing decisions), a real connected Stripe account (the billing *architecture* is built as of Phase 14 — see above — but no live payments have been taken), a custom domain, and ERP/accounting/inventory features. These are deliberately deferred — see [ROADMAP.md](ROADMAP.md). (As of Phase 11, SalesLeak *does* run on real production infrastructure — PostgreSQL + Vercel — just not yet with a paid AI provider, live connector credentials, live billing, or a custom domain.)
 
 Integrations exist only to make enquiry capture easier — SalesLeak's value stays in surfacing which of those captured enquiries need action before revenue is lost, not in how many sources feed it.
+
+## Launch readiness
+
+As of Phase 15, the product itself, its security posture, and its data-safety story are launch-ready — the complete signup-to-Won-deal funnel, including the core rule, trial/read-only enforcement, and role-based access, was verified live end-to-end on a real signup, not just the seeded demo data. What remains before a first real customer is fully onboarded is a short list of business decisions rather than code: a support contact channel, Terms of Service/Privacy Policy (neither exists yet — deliberately not drafted speculatively), and, only if that customer needs them, a live IndiaMART seller-account connection or a live Stripe account. See [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md) for the complete, honestly-marked breakdown.

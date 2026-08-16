@@ -35,16 +35,24 @@ export function FollowUpsCard({
   const now = new Date();
 
   function handleAdd() {
+    if (!title.trim()) {
+      setError("Follow-up title is required.");
+      return;
+    }
+    if (!dueDate) {
+      setError("Due date is required.");
+      return;
+    }
     setError(null);
     startTransition(async () => {
-      try {
-        await scheduleFollowUp(lead.id, title, dueDate, assignedToId || null, actingUserId);
-        setTitle("");
-        setDueDate("");
-        setShowForm(false);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Something went wrong.");
+      const result = await scheduleFollowUp(lead.id, title, dueDate, assignedToId || null, actingUserId);
+      if (!result.success) {
+        setError(result.error);
+        return;
       }
+      setTitle("");
+      setDueDate("");
+      setShowForm(false);
     });
   }
 

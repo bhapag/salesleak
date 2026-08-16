@@ -1,6 +1,11 @@
+"use client";
+
+import { useState } from "react";
 import type { LeadDetail } from "@/server/data/leads";
-import { Card } from "@/components/ui";
+import { Card, SecondaryButton } from "@/components/ui";
 import { formatCurrency, formatDate, labelize } from "@/lib/format";
+import { CreateQuotationForm } from "@/components/quotations/CreateQuotationForm";
+import type { ProductOption } from "@/server/data/products";
 
 const statusStyle: Record<string, string> = {
   DRAFT: "bg-slate-100 text-slate-600 ring-slate-200",
@@ -11,7 +16,35 @@ const statusStyle: Record<string, string> = {
   EXPIRED: "bg-slate-100 text-slate-400 ring-slate-200",
 };
 
-export function QuotationsCard({ lead }: { lead: LeadDetail }) {
+export function QuotationsCard({
+  lead,
+  products,
+  suggestedQuotationNumber,
+  actingUserId,
+  autoOpen = false,
+}: {
+  lead: LeadDetail;
+  products: ProductOption[];
+  suggestedQuotationNumber: string;
+  actingUserId: string | null;
+  autoOpen?: boolean;
+}) {
+  const [showForm, setShowForm] = useState(autoOpen);
+
+  if (showForm) {
+    return (
+      <CreateQuotationForm
+        leadId={lead.id}
+        products={products}
+        suggestedQuotationNumber={suggestedQuotationNumber}
+        actingUserId={actingUserId}
+        context={{ leadTitle: lead.title, customerName: lead.customer.name, ownerName: lead.owner?.name ?? null }}
+        onDone={() => setShowForm(false)}
+        onCancel={() => setShowForm(false)}
+      />
+    );
+  }
+
   return (
     <Card title="Quotations" description="Quotations sent for this opportunity">
       {lead.quotations.length === 0 ? (
@@ -48,6 +81,9 @@ export function QuotationsCard({ lead }: { lead: LeadDetail }) {
           ))}
         </div>
       )}
+      <SecondaryButton className="mt-4" onClick={() => setShowForm(true)}>
+        + Create Quotation
+      </SecondaryButton>
     </Card>
   );
 }

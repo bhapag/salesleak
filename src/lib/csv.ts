@@ -68,3 +68,18 @@ export function parseCsv(text: string): ParsedCsv {
 
   return { headers, rows: dataRows };
 }
+
+/** Quotes a single CSV field only when it needs it (contains a comma, quote, or newline) — same escaping convention parseCsv() reads back. */
+function csvField(value: string): string {
+  if (/[",\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`;
+  return value;
+}
+
+/** The write-side counterpart to parseCsv() — used by the company-data export (Phase 13), not by CSV import. */
+export function toCsv(headers: string[], rows: (string | number | null | undefined)[][]): string {
+  const lines = [headers.map(csvField).join(",")];
+  for (const row of rows) {
+    lines.push(row.map((cell) => csvField(cell == null ? "" : String(cell))).join(","));
+  }
+  return lines.join("\r\n");
+}

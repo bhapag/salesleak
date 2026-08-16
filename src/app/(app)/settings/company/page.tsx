@@ -4,6 +4,7 @@ import { requireSession } from "@/server/auth/session";
 import { canManageCompany } from "@/server/auth/permissions";
 import { NotAuthorized } from "@/components/auth/NotAuthorized";
 import { CompanySettingsForm } from "@/components/settings/CompanySettingsForm";
+import { ExportDataCard } from "@/components/settings/ExportDataCard";
 import { DemoResetCard } from "@/components/settings/DemoResetCard";
 import { Card } from "@/components/ui";
 
@@ -44,6 +45,10 @@ export default async function CompanySettingsPage() {
               }}
             />
           </Card>
+
+          <div className="mt-6">
+            <ExportDataCard />
+          </div>
 
           {process.env.NODE_ENV !== "production" && (
             <div className="mt-6">

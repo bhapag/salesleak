@@ -5,6 +5,7 @@ import type { QuotationDetail } from "@/server/data/quotations";
 import { Card, PrimaryButton, SecondaryButton, DangerButton, ErrorText, inputClass } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { markQuotationWon, markQuotationLost } from "@/server/actions/quotations";
+import { QUOTATION_ACTIVE_STATUSES } from "@/lib/constants";
 
 export function CloseDealCard({
   quotation,
@@ -17,8 +18,15 @@ export function CloseDealCard({
 }) {
   const [showLostForm, setShowLostForm] = useState(false);
   const [lostReason, setLostReason] = useState("");
+  const [alsoMarkLeadWon, setAlsoMarkLeadWon] = useState(false);
+  const [alsoMarkLeadLost, setAlsoMarkLeadLost] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const leadIsOpen = quotation.lead.status !== "WON" && quotation.lead.status !== "LOST";
+  const otherOpenQuotations = quotation.lead.quotations.filter(
+    (q) => q.id !== quotation.id && (QUOTATION_ACTIVE_STATUSES as readonly string[]).includes(q.status)
+  ).length;
 
   if (quotation.status === "ACCEPTED") {
     return (
@@ -41,7 +49,7 @@ export function CloseDealCard({
     setError(null);
     startTransition(async () => {
       try {
-        await markQuotationWon(quotation.id, actingUserId);
+        await markQuotationWon(quotation.id, actingUserId, alsoMarkLeadWon);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Something went wrong.");
       }
@@ -52,9 +60,10 @@ export function CloseDealCard({
     setError(null);
     startTransition(async () => {
       try {
-        await markQuotationLost(quotation.id, lostReason, actingUserId);
+        await markQuotationLost(quotation.id, lostReason, actingUserId, alsoMarkLeadLost);
         setShowLostForm(false);
         setLostReason("");
+        setAlsoMarkLeadLost(false);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Something went wrong.");
       }
@@ -65,6 +74,17 @@ export function CloseDealCard({
     <Card title="Close Deal">
       {!showLostForm ? (
         <div className="flex flex-col gap-2">
+          {leadIsOpen && (
+            <label className="flex items-start gap-2 text-xs text-slate-600">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={alsoMarkLeadWon}
+                onChange={(e) => setAlsoMarkLeadWon(e.target.checked)}
+              />
+              Also mark the linked lead &quot;{quotation.lead.title}&quot; as Won
+            </label>
+          )}
           <PrimaryButton onClick={handleWon} disabled={pending} className="bg-emerald-600 hover:bg-emerald-700">
             {pending ? "Saving…" : "Mark Won"}
           </PrimaryButton>
@@ -101,6 +121,23 @@ export function CloseDealCard({
               className={`${inputClass} resize-none`}
             />
           </label>
+          {leadIsOpen &&
+            (otherOpenQuotations === 0 ? (
+              <label className="flex items-start gap-2 text-xs text-slate-600">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={alsoMarkLeadLost}
+                  onChange={(e) => setAlsoMarkLeadLost(e.target.checked)}
+                />
+                Also mark the linked lead &quot;{quotation.lead.title}&quot; as Lost
+              </label>
+            ) : (
+              <p className="text-[11px] text-slate-400">
+                This lead has {otherOpenQuotations} other open quotation{otherOpenQuotations === 1 ? "" : "s"} — it won&apos;t be marked Lost
+                automatically.
+              </p>
+            ))}
           <ErrorText>{error}</ErrorText>
           <div className="flex gap-2">
             <DangerButton onClick={handleLost} disabled={pending || !lostReason.trim()}>
@@ -111,6 +148,7 @@ export function CloseDealCard({
                 setShowLostForm(false);
                 setLostReason("");
                 setError(null);
+                setAlsoMarkLeadLost(false);
               }}
               disabled={pending}
             >
