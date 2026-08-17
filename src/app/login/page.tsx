@@ -37,7 +37,7 @@ export default async function LoginPage() {
       footer={
         <>
           New to SalesLeak?{" "}
-          <Link href="/signup" className="font-medium text-brand-navy underline underline-offset-2">
+          <Link href="/signup" className="font-medium text-brand-warm-white underline underline-offset-2">
             Create a company workspace
           </Link>
         </>
@@ -45,8 +45,8 @@ export default async function LoginPage() {
       extra={
         showDemoAccounts &&
         demoUsers.length > 0 && (
-          <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-white p-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Local demo accounts — dev only</p>
+          <div className="rounded-xl border border-white/15 bg-white/5 p-4">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-brand-warm-white/40">Local demo accounts — dev only</p>
             <div className="flex flex-col gap-3">
               {Object.entries(
                 demoUsers.reduce<Record<string, typeof demoUsers>>((acc, u) => {
@@ -55,8 +55,8 @@ export default async function LoginPage() {
                 }, {})
               ).map(([companyName, users]) => (
                 <div key={companyName}>
-                  <p className="text-xs font-medium text-slate-700">{companyName}</p>
-                  <ul className="mt-1 space-y-0.5 text-xs text-slate-500">
+                  <p className="text-xs font-medium text-brand-warm-white/70">{companyName}</p>
+                  <ul className="mt-1 space-y-0.5 text-xs text-brand-warm-white/45">
                     {users.map((u) => (
                       <li key={u.id}>
                         {labelizeRole(u.role)}: <span className="font-mono">{u.email}</span>
@@ -65,7 +65,7 @@ export default async function LoginPage() {
                   </ul>
                 </div>
               ))}
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-brand-warm-white/35">
                 Password for every demo account: <span className="font-mono">{DEMO_PASSWORD}</span>
               </p>
             </div>

@@ -18,7 +18,7 @@ export default async function SignupPage() {
       footer={
         <>
           Already have a workspace?{" "}
-          <Link href="/login" className="font-medium text-brand-navy underline underline-offset-2">
+          <Link href="/login" className="font-medium text-brand-warm-white underline underline-offset-2">
             Sign in
           </Link>
         </>
