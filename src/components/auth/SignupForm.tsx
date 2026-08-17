@@ -30,7 +30,7 @@ export function SignupForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <Field label="Company name">
+      <Field label="Company name" required>
         <input
           value={companyName}
           onChange={(e) => setCompanyName(e.target.value)}
@@ -40,7 +40,7 @@ export function SignupForm() {
           required
         />
       </Field>
-      <Field label="Your name">
+      <Field label="Your name" required>
         <input
           value={ownerName}
           onChange={(e) => setOwnerName(e.target.value)}
@@ -50,7 +50,7 @@ export function SignupForm() {
           required
         />
       </Field>
-      <Field label="Email">
+      <Field label="Email" required>
         <input
           type="email"
           value={email}
@@ -61,20 +61,24 @@ export function SignupForm() {
           required
         />
       </Field>
-      <Field label="Password">
+      <Field label="Password" required helper="At least 8 characters">
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="At least 8 characters"
+          placeholder="••••••••"
           autoComplete="new-password"
           minLength={8}
           className={inputClass}
           required
         />
       </Field>
-      <ErrorText>{error}</ErrorText>
-      <PrimaryButton type="submit" disabled={pending} className="w-full">
+      {error && (
+        <div role="alert" aria-live="polite">
+          <ErrorText>{error}</ErrorText>
+        </div>
+      )}
+      <PrimaryButton type="submit" loading={pending} className="w-full">
         {pending ? "Creating workspace…" : "Create workspace"}
       </PrimaryButton>
     </form>

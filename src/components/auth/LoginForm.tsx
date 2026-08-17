@@ -28,7 +28,7 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <Field label="Email">
+      <Field label="Email" required>
         <input
           type="email"
           value={email}
@@ -39,7 +39,7 @@ export function LoginForm() {
           required
         />
       </Field>
-      <Field label="Password">
+      <Field label="Password" required>
         <input
           type="password"
           value={password}
@@ -50,8 +50,12 @@ export function LoginForm() {
           required
         />
       </Field>
-      <ErrorText>{error}</ErrorText>
-      <PrimaryButton type="submit" disabled={pending} className="w-full">
+      {error && (
+        <div role="alert" aria-live="polite">
+          <ErrorText>{error}</ErrorText>
+        </div>
+      )}
+      <PrimaryButton type="submit" loading={pending} className="w-full">
         {pending ? "Signing in…" : "Sign in"}
       </PrimaryButton>
     </form>

@@ -42,6 +42,30 @@ body {
   /* Fast-start, gentle-settle entrances; quicker, sharper exits. No bounce. */
   --ease-brand-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-brand-in: cubic-bezier(0.4, 0, 1, 1);
+
+  /* The one specified exception to the four durations above — the single
+     deliberate page-load entrance on Login/Signup/Onboarding only. Never
+     repeated, never reused for anything else. */
+  --dur-entrance: 280ms;
+}
+
+/* ---------------------------------------------------------------------
+   Login/Signup/Onboarding entrance — one fade+lift on page load, never
+   repeated. Neutralized by the prefers-reduced-motion override below.
+--------------------------------------------------------------------- */
+@keyframes auth-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-fade-in {
+  animation: auth-fade-in var(--dur-entrance) var(--ease-brand-out) both;
 }
 
 /* ---------------------------------------------------------------------
