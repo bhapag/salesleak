@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
@@ -55,11 +56,21 @@ export function Sidebar({ companyName, role }: { companyName: string; role: Role
     <>
       {/* Mobile top bar */}
       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
-        <div className="flex items-baseline gap-1.5">
-          <span className="text-lg font-semibold tracking-tight text-slate-900">SalesLeak</span>
-          <span className="text-[10px] text-slate-400">
-            by <span className="text-[#B08A45]">NobleArc</span>
-          </span>
+        <div className="flex items-center gap-2">
+          <Image
+            src="/brand/salesleak/salesleak-icon-master.png"
+            alt="SalesLeak"
+            width={22}
+            height={22}
+            priority
+            className="shrink-0 rounded-[6px]"
+          />
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-lg font-semibold tracking-tight text-slate-900">SalesLeak</span>
+            <span className="text-[10px] text-slate-400">
+              by <span className="text-[#B08A45]">NobleArc</span>
+            </span>
+          </div>
         </div>
         <button
           type="button"
@@ -79,11 +90,21 @@ export function Sidebar({ companyName, role }: { companyName: string; role: Role
       {/* Desktop sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
         <div className="flex flex-col gap-0.5 px-5 py-6">
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-lg font-semibold tracking-tight text-slate-900">SalesLeak</span>
-            <span className="text-[10px] text-slate-400">
-              by <span className="text-[#B08A45]">NobleArc</span>
-            </span>
+          <div className="flex items-center gap-2">
+            <Image
+              src="/brand/salesleak/salesleak-icon-master.png"
+              alt="SalesLeak"
+              width={26}
+              height={26}
+              priority
+              className="shrink-0 rounded-[7px]"
+            />
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-lg font-semibold tracking-tight text-slate-900">SalesLeak</span>
+              <span className="text-[10px] text-slate-400">
+                by <span className="text-[#B08A45]">NobleArc</span>
+              </span>
+            </div>
           </div>
           <span className="truncate text-xs text-slate-500">{companyName}</span>
         </div>
