@@ -1,9 +1,12 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { requireSession } from "@/server/auth/session";
 import { canManageTeam } from "@/server/auth/permissions";
 import { NotAuthorized } from "@/components/auth/NotAuthorized";
 import { getSalesHealthReport } from "@/server/data/health";
 import { Card } from "@/components/ui";
+
+export const metadata: Metadata = { title: "Health" };
 
 export default async function HealthPage() {
   const session = await requireSession();

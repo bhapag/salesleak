@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/server/auth/session";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
+
+export const metadata: Metadata = { title: "Onboarding" };
 
 export default async function OnboardingPage() {
   const session = await requireSession();
@@ -16,6 +19,9 @@ export default async function OnboardingPage() {
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Welcome to SalesLeak</h1>
           <p className="mt-1 text-sm text-slate-500">A few quick steps to set up {company.name}&rsquo;s workspace.</p>
+          <p className="mt-2 text-xs text-slate-400">
+            by <span className="text-[#B08A45]">NobleArc</span>
+          </p>
         </div>
         <OnboardingWizard
           company={{

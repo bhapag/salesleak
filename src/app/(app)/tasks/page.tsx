@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getWorkQueueForCompany } from "@/server/data/tasks";
 import { WorkQueueView } from "@/components/tasks/WorkQueueView";
 import { requireSession } from "@/server/auth/session";
 import { getOwnerScope } from "@/server/auth/permissions";
+
+export const metadata: Metadata = { title: "Tasks" };
 
 export default async function TasksPage() {
   const session = await requireSession();

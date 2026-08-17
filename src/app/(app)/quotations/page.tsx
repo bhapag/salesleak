@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getQuotationsForCompany, getLeadPickerOptions, getSuggestedQuotationNumber } from "@/server/data/quotations";
 import { getProductsForCompany } from "@/server/data/products";
@@ -5,6 +6,8 @@ import { QuotationsTable } from "@/components/quotations/QuotationsTable";
 import { CreateQuotationEntry } from "@/components/quotations/CreateQuotationEntry";
 import { requireSession } from "@/server/auth/session";
 import { getOwnerScope } from "@/server/auth/permissions";
+
+export const metadata: Metadata = { title: "Quotations" };
 
 export default async function QuotationsPage() {
   const session = await requireSession();

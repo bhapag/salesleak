@@ -1,5 +1,9 @@
 # SalesLeak — Architecture
 
+## Brand
+
+SalesLeak is the product; NobleArc Technologies is the parent/master brand behind it. See [BRAND.md](BRAND.md) for the full hierarchy, palette, canonical logo assets (`/public/brand/noblearc/`), and exactly where the "by NobleArc" endorsement does and doesn't appear in the UI. This is a brand-layer concern only — it doesn't affect data model, tenancy, or any of the architecture below.
+
 ## Stack
 
 - **Next.js (App Router, TypeScript)** — server components for data fetching, server actions for mutations, no separate API layer for internal CRUD (except the one webhook route).

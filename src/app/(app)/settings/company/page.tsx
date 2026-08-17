@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import type { LeadSource } from "@/generated/prisma/client";
 import { requireSession } from "@/server/auth/session";
@@ -7,6 +8,8 @@ import { CompanySettingsForm } from "@/components/settings/CompanySettingsForm";
 import { ExportDataCard } from "@/components/settings/ExportDataCard";
 import { DemoResetCard } from "@/components/settings/DemoResetCard";
 import { Card } from "@/components/ui";
+
+export const metadata: Metadata = { title: "Settings" };
 
 export default async function CompanySettingsPage() {
   const session = await requireSession();
@@ -55,6 +58,10 @@ export default async function CompanySettingsPage() {
               <DemoResetCard />
             </div>
           )}
+
+          <p className="mt-8 text-xs text-slate-400">
+            SalesLeak is a product of <span className="text-[#B08A45]">NobleArc</span> Technologies.
+          </p>
         </div>
       </main>
     </div>

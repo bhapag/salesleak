@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getCustomersForCompany } from "@/server/data/customers";
 import { CustomersTable } from "@/components/customers/CustomersTable";
 import { requireSession } from "@/server/auth/session";
 import { getOwnerScope } from "@/server/auth/permissions";
+
+export const metadata: Metadata = { title: "Customers" };
 
 export default async function CustomersPage() {
   const session = await requireSession();

@@ -55,8 +55,11 @@ export function Sidebar({ companyName, role }: { companyName: string; role: Role
     <>
       {/* Mobile top bar */}
       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
-        <div className="flex items-center gap-2">
+        <div className="flex items-baseline gap-1.5">
           <span className="text-lg font-semibold tracking-tight text-slate-900">SalesLeak</span>
+          <span className="text-[10px] text-slate-400">
+            by <span className="text-[#B08A45]">NobleArc</span>
+          </span>
         </div>
         <button
           type="button"
@@ -76,7 +79,12 @@ export function Sidebar({ companyName, role }: { companyName: string; role: Role
       {/* Desktop sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
         <div className="flex flex-col gap-0.5 px-5 py-6">
-          <span className="text-lg font-semibold tracking-tight text-slate-900">SalesLeak</span>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-lg font-semibold tracking-tight text-slate-900">SalesLeak</span>
+            <span className="text-[10px] text-slate-400">
+              by <span className="text-[#B08A45]">NobleArc</span>
+            </span>
+          </div>
           <span className="truncate text-xs text-slate-500">{companyName}</span>
         </div>
         {navLinks}

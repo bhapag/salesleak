@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getLeadsForCompany } from "@/server/data/leads";
 import { LeadsTable } from "@/components/leads/LeadsTable";
 import { AddLeadCard } from "@/components/leads/AddLeadCard";
 import { requireSession } from "@/server/auth/session";
 import { getOwnerScope } from "@/server/auth/permissions";
+
+export const metadata: Metadata = { title: "Leads" };
 
 export default async function LeadsPage() {
   const session = await requireSession();

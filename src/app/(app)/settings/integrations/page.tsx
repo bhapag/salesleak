@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { requireSession } from "@/server/auth/session";
 import { canManageTeam } from "@/server/auth/permissions";
 import { NotAuthorized } from "@/components/auth/NotAuthorized";
@@ -5,6 +6,8 @@ import { getIntegrationsForCompany, getIngestionHistory, getFailedIngestions } f
 import { IntegrationCard } from "@/components/integrations/IntegrationCard";
 import { FailedIngestionQueue } from "@/components/integrations/FailedIngestionQueue";
 import { formatSource, formatDateTime } from "@/lib/format";
+
+export const metadata: Metadata = { title: "Integrations" };
 
 export default async function IntegrationsPage() {
   const session = await requireSession();

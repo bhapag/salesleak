@@ -35,6 +35,9 @@ export default async function WebsiteFormPage({ params }: { params: Promise<{ to
         <div className="mt-5">
           <WebsiteFormDemo token={token} />
         </div>
+        <p className="mt-6 text-center text-[11px] text-slate-400">
+          Powered by SalesLeak · <span className="text-[#B08A45]">NobleArc</span>
+        </p>
       </div>
     </div>
   );

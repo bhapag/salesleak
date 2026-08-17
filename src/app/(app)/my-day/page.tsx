@@ -1,9 +1,12 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getMyDayData } from "@/server/data/myDay";
 import { TaskActionsCard } from "@/components/tasks/TaskActionsCard";
 import { StatusBadge, QuotationStatusBadge, RepeatOrderBadge } from "@/components/badges";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { requireSession } from "@/server/auth/session";
+
+export const metadata: Metadata = { title: "My Day" };
 
 export default async function MyDayPage() {
   const session = await requireSession();

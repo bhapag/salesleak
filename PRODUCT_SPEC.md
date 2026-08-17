@@ -1,5 +1,7 @@
 # SalesLeak — Product Spec
 
+SalesLeak is a product of NobleArc Technologies (customer-facing: "SalesLeak by NobleArc"). See [BRAND.md](BRAND.md) for the full brand hierarchy and usage rules — inside the product itself, SalesLeak remains the primary, visible brand; NobleArc appears only as a small secondary endorsement.
+
 ## What it is
 
 SalesLeak is sales-management software for small B2B manufacturers, distributors, traders, and industrial businesses. It gives a business owner one place to see every sales enquiry, where it came from, who owns it, what's supposed to happen next, and whether anything is at risk of being forgotten.

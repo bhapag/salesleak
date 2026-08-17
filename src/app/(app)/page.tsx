@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getDashboardData } from "@/server/data/metrics";
 import { getCachedInsight } from "@/server/data/ai";
 import { formatCurrency } from "@/lib/format";
@@ -6,6 +7,8 @@ import { requireSession } from "@/server/auth/session";
 import { getOwnerScope } from "@/server/auth/permissions";
 import { AiSalesBrief, type SalesBriefData } from "@/components/ai/AiSalesBrief";
 import type { SalesBriefResult } from "@/server/ai/features/salesBrief";
+
+export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function Home() {
   const session = await requireSession();

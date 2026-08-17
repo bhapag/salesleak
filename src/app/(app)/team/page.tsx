@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getTeamOverview } from "@/server/data/team";
 import { formatCurrency, labelize } from "@/lib/format";
@@ -6,6 +7,8 @@ import { requireSession } from "@/server/auth/session";
 import { canManageTeam, canManageCompany } from "@/server/auth/permissions";
 import { NotAuthorized } from "@/components/auth/NotAuthorized";
 import { ManageTeamCard } from "@/components/team/ManageTeamCard";
+
+export const metadata: Metadata = { title: "Team" };
 
 export default async function TeamPage() {
   const session = await requireSession();

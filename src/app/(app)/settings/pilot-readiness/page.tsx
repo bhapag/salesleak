@@ -1,10 +1,13 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { requireSession } from "@/server/auth/session";
 import { canManageCompany } from "@/server/auth/permissions";
 import { NotAuthorized } from "@/components/auth/NotAuthorized";
 import { getPilotReadinessReport } from "@/server/data/pilotReadiness";
 import { Card } from "@/components/ui";
 import { formatCurrency } from "@/lib/format";
+
+export const metadata: Metadata = { title: "Pilot Readiness" };
 
 export default async function PilotReadinessPage() {
   const session = await requireSession();

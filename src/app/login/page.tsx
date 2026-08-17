@@ -1,8 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getSession } from "@/server/auth/session";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = { title: "Login" };
 
 const DEMO_PASSWORD = "password123";
 
@@ -32,6 +35,9 @@ export default async function LoginPage() {
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">SalesLeak</h1>
           <p className="mt-1 text-sm text-slate-500">See which leads and quotations are at risk before revenue is lost.</p>
+          <p className="mt-2 text-xs text-slate-400">
+            by <span className="text-[#B08A45]">NobleArc</span>
+          </p>
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
