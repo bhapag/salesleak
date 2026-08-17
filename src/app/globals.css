@@ -10,17 +10,112 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* SalesLeak brand tokens — see BRAND.md. Locked NobleArc/SalesLeak colors.
+     Generates bg-brand-navy, text-brand-navy, border-brand-navy, etc. */
+  --color-brand-navy: #0b1739;
+  --color-brand-navy-hover: #14235a;
+  --color-brand-warm-white: #f7f5f0;
+  --color-brand-gold: #c6a15b;
+  --color-brand-gold-dark: #9b742e;
+  --color-brand-gold-highlight: #e0c17a;
+  --color-brand-gold-secondary: #b58a3c;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ---------------------------------------------------------------------
+   Motion duration tokens. Not a native Tailwind theme namespace, so kept
+   as plain custom properties — reference via duration-(--dur-short) etc.
+   or inline style. Values match the approved SalesLeak visual system.
+--------------------------------------------------------------------- */
+:root {
+  --dur-micro: 120ms;
+  --dur-short: 180ms;
+  --dur-medium: 260ms;
+  --dur-step: 380ms;
+
+  /* Fast-start, gentle-settle entrances; quicker, sharper exits. No bounce. */
+  --ease-brand-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-brand-in: cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* ---------------------------------------------------------------------
+   Navy-tinted shadows (vs. Tailwind's default pure-black shadows). One
+   layer each, no glow, no color beyond the navy tint. Hand-written utility
+   classes — Tailwind v4's @theme namespace doesn't auto-generate shadow
+   utilities the way it does for colors, so these are applied directly.
+--------------------------------------------------------------------- */
+.shadow-card {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+.shadow-dropdown {
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+.shadow-modal {
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Metallic gold — the rare, premium-moment treatment. NOT for general UI.
+   See BRAND.md / visual-system spec: login/signup/onboarding brand card,
+   the Founding plan badge, one onboarding-completion accent, marketing
+   headlines. Never a button, never repeated, never body text.
+--------------------------------------------------------------------- */
+.metallic-gold {
+  background-image: linear-gradient(
+    115deg,
+    #9b742e 0%,
+    #c6a15b 32%,
+    #e0c17a 50%,
+    #c6a15b 68%,
+    #b58a3c 100%
+  );
+}
+
+.metallic-gold-text {
+  background-image: linear-gradient(
+    115deg,
+    #9b742e 0%,
+    #c6a15b 32%,
+    #e9cd8e 50%,
+    #c6a15b 68%,
+    #b58a3c 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------------------------------------------------------------------
+   Accessibility foundation.
+--------------------------------------------------------------------- */
+
+/* Visible keyboard focus everywhere — replaces browsers' inconsistent
+   default outline with one consistent, navy-tinted ring. Never removed
+   without a replacement. */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(11, 23, 57, 0.12), 0 0 0 1.5px var(--color-brand-navy);
+  border-radius: 4px;
+}
+
+/* Checkboxes/radios pick up the brand navy instead of the browser default
+   blue — a one-line fix, applies everywhere automatically. */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--color-brand-navy);
 }

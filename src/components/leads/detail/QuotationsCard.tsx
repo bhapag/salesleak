@@ -7,12 +7,16 @@ import { formatCurrency, formatDate, labelize } from "@/lib/format";
 import { CreateQuotationForm } from "@/components/quotations/CreateQuotationForm";
 import type { ProductOption } from "@/server/data/products";
 
+// Kept in sync with badges.tsx's quotationStatusStyles by hand (different
+// key set — raw Prisma enum here vs. display-status labels there). Rejected
+// is neutral, not red — red is reserved for genuine actionable risk, and a
+// rejected quotation is closed/historical, not something to act on today.
 const statusStyle: Record<string, string> = {
   DRAFT: "bg-slate-100 text-slate-600 ring-slate-200",
   SENT: "bg-amber-50 text-amber-700 ring-amber-200",
   FOLLOWED_UP: "bg-blue-50 text-blue-700 ring-blue-200",
   ACCEPTED: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  REJECTED: "bg-red-50 text-red-700 ring-red-200",
+  REJECTED: "bg-slate-100 text-slate-500 ring-slate-200",
   EXPIRED: "bg-slate-100 text-slate-400 ring-slate-200",
 };
 

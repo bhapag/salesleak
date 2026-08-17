@@ -3,6 +3,8 @@ import type { LeadRisk } from "@/lib/leadRisk";
 import type { QuotationDisplayStatus, QuotationRisk } from "@/lib/quotationRisk";
 import type { CustomerStatus, RepeatOrderStatus, CustomerSignal } from "@/lib/customerIntelligence";
 
+// Red is reserved for genuine, actionable risk (overdue, high-risk) — a
+// closed/dead deal is the opposite of that, so LOST is neutral, not red.
 const statusStyles: Record<string, string> = {
   NEW: "bg-slate-100 text-slate-700 ring-slate-200",
   CONTACTED: "bg-blue-50 text-blue-700 ring-blue-200",
@@ -10,7 +12,7 @@ const statusStyles: Record<string, string> = {
   QUOTATION_SENT: "bg-amber-50 text-amber-700 ring-amber-200",
   NEGOTIATION: "bg-purple-50 text-purple-700 ring-purple-200",
   WON: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  LOST: "bg-red-50 text-red-700 ring-red-200",
+  LOST: "bg-slate-100 text-slate-500 ring-slate-200",
 };
 
 export function StatusBadge({ status }: { status: string }) {
@@ -150,7 +152,7 @@ const quotationStatusStyles: Record<QuotationDisplayStatus, string> = {
   "Follow-up Due": "bg-red-50 text-red-700 ring-red-200",
   Negotiating: "bg-purple-50 text-purple-700 ring-purple-200",
   Won: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  Lost: "bg-red-50 text-red-700 ring-red-200",
+  Lost: "bg-slate-100 text-slate-500 ring-slate-200",
   Expired: "bg-slate-100 text-slate-400 ring-slate-200",
 };
 
@@ -197,7 +199,7 @@ const customerStatusStyles: Record<CustomerStatus, string> = {
   "Active Customer": "bg-blue-50 text-blue-700 ring-blue-200",
   "Repeat Customer": "bg-emerald-50 text-emerald-700 ring-emerald-200",
   Dormant: "bg-amber-50 text-amber-700 ring-amber-200",
-  Lost: "bg-red-50 text-red-700 ring-red-200",
+  Lost: "bg-slate-100 text-slate-500 ring-slate-200",
 };
 
 export function CustomerStatusBadge({ status }: { status: CustomerStatus }) {
