@@ -69,6 +69,38 @@ body {
 }
 
 /* ---------------------------------------------------------------------
+   Onboarding step transitions — direction-aware fade+shift when moving
+   between the wizard's steps. Small movement only, never a full slide.
+--------------------------------------------------------------------- */
+@keyframes step-enter-forward {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes step-enter-back {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.step-enter-forward {
+  animation: step-enter-forward var(--dur-medium) var(--ease-brand-out) both;
+}
+.step-enter-back {
+  animation: step-enter-back var(--dur-medium) var(--ease-brand-out) both;
+}
+
+/* ---------------------------------------------------------------------
    Navy-tinted shadows (vs. Tailwind's default pure-black shadows). One
    layer each, no glow, no color beyond the navy tint. Hand-written utility
    classes — Tailwind v4's @theme namespace doesn't auto-generate shadow
