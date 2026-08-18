@@ -112,7 +112,7 @@ export function AddLeadCard({
         <AiEnquiryExtractor onExtracted={applyExtraction} />
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field label="Customer / Contact Name *">
+          <Field label="Customer / Contact Name" required>
             <input value={form.customerName} onChange={(e) => set("customerName", e.target.value)} className={inputClass} />
           </Field>
           <Field label="Company Name">
@@ -185,10 +185,10 @@ export function AddLeadCard({
         </Field>
 
         <div className="grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2">
-          <Field label="Next Action *">
+          <Field label="Next Action" required>
             <input value={form.nextAction} onChange={(e) => set("nextAction", e.target.value)} className={inputClass} />
           </Field>
-          <Field label="Deadline *">
+          <Field label="Deadline" required>
             <input
               type="date"
               value={form.nextActionDeadline}

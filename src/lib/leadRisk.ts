@@ -31,13 +31,30 @@ export type LeadRisk = {
 
 const HIGH_RISK_VALUE_THRESHOLD = 50000;
 
-export function getLeadRisk(lead: LeadRiskInput, now: Date = new Date(), highValueThreshold: number = HIGH_RISK_VALUE_THRESHOLD): LeadRisk {
+/**
+ * `todayStart` defaults to `now` itself, preserving the original exact-instant
+ * comparison for any caller that doesn't pass one — same "optional, additive,
+ * backward-compatible" pattern as `highValueThreshold`. Callers that want
+ * "overdue" to respect the company's own timezone (rather than the server's)
+ * should pass `startOfDayInTimezone(now, company.timezone)` from
+ * src/lib/timezone.ts — see server/data/leads.ts.
+ */
+export function getLeadRisk(
+  lead: LeadRiskInput,
+  now: Date = new Date(),
+  highValueThreshold: number = HIGH_RISK_VALUE_THRESHOLD,
+  todayStart: Date = now
+): LeadRisk {
   const isActive = lead.status !== "WON" && lead.status !== "LOST";
 
   const missingOwner = isActive && !lead.ownerId;
   const missingNextAction = isActive && !lead.nextAction;
   const missingDeadline = isActive && !lead.nextActionDeadline;
-  const isOverdue = isActive && lead.nextActionDeadline != null && lead.nextActionDeadline < now;
+  // A deadline only becomes "overdue" once its whole calendar day (in the
+  // company's timezone) has passed — not the instant its stored UTC-midnight
+  // timestamp ticks over, which could be hours before the business day it
+  // actually names has even started locally.
+  const isOverdue = isActive && lead.nextActionDeadline != null && lead.nextActionDeadline < todayStart;
   const isUntouched = isActive && lead.lastActivityAt == null;
 
   const reasons: string[] = [];

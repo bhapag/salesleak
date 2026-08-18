@@ -77,7 +77,7 @@ export function FollowUpsCard({
             const risk = getTaskRisk(task, now);
             const assignee = users.find((u) => u.id === task.assignedToId);
             return (
-              <li key={task.id} className="flex items-center justify-between gap-3 py-2.5">
+              <li key={task.id} className={`flex items-center justify-between gap-3 py-2.5 ${risk.isSeriouslyOverdue ? "bg-red-50/60 -mx-2 px-2 rounded-lg" : ""}`}>
                 <div className="min-w-0">
                   <p className="truncate text-sm text-slate-800">{task.title}</p>
                   <p className="text-xs text-slate-400">
@@ -87,9 +87,11 @@ export function FollowUpsCard({
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span
-                    className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${statusStyle[risk.bucket]}`}
+                    className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${
+                      risk.isSeriouslyOverdue ? "bg-red-600 text-white" : `ring-1 ring-inset ${statusStyle[risk.bucket]}`
+                    }`}
                   >
-                    {TASK_BUCKET_LABEL[risk.bucket]}
+                    {risk.isSeriouslyOverdue ? `Overdue ${risk.daysOverdue}d` : TASK_BUCKET_LABEL[risk.bucket]}
                   </span>
                   {task.status === "PENDING" && (
                     <button

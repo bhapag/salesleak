@@ -53,14 +53,15 @@ export function ActivityTimeline({ lead, actingUserId }: { lead: LeadDetail; act
       {lead.activities.length === 0 ? (
         <p className="text-sm text-slate-500">No activity logged yet.</p>
       ) : (
-        <ul className="flex flex-col gap-4 border-t border-slate-100 pt-4">
+        <ul className="flex flex-col divide-y divide-slate-50 border-t border-slate-100">
           {lead.activities.map((activity) => (
-            <li key={activity.id} className="flex gap-3">
-              <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${typeStyle[activity.type] ?? "bg-slate-400"}`} />
+            <li key={activity.id} className="flex gap-3 py-3 first:pt-4">
+              <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${typeStyle[activity.type] ?? "bg-slate-400"}`} aria-hidden="true" />
               <div className="min-w-0">
                 <p className="text-sm text-slate-800">{activity.notes}</p>
-                <p className="text-xs text-slate-400">
-                  {labelize(activity.type)} · {activity.user?.name ?? "System"} · {formatDateTime(activity.createdAt)}
+                <p className="mt-0.5 text-xs text-slate-400">
+                  <span className="font-medium text-slate-500">{activity.user?.name ?? "System"}</span> · {labelize(activity.type)} ·{" "}
+                  {formatDateTime(activity.createdAt)}
                 </p>
               </div>
             </li>

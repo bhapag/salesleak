@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { getLeadRisk } from "@/lib/leadRisk";
 import { getCompanyRiskThresholds } from "@/server/data/companySettings";
+import { startOfDayInTimezone } from "@/lib/timezone";
 
 export async function getLeadsForCompany(companyId: string) {
-  const [leads, thresholds] = await Promise.all([
+  const [leads, thresholds, company] = await Promise.all([
     prisma.lead.findMany({
       where: { companyId },
       include: {
@@ -15,9 +16,14 @@ export async function getLeadsForCompany(companyId: string) {
       orderBy: { createdAt: "desc" },
     }),
     getCompanyRiskThresholds(companyId),
+    prisma.company.findFirst({ where: { id: companyId }, select: { timezone: true } }),
   ]);
 
   const now = new Date();
+  // Computed once per request and reused for every lead below — "overdue"
+  // respects the company's own timezone, not server-local/UTC.
+  const todayStart = startOfDayInTimezone(now, company?.timezone ?? "Asia/Kolkata");
+
   return leads.map((lead) => {
     const lastActivityAt = lead.activities[0]?.createdAt ?? null;
     const risk = getLeadRisk(
@@ -31,7 +37,8 @@ export async function getLeadsForCompany(companyId: string) {
         lastActivityAt,
       },
       now,
-      thresholds.highValueThreshold
+      thresholds.highValueThreshold,
+      todayStart
     );
     return { ...lead, lastActivityAt, risk };
   });
@@ -59,6 +66,8 @@ export async function getLeadDetail(leadId: string, companyId: string) {
 
   const thresholds = await getCompanyRiskThresholds(companyId);
   const lastActivityAt = lead.activities[0]?.createdAt ?? null;
+  const now = new Date();
+  const todayStart = startOfDayInTimezone(now, lead.company.timezone);
   const risk = getLeadRisk(
     {
       status: lead.status,
@@ -69,8 +78,9 @@ export async function getLeadDetail(leadId: string, companyId: string) {
       estimatedValue: lead.estimatedValue,
       lastActivityAt,
     },
-    new Date(),
-    thresholds.highValueThreshold
+    now,
+    thresholds.highValueThreshold,
+    todayStart
   );
 
   return { ...lead, lastActivityAt, risk };

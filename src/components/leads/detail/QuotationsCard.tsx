@@ -63,7 +63,7 @@ export function QuotationsCard({
                   {labelize(q.status)}
                 </span>
               </div>
-              <p className="mt-1 text-sm text-slate-600">{formatCurrency(q.value)}</p>
+              <p className="mt-1 text-sm font-medium tabular-nums text-slate-800">{formatCurrency(q.value)}</p>
               <p className="mt-1 text-xs text-slate-400">
                 Sent {formatDate(q.sentAt)}
                 {q.validUntil && ` · Valid until ${formatDate(q.validUntil)}`}

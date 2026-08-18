@@ -84,11 +84,15 @@ export function NextActionCard({ lead, actingUserId }: { lead: LeadDetail; actin
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <SecondaryButton onClick={handleOpenEdit}>Update next action</SecondaryButton>
-            {lead.status === "NEW" && (
-              <SecondaryButton onClick={handleMarkContacted} disabled={pending}>
-                {pending ? "Saving…" : "Mark contacted"}
-              </SecondaryButton>
+            {lead.status === "NEW" ? (
+              <>
+                <PrimaryButton onClick={handleMarkContacted} disabled={pending}>
+                  {pending ? "Saving…" : "Mark contacted"}
+                </PrimaryButton>
+                <SecondaryButton onClick={handleOpenEdit}>Update next action</SecondaryButton>
+              </>
+            ) : (
+              <SecondaryButton onClick={handleOpenEdit}>Update next action</SecondaryButton>
             )}
           </div>
           <ErrorText>{error}</ErrorText>

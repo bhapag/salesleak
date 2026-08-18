@@ -1,7 +1,22 @@
-import type { LeadRisk } from "@/lib/leadRisk";
+import type { LeadDetail } from "@/server/data/leads";
 
-export function WarningBanner({ risk }: { risk: LeadRisk }) {
+// Swaps the generic "deadline has passed" reason for a concrete day count
+// when we know the deadline — "Follow-up overdue by 2 days" is more
+// actionable than a vague warning, and reads as calm fact rather than alarm.
+function concreteReasons(lead: LeadDetail): string[] {
+  if (!lead.risk.isOverdue || !lead.nextActionDeadline) return lead.risk.reasons;
+
+  const days = Math.floor((Date.now() - lead.nextActionDeadline.getTime()) / (1000 * 60 * 60 * 24));
+  const overdueLabel = days < 1 ? "Follow-up overdue today" : `Follow-up overdue by ${days} day${days === 1 ? "" : "s"}`;
+
+  return lead.risk.reasons.map((r) => (r === "Next-action deadline has passed" ? overdueLabel : r));
+}
+
+export function WarningBanner({ lead }: { lead: LeadDetail }) {
+  const { risk } = lead;
   if (!risk.needsAttention) return null;
+
+  const reasons = concreteReasons(lead);
 
   return (
     <div
@@ -21,7 +36,7 @@ export function WarningBanner({ risk }: { risk: LeadRisk }) {
           {risk.isHighRiskOpportunity ? "High-risk opportunity — needs attention now" : "This lead needs attention"}
         </p>
         <ul className={`mt-1 list-inside list-disc text-sm ${risk.isHighRiskOpportunity ? "text-red-700" : "text-amber-700"}`}>
-          {risk.reasons.map((r) => (
+          {reasons.map((r) => (
             <li key={r}>{r}</li>
           ))}
         </ul>

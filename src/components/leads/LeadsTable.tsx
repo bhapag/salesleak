@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { LeadWithRisk } from "@/server/data/leads";
 import { StatusBadge, PriorityBadge, RiskBadges, SourceBadge } from "@/components/badges";
+import { inputClass, selectClass, PrimaryButton, SecondaryButton } from "@/components/ui";
 import { formatCurrency, formatDate, formatRelativeToNow, formatSource, labelize } from "@/lib/format";
 import { LEAD_STATUSES, LEAD_SOURCES } from "@/lib/constants";
 
@@ -12,8 +13,13 @@ type SortDir = "asc" | "desc";
 
 const PRIORITY_RANK: Record<string, number> = { LOW: 0, MEDIUM: 1, HIGH: 2, URGENT: 3 };
 
-const selectClass =
-  "rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none";
+// A left rail, not a background wash — obvious at a glance without tinting
+// the whole row. Reserved for genuine risk; a healthy row stays plain.
+function riskRailClass(risk: LeadWithRisk["risk"]): string {
+  if (risk.isHighRiskOpportunity) return "border-l-[3px] border-l-red-500";
+  if (risk.needsAttention) return "border-l-[3px] border-l-amber-400";
+  return "border-l-[3px] border-l-transparent";
+}
 
 export function LeadsTable({ leads, users }: { leads: LeadWithRisk[]; users: { id: string; name: string }[] }) {
   const [search, setSearch] = useState("");
@@ -77,7 +83,7 @@ export function LeadsTable({ leads, users }: { leads: LeadWithRisk[]; users: { i
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-card lg:flex-row lg:items-center lg:justify-between">
         <div className="relative w-full lg:max-w-xs">
           <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -85,7 +91,7 @@ export function LeadsTable({ leads, users }: { leads: LeadWithRisk[]; users: { i
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search leads, customers, products..."
-            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:outline-none"
+            className={`${inputClass} pl-9`}
           />
         </div>
 
@@ -129,7 +135,11 @@ export function LeadsTable({ leads, users }: { leads: LeadWithRisk[]; users: { i
           </label>
 
           {activeFilterCount > 0 && (
-            <button type="button" onClick={resetFilters} className="text-sm font-medium text-slate-500 hover:text-slate-900">
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="text-sm font-medium text-slate-500 transition-colors duration-(--dur-micro) hover:text-slate-900"
+            >
               Clear filters
             </button>
           )}
@@ -144,19 +154,25 @@ export function LeadsTable({ leads, users }: { leads: LeadWithRisk[]; users: { i
         <EmptyState hasFilters={activeFilterCount > 0 || search.length > 0} onReset={resetFilters} />
       ) : (
         <>
-          <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm md:block">
+          <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-card md:block">
             <table className="w-full min-w-[1100px] text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Lead</th>
-                  <th className="px-4 py-3 font-medium">Source</th>
-                  <th className="px-4 py-3 font-medium">Product / Qty</th>
-                  <SortableHeader label="Value" active={sortKey === "estimatedValue"} dir={sortDir} onClick={() => toggleSort("estimatedValue")} />
-                  <th className="px-4 py-3 font-medium">Owner</th>
+                  <th className="px-4 py-3">Lead</th>
+                  <th className="px-4 py-3">Source</th>
+                  <th className="px-4 py-3">Product / Qty</th>
+                  <SortableHeader
+                    label="Value"
+                    align="right"
+                    active={sortKey === "estimatedValue"}
+                    dir={sortDir}
+                    onClick={() => toggleSort("estimatedValue")}
+                  />
+                  <th className="px-4 py-3">Owner</th>
                   <SortableHeader label="Priority" active={sortKey === "priority"} dir={sortDir} onClick={() => toggleSort("priority")} />
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Last Activity</th>
-                  <th className="px-4 py-3 font-medium">Next Action</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Last Activity</th>
+                  <th className="px-4 py-3">Next Action</th>
                   <SortableHeader
                     label="Deadline"
                     active={sortKey === "nextActionDeadline"}
@@ -185,47 +201,39 @@ export function LeadsTable({ leads, users }: { leads: LeadWithRisk[]; users: { i
 }
 
 function LeadRow({ lead }: { lead: LeadWithRisk }) {
-  const rowClass = lead.risk.isHighRiskOpportunity
-    ? "bg-red-50/60"
-    : lead.risk.isOverdue
-      ? "bg-red-50/40"
-      : lead.risk.needsAttention
-        ? "bg-amber-50/40"
-        : "";
-
   return (
-    <tr className={`transition-colors hover:bg-slate-50 ${rowClass}`}>
-      <td className="max-w-[220px] px-4 py-3 align-top">
+    <tr className={`transition-colors duration-(--dur-micro) hover:bg-slate-50 ${riskRailClass(lead.risk)}`}>
+      <td className="max-w-[220px] px-4 py-3.5 align-top">
         <Link href={`/leads/${lead.id}`} className="font-medium text-slate-900 hover:underline">
           {lead.title}
         </Link>
         <p className="truncate text-xs text-slate-500">{lead.customer.name}</p>
-        <div className="mt-1">
+        <div className="mt-1.5">
           <RiskBadges risk={lead.risk} />
         </div>
       </td>
-      <td className="px-4 py-3 align-top">
+      <td className="px-4 py-3.5 align-top">
         <SourceBadge source={lead.source} />
       </td>
-      <td className="px-4 py-3 align-top text-slate-600">
+      <td className="px-4 py-3.5 align-top text-slate-600">
         {lead.product ?? "—"}
         {lead.quantity && <p className="text-xs text-slate-400">{lead.quantity}</p>}
       </td>
-      <td className="px-4 py-3 align-top font-medium text-slate-700">{formatCurrency(lead.estimatedValue)}</td>
-      <td className="px-4 py-3 align-top text-slate-600">
+      <td className="px-4 py-3.5 align-top text-right font-semibold tabular-nums text-slate-900">{formatCurrency(lead.estimatedValue)}</td>
+      <td className="px-4 py-3.5 align-top text-slate-600">
         {lead.owner ? lead.owner.name : <span className="font-medium text-amber-700">Unassigned</span>}
       </td>
-      <td className="px-4 py-3 align-top">
+      <td className="px-4 py-3.5 align-top">
         <PriorityBadge priority={lead.priority} />
       </td>
-      <td className="px-4 py-3 align-top">
+      <td className="px-4 py-3.5 align-top">
         <StatusBadge status={lead.status} />
       </td>
-      <td className="px-4 py-3 align-top text-slate-600">{formatRelativeToNow(lead.lastActivityAt)}</td>
-      <td className="max-w-[200px] px-4 py-3 align-top text-slate-600">
+      <td className="px-4 py-3.5 align-top tabular-nums text-slate-600">{formatRelativeToNow(lead.lastActivityAt)}</td>
+      <td className="max-w-[200px] px-4 py-3.5 align-top text-slate-600">
         {lead.nextAction ?? (lead.risk.isActive ? <span className="font-medium text-amber-700">Not set</span> : "—")}
       </td>
-      <td className={`px-4 py-3 align-top ${lead.risk.isOverdue ? "font-medium text-red-600" : "text-slate-600"}`}>
+      <td className={`px-4 py-3.5 align-top tabular-nums ${lead.risk.isOverdue ? "font-medium text-red-600" : "text-slate-600"}`}>
         {lead.nextActionDeadline
           ? formatDate(lead.nextActionDeadline)
           : lead.risk.isActive
@@ -240,12 +248,8 @@ function LeadCard({ lead }: { lead: LeadWithRisk }) {
   return (
     <Link
       href={`/leads/${lead.id}`}
-      className={`block rounded-xl border p-4 shadow-sm ${
-        lead.risk.isHighRiskOpportunity
-          ? "border-red-200 bg-red-50/60"
-          : lead.risk.needsAttention
-            ? "border-amber-200 bg-amber-50/40"
-            : "border-slate-200 bg-white"
+      className={`block rounded-xl border bg-white p-4 shadow-card transition-colors duration-(--dur-micro) hover:border-slate-300 ${
+        lead.risk.isHighRiskOpportunity ? "border-red-200" : lead.risk.needsAttention ? "border-amber-200" : "border-slate-200"
       }`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -253,24 +257,18 @@ function LeadCard({ lead }: { lead: LeadWithRisk }) {
           <p className="truncate font-medium text-slate-900">{lead.title}</p>
           <p className="text-xs text-slate-500">{lead.customer.name}</p>
         </div>
-        <span className="shrink-0 text-sm font-medium text-slate-700">{formatCurrency(lead.estimatedValue)}</span>
+        <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-900">{formatCurrency(lead.estimatedValue)}</span>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
         <StatusBadge status={lead.status} />
         <PriorityBadge priority={lead.priority} />
       </div>
-      <div className="mt-2">
-        <RiskBadges risk={lead.risk} />
-      </div>
+      {lead.risk.needsAttention && (
+        <div className="mt-2">
+          <RiskBadges risk={lead.risk} />
+        </div>
+      )}
       <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
-        <div>
-          <dt className="text-slate-400">Owner</dt>
-          <dd className="text-slate-700">{lead.owner?.name ?? "Unassigned"}</dd>
-        </div>
-        <div>
-          <dt className="text-slate-400">Source</dt>
-          <dd className="mt-0.5"><SourceBadge source={lead.source} /></dd>
-        </div>
         <div>
           <dt className="text-slate-400">Next action</dt>
           <dd className="text-slate-700">{lead.nextAction ?? "Not set"}</dd>
@@ -279,18 +277,40 @@ function LeadCard({ lead }: { lead: LeadWithRisk }) {
           <dt className="text-slate-400">Deadline</dt>
           <dd className={lead.risk.isOverdue ? "font-medium text-red-600" : "text-slate-700"}>{formatDate(lead.nextActionDeadline)}</dd>
         </div>
+        <div>
+          <dt className="text-slate-400">Owner</dt>
+          <dd className="text-slate-700">{lead.owner?.name ?? "Unassigned"}</dd>
+        </div>
+        <div>
+          <dt className="text-slate-400">Source</dt>
+          <dd className="mt-0.5"><SourceBadge source={lead.source} /></dd>
+        </div>
       </dl>
     </Link>
   );
 }
 
-function SortableHeader({ label, active, dir, onClick }: { label: string; active: boolean; dir: SortDir; onClick: () => void }) {
+function SortableHeader({
+  label,
+  active,
+  dir,
+  onClick,
+  align = "left",
+}: {
+  label: string;
+  active: boolean;
+  dir: SortDir;
+  onClick: () => void;
+  align?: "left" | "right";
+}) {
   return (
-    <th className="px-4 py-3 font-medium">
+    <th className={`px-4 py-3 ${align === "right" ? "text-right" : "text-left"}`}>
       <button
         type="button"
         onClick={onClick}
-        className={`flex items-center gap-1 ${active ? "text-slate-900" : "text-slate-500"} hover:text-slate-900`}
+        className={`inline-flex items-center gap-1 transition-colors duration-(--dur-micro) ${align === "right" ? "flex-row-reverse" : ""} ${
+          active ? "text-slate-900" : "text-slate-500"
+        } hover:text-slate-900`}
       >
         {label}
         <span className="text-[10px]">{active ? (dir === "asc" ? "▲" : "▼") : "↕"}</span>
@@ -309,23 +329,16 @@ function EmptyState({ hasFilters, onReset }: { hasFilters: boolean; onReset: () 
           : "Use “+ Add Lead” above to log one by hand, or bring in your existing enquiries."}
       </p>
       {hasFilters ? (
-        <button
-          type="button"
-          onClick={onReset}
-          className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-        >
+        <PrimaryButton className="mt-4" onClick={onReset}>
           Clear filters
-        </button>
+        </PrimaryButton>
       ) : (
         <div className="mt-4 flex flex-wrap justify-center gap-2">
-          <Link href="/leads/import" className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-            Import CSV
+          <Link href="/leads/import">
+            <SecondaryButton>Import CSV</SecondaryButton>
           </Link>
-          <Link
-            href="/settings/integrations"
-            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-          >
-            Configure a lead source
+          <Link href="/settings/integrations">
+            <SecondaryButton>Configure a lead source</SecondaryButton>
           </Link>
         </div>
       )}

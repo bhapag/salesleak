@@ -63,7 +63,15 @@ export async function changeStatus(leadId: string, status: Exclude<LeadStatus, "
   const lead = await getOwnedLead(leadId, session);
   if (lead.status === status) return;
 
-  await prisma.lead.update({ where: { id: leadId }, data: { status } });
+  // Reopening a closed lead (WON/LOST -> an active status) must clear the
+  // stale close timestamp — otherwise wonAt/lostAt keeps claiming the lead
+  // closed on a date it's since been reopened past, even though every current
+  // read of these fields already gates on status === WON/LOST and so isn't
+  // visibly wrong today. Only one of the two is ever set, since a lead is
+  // never simultaneously WON and LOST.
+  const closeTimestampReset = lead.status === "WON" ? { wonAt: null } : lead.status === "LOST" ? { lostAt: null } : {};
+
+  await prisma.lead.update({ where: { id: leadId }, data: { status, ...closeTimestampReset } });
   await prisma.activity.create({
     data: {
       leadId,
@@ -200,7 +208,10 @@ export async function markWon(leadId: string, _actingUserId: string | null) {
   const session = await requireSession();
   const lead = await getOwnedLead(leadId, session);
 
-  await prisma.lead.update({ where: { id: leadId }, data: { status: "WON", wonAt: new Date() } });
+  // Clears a stale lostAt too, in case this lead was previously LOST — a lead
+  // is never both Won and Lost at once, so the two timestamps must stay
+  // mutually exclusive across any closed-to-closed transition.
+  await prisma.lead.update({ where: { id: leadId }, data: { status: "WON", wonAt: new Date(), lostAt: null } });
   await prisma.activity.create({
     data: { leadId, userId: session.userId, type: "STATUS_CHANGE", notes: `Marked as Won (was ${lead.status.replace("_", " ")}).` },
   });
@@ -225,9 +236,11 @@ export async function markLost(leadId: string, lostReason: string, _actingUserId
   const trimmed = lostReason.trim();
   if (!trimmed) throw new Error("A lost reason is required.");
 
+  // Clears a stale wonAt too, in case this lead was previously WON — same
+  // mutual-exclusivity reasoning as markWon's lostAt clear above.
   await prisma.lead.update({
     where: { id: leadId },
-    data: { status: "LOST", lostAt: new Date(), lostReason: trimmed },
+    data: { status: "LOST", lostAt: new Date(), lostReason: trimmed, wonAt: null },
   });
   await prisma.activity.create({
     data: {

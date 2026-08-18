@@ -13,7 +13,7 @@ export function OverviewCard({ lead }: { lead: LeadDetail }) {
     { label: "Source", value: <SourceBadge source={lead.source} /> },
     { label: "Product / requirement", value: lead.product ?? "—" },
     { label: "Quantity", value: lead.quantity ?? "—" },
-    { label: "Opportunity value", value: formatCurrency(lead.estimatedValue) },
+    { label: "Opportunity value", value: <span className="tabular-nums">{formatCurrency(lead.estimatedValue)}</span> },
   ];
 
   return (

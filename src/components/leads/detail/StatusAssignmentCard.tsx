@@ -18,7 +18,12 @@ export function StatusAssignmentCard({
   users: { id: string; name: string; role: string }[];
   actingUserId: string | null;
 }) {
-  const [status, setStatus] = useState<string>(lead.status);
+  const isClosed = !lead.risk.isActive;
+  // A closed lead has no active status of its own to preselect (WON/LOST
+  // aren't in the reopen dropdown's options) — NEGOTIATION is the most
+  // plausible stage a deal was closed from, and it's freely changeable
+  // before confirming.
+  const [status, setStatus] = useState<string>(isClosed ? "NEGOTIATION" : lead.status);
   const [ownerId, setOwnerId] = useState<string>(lead.ownerId ?? "");
   const [statusError, setStatusError] = useState<string | null>(null);
   const [ownerError, setOwnerError] = useState<string | null>(null);
@@ -32,14 +37,12 @@ export function StatusAssignmentCard({
   const [syncedOwnerId, setSyncedOwnerId] = useState(lead.ownerId);
   if (syncedStatus !== lead.status) {
     setSyncedStatus(lead.status);
-    setStatus(lead.status);
+    setStatus(isClosed ? "NEGOTIATION" : lead.status);
   }
   if (syncedOwnerId !== lead.ownerId) {
     setSyncedOwnerId(lead.ownerId);
     setOwnerId(lead.ownerId ?? "");
   }
-
-  const isClosed = !lead.risk.isActive;
 
   function handleStatusUpdate() {
     setStatusError(null);
@@ -70,23 +73,26 @@ export function StatusAssignmentCard({
         <PriorityBadge priority={lead.priority} />
       </div>
 
-      {!isClosed && (
-        <div className="mb-4 flex flex-col gap-2">
-          <Field label="Change status">
-            <select value={status} onChange={(e) => setStatus(e.target.value)} className={selectClass}>
-              {ACTIVE_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {labelize(s)}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <ErrorText>{statusError}</ErrorText>
-          <PrimaryButton onClick={handleStatusUpdate} disabled={statusPending || status === lead.status}>
-            {statusPending ? "Updating…" : "Update status"}
-          </PrimaryButton>
-        </div>
-      )}
+      <div className="mb-4 flex flex-col gap-2">
+        {isClosed && (
+          <p className="text-xs text-slate-500">
+            Reopening moves this lead back to an active stage — pick where it should resume, then confirm.
+          </p>
+        )}
+        <Field label={isClosed ? "Reopen into" : "Change status"}>
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className={selectClass}>
+            {ACTIVE_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {labelize(s)}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <ErrorText>{statusError}</ErrorText>
+        <PrimaryButton onClick={handleStatusUpdate} disabled={statusPending || (!isClosed && status === lead.status)}>
+          {statusPending ? "Updating…" : isClosed ? "Reopen lead" : "Update status"}
+        </PrimaryButton>
+      </div>
 
       <div className="flex flex-col gap-2 border-t border-slate-100 pt-4">
         <Field label="Assigned salesperson">
