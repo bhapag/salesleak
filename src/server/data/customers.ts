@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getLeadRisk } from "@/lib/leadRisk";
 import { getQuotationRisk } from "@/lib/quotationRisk";
 import { computeCustomerStatus, computeRepeatOrderSignal, computeCustomerSignals } from "@/lib/customerIntelligence";
+import { getWonValueForLead } from "@/lib/wonValue";
 import { formatCurrency, formatSource, labelize } from "@/lib/format";
 import { getCompanyRiskThresholds, type CompanyRiskThresholds } from "@/server/data/companySettings";
 import type { LeadStatus, LeadPriority, QuotationStatus } from "@/generated/prisma/client";
@@ -36,6 +37,7 @@ type LeadForMetrics = {
     followUpDate: Date | null;
     nextAction: string | null;
     updatedAt: Date;
+    wonAt: Date | null;
   }[];
   activities: { createdAt: Date }[];
 };
@@ -47,7 +49,11 @@ function computeCustomerMetrics(leads: LeadForMetrics[], now: Date, thresholds: 
   const lostLeads = leads.filter((l) => l.status === "LOST");
   const activeLeads = leads.filter((l) => l.status !== "WON" && l.status !== "LOST");
 
-  const totalWonValue = sum(wonLeads.map((l) => l.estimatedValue ?? 0));
+  // Prefers each won lead's ACCEPTED quotation value over its estimatedValue
+  // (a pre-quotation guess) — same rule Dashboard/team money figures already
+  // use (see lib/wonValue.ts); this customer aggregate had drifted from that
+  // rule, undercounting/overcounting "Won to date" whenever the two differed.
+  const totalWonValue = sum(wonLeads.map((l) => getWonValueForLead(l, l.quotations)));
   const totalLostValue = sum(lostLeads.map((l) => l.estimatedValue ?? 0));
   const totalQuotationValue = sum(allQuotations.map((q) => q.value));
   const totalOpportunityValue = sum(leads.map((l) => l.estimatedValue ?? 0));
@@ -65,7 +71,9 @@ function computeCustomerMetrics(leads: LeadForMetrics[], now: Date, thresholds: 
   const hasActiveLead = activeLeads.length > 0;
 
   const repeatOrderSignal = computeRepeatOrderSignal(
-    wonLeads.filter((l): l is LeadForMetrics & { wonAt: Date } => l.wonAt != null).map((l) => ({ wonAt: l.wonAt, value: l.estimatedValue ?? 0 })),
+    wonLeads
+      .filter((l): l is LeadForMetrics & { wonAt: Date } => l.wonAt != null)
+      .map((l) => ({ wonAt: l.wonAt, value: getWonValueForLead(l, l.quotations) })),
     now
   );
 
@@ -123,6 +131,7 @@ function computeCustomerMetrics(leads: LeadForMetrics[], now: Date, thresholds: 
   return {
     totalEnquiries: leads.length,
     totalQuotations: allQuotations.length,
+    activeOpportunityCount: activeLeads.length,
     totalWonValue,
     totalLostValue,
     totalQuotationValue,

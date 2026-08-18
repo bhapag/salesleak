@@ -5,8 +5,8 @@ export function OverviewCard({ customer }: { customer: CustomerDetail }) {
   const items: { label: string; value: React.ReactNode }[] = [
     { label: "Company", value: customer.companyName ?? customer.name },
     { label: "Contact person", value: customer.contactPerson ?? "—" },
-    { label: "Phone", value: customer.phone ?? "—" },
-    { label: "Email", value: customer.email ?? "—" },
+    { label: "Phone", value: customer.phone ? <a href={`tel:${customer.phone}`} className="hover:underline">{customer.phone}</a> : "—" },
+    { label: "Email", value: customer.email ? <a href={`mailto:${customer.email}`} className="hover:underline">{customer.email}</a> : "—" },
     { label: "Location", value: [customer.city, customer.state].filter(Boolean).join(", ") || "—" },
     { label: "GST number", value: customer.gstNumber ?? "—" },
   ];

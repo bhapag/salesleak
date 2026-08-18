@@ -4,14 +4,20 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { CustomerSummary } from "@/server/data/customers";
 import { CustomerStatusBadge, RepeatOrderBadge, CustomerSignalBadges } from "@/components/badges";
+import { inputClass, selectClass, PrimaryButton } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { CUSTOMER_STATUSES } from "@/lib/constants";
 
-type SortKey = "totalWonValue" | "lastEnquiryDate" | "lastWonDate";
+type SortKey = "totalWonValue" | "lastActivityDate";
 type SortDir = "asc" | "desc";
 
-const selectClass =
-  "rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none";
+// A left rail, not a background wash — same pattern as Leads/Quotations.
+// Reserved for genuine attention signals; a healthy customer stays plain.
+function riskRailClass(customer: CustomerSummary): string {
+  if (customer.signals.some((s) => s.severity === "critical")) return "border-l-[3px] border-l-red-500";
+  if (customer.signals.length > 0) return "border-l-[3px] border-l-amber-400";
+  return "border-l-[3px] border-l-transparent";
+}
 
 export function CustomersTable({ customers, users }: { customers: CustomerSummary[]; users: { id: string; name: string }[] }) {
   const [search, setSearch] = useState("");
@@ -43,8 +49,7 @@ export function CustomersTable({ customers, users }: { customers: CustomerSummar
     return [...result].sort((a, b) => {
       let cmp = 0;
       if (sortKey === "totalWonValue") cmp = a.totalWonValue - b.totalWonValue;
-      if (sortKey === "lastEnquiryDate") cmp = (a.lastEnquiryDate?.getTime() ?? 0) - (b.lastEnquiryDate?.getTime() ?? 0);
-      if (sortKey === "lastWonDate") cmp = (a.lastWonDate?.getTime() ?? 0) - (b.lastWonDate?.getTime() ?? 0);
+      if (sortKey === "lastActivityDate") cmp = (a.lastActivityDate?.getTime() ?? 0) - (b.lastActivityDate?.getTime() ?? 0);
       return sortDir === "asc" ? cmp : -cmp;
     });
   }, [customers, search, status, ownerFilter, repeatDueOnly, sortKey, sortDir]);
@@ -69,7 +74,7 @@ export function CustomersTable({ customers, users }: { customers: CustomerSummar
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-card lg:flex-row lg:items-center lg:justify-between">
         <div className="relative w-full lg:max-w-xs">
           <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -77,7 +82,7 @@ export function CustomersTable({ customers, users }: { customers: CustomerSummar
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search customers, contacts..."
-            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:outline-none"
+            className={`${inputClass} pl-9`}
           />
         </div>
 
@@ -112,7 +117,11 @@ export function CustomersTable({ customers, users }: { customers: CustomerSummar
           </label>
 
           {activeFilterCount > 0 && (
-            <button type="button" onClick={resetFilters} className="text-sm font-medium text-slate-500 hover:text-slate-900">
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="text-sm font-medium text-slate-500 transition-colors duration-(--dur-micro) hover:text-slate-900"
+            >
               Clear filters
             </button>
           )}
@@ -127,26 +136,29 @@ export function CustomersTable({ customers, users }: { customers: CustomerSummar
         <EmptyState hasFilters={activeFilterCount > 0 || search.length > 0} onReset={resetFilters} />
       ) : (
         <>
-          <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm md:block">
-            <table className="w-full min-w-[1200px] text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+          <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-card md:block">
+            <table className="w-full min-w-[1100px] text-left text-sm">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Customer</th>
-                  <th className="px-4 py-3 font-medium">Contact</th>
-                  <th className="px-4 py-3 font-medium">Location</th>
-                  <th className="px-4 py-3 font-medium">Enquiries</th>
-                  <th className="px-4 py-3 font-medium">Quotations</th>
-                  <SortableHeader label="Won Value" active={sortKey === "totalWonValue"} dir={sortDir} onClick={() => toggleSort("totalWonValue")} />
-                  <th className="px-4 py-3 font-medium">Salesperson</th>
+                  <th className="px-4 py-3">Customer</th>
+                  <th className="px-4 py-3">Contact</th>
+                  <th className="px-4 py-3">Salesperson</th>
+                  <th className="px-4 py-3 text-right">Active</th>
                   <SortableHeader
-                    label="Last Enquiry"
-                    active={sortKey === "lastEnquiryDate"}
+                    label="Won Value"
+                    align="right"
+                    active={sortKey === "totalWonValue"}
                     dir={sortDir}
-                    onClick={() => toggleSort("lastEnquiryDate")}
+                    onClick={() => toggleSort("totalWonValue")}
                   />
-                  <SortableHeader label="Last Order" active={sortKey === "lastWonDate"} dir={sortDir} onClick={() => toggleSort("lastWonDate")} />
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Repeat Signal</th>
+                  <SortableHeader
+                    label="Last Activity"
+                    active={sortKey === "lastActivityDate"}
+                    dir={sortDir}
+                    onClick={() => toggleSort("lastActivityDate")}
+                  />
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Repeat Signal</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -169,35 +181,41 @@ export function CustomersTable({ customers, users }: { customers: CustomerSummar
 }
 
 function CustomerRow({ customer }: { customer: CustomerSummary }) {
-  const needsAttention = customer.signals.some((s) => s.severity === "critical");
-  const rowClass = needsAttention ? "bg-red-50/40" : customer.signals.length > 0 ? "bg-amber-50/30" : "";
-
   return (
-    <tr className={`transition-colors hover:bg-slate-50 ${rowClass}`}>
-      <td className="max-w-[200px] px-4 py-3 align-top">
+    <tr className={`transition-colors duration-(--dur-micro) hover:bg-slate-50 ${riskRailClass(customer)}`}>
+      <td className="max-w-[220px] px-4 py-3.5 align-top">
         <Link href={`/customers/${customer.id}`} className="font-medium text-slate-900 hover:underline">
           {customer.name}
         </Link>
         {customer.contactPerson && <p className="truncate text-xs text-slate-500">{customer.contactPerson}</p>}
+        <p className="truncate text-xs text-slate-400">
+          {[customer.city, customer.state].filter(Boolean).join(", ") || "—"} · {customer.totalEnquiries} enquir
+          {customer.totalEnquiries === 1 ? "y" : "ies"} · {customer.totalQuotations} quotation{customer.totalQuotations === 1 ? "" : "s"}
+        </p>
+        {customer.signals.length > 0 && (
+          <div className="mt-1.5">
+            <CustomerSignalBadges signals={customer.signals} />
+          </div>
+        )}
       </td>
-      <td className="px-4 py-3 align-top text-slate-600">
-        {customer.phone && <p>{customer.phone}</p>}
-        {customer.email && <p className="text-xs text-slate-400">{customer.email}</p>}
+      <td className="px-4 py-3.5 align-top text-slate-600">
+        <ContactLines phone={customer.phone} email={customer.email} />
       </td>
-      <td className="px-4 py-3 align-top text-slate-600">{[customer.city, customer.state].filter(Boolean).join(", ") || "—"}</td>
-      <td className="px-4 py-3 align-top text-slate-600">{customer.totalEnquiries}</td>
-      <td className="px-4 py-3 align-top text-slate-600">{customer.totalQuotations}</td>
-      <td className="px-4 py-3 align-top font-medium text-slate-700">{formatCurrency(customer.totalWonValue)}</td>
-      <td className="px-4 py-3 align-top text-slate-600">{customer.assignedSalesperson?.name ?? "—"}</td>
-      <td className="px-4 py-3 align-top text-slate-600">{formatDate(customer.lastEnquiryDate)}</td>
-      <td className="px-4 py-3 align-top text-slate-600">{formatDate(customer.lastWonDate)}</td>
-      <td className="px-4 py-3 align-top">
+      <td className="px-4 py-3.5 align-top text-slate-600">
+        {customer.assignedSalesperson ? customer.assignedSalesperson.name : <span className="font-medium text-amber-700">Unassigned</span>}
+      </td>
+      <td className="px-4 py-3.5 align-top text-right tabular-nums text-slate-600">{customer.activeOpportunityCount}</td>
+      <td className="px-4 py-3.5 align-top text-right font-semibold tabular-nums text-slate-900">{formatCurrency(customer.totalWonValue)}</td>
+      <td className="px-4 py-3.5 align-top tabular-nums text-slate-600">{formatDate(customer.lastActivityDate)}</td>
+      <td className="px-4 py-3.5 align-top">
         <CustomerStatusBadge status={customer.customerStatus} />
       </td>
-      <td className="px-4 py-3 align-top">
-        <div className="flex flex-col gap-1.5">
+      <td className="px-4 py-3.5 align-top">
+        <div className="flex flex-col gap-1">
           <RepeatOrderBadge eligible={customer.repeatOrderSignal.eligible} status={customer.repeatOrderSignal.status} />
-          <CustomerSignalBadges signals={customer.signals} />
+          {customer.repeatOrderSignal.lastOrderDate && (
+            <span className="text-xs text-slate-400">Last order {formatDate(customer.repeatOrderSignal.lastOrderDate)}</span>
+          )}
         </div>
       </td>
     </tr>
@@ -208,12 +226,12 @@ function CustomerCard({ customer }: { customer: CustomerSummary }) {
   return (
     <Link
       href={`/customers/${customer.id}`}
-      className={`block rounded-xl border p-4 shadow-sm ${
+      className={`block rounded-xl border bg-white p-4 shadow-card transition-colors duration-(--dur-micro) hover:border-slate-300 ${
         customer.signals.some((s) => s.severity === "critical")
-          ? "border-red-200 bg-red-50/60"
+          ? "border-red-200"
           : customer.signals.length > 0
-            ? "border-amber-200 bg-amber-50/40"
-            : "border-slate-200 bg-white"
+            ? "border-amber-200"
+            : "border-slate-200"
       }`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -221,46 +239,89 @@ function CustomerCard({ customer }: { customer: CustomerSummary }) {
           <p className="truncate font-medium text-slate-900">{customer.name}</p>
           <p className="text-xs text-slate-500">{customer.contactPerson ?? [customer.city, customer.state].filter(Boolean).join(", ")}</p>
         </div>
-        <span className="shrink-0 text-sm font-medium text-slate-700">{formatCurrency(customer.totalWonValue)}</span>
+        <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-900">{formatCurrency(customer.totalWonValue)}</span>
       </div>
+
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        <CustomerStatusBadge status={customer.customerStatus} />
         <RepeatOrderBadge eligible={customer.repeatOrderSignal.eligible} status={customer.repeatOrderSignal.status} />
+        <CustomerStatusBadge status={customer.customerStatus} />
       </div>
-      <div className="mt-2">
-        <CustomerSignalBadges signals={customer.signals} />
-      </div>
+
+      {customer.signals.length > 0 && (
+        <div className="mt-2">
+          <CustomerSignalBadges signals={customer.signals} />
+        </div>
+      )}
+
       <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
         <div>
           <dt className="text-slate-400">Salesperson</dt>
           <dd className="text-slate-700">{customer.assignedSalesperson?.name ?? "Unassigned"}</dd>
         </div>
         <div>
-          <dt className="text-slate-400">Enquiries / Quotations</dt>
-          <dd className="text-slate-700">
-            {customer.totalEnquiries} / {customer.totalQuotations}
-          </dd>
+          <dt className="text-slate-400">Active opportunities</dt>
+          <dd className="tabular-nums text-slate-700">{customer.activeOpportunityCount}</dd>
         </div>
         <div>
-          <dt className="text-slate-400">Last enquiry</dt>
-          <dd className="text-slate-700">{formatDate(customer.lastEnquiryDate)}</dd>
+          <dt className="text-slate-400">Last activity</dt>
+          <dd className="text-slate-700">{formatDate(customer.lastActivityDate)}</dd>
         </div>
         <div>
-          <dt className="text-slate-400">Last order</dt>
-          <dd className="text-slate-700">{formatDate(customer.lastWonDate)}</dd>
+          <dt className="text-slate-400">Contact</dt>
+          <dd className="truncate text-slate-700">{customer.phone ?? customer.email ?? "—"}</dd>
         </div>
       </dl>
     </Link>
   );
 }
 
-function SortableHeader({ label, active, dir, onClick }: { label: string; active: boolean; dir: SortDir; onClick: () => void }) {
+function ContactLines({ phone, email }: { phone: string | null; email: string | null }) {
+  if (!phone && !email) return <span className="text-slate-400">—</span>;
   return (
-    <th className="px-4 py-3 font-medium">
+    <div className="flex flex-col gap-0.5">
+      {phone && (
+        <a
+          href={`tel:${phone}`}
+          onClick={(e) => e.stopPropagation()}
+          className="text-slate-700 transition-colors duration-(--dur-micro) hover:text-slate-900 hover:underline"
+        >
+          {phone}
+        </a>
+      )}
+      {email && (
+        <a
+          href={`mailto:${email}`}
+          onClick={(e) => e.stopPropagation()}
+          className="truncate text-xs text-slate-400 transition-colors duration-(--dur-micro) hover:text-slate-700 hover:underline"
+        >
+          {email}
+        </a>
+      )}
+    </div>
+  );
+}
+
+function SortableHeader({
+  label,
+  active,
+  dir,
+  onClick,
+  align = "left",
+}: {
+  label: string;
+  active: boolean;
+  dir: SortDir;
+  onClick: () => void;
+  align?: "left" | "right";
+}) {
+  return (
+    <th className={`px-4 py-3 ${align === "right" ? "text-right" : "text-left"}`}>
       <button
         type="button"
         onClick={onClick}
-        className={`flex items-center gap-1 ${active ? "text-slate-900" : "text-slate-500"} hover:text-slate-900`}
+        className={`inline-flex items-center gap-1 transition-colors duration-(--dur-micro) ${align === "right" ? "flex-row-reverse" : ""} ${
+          active ? "text-slate-900" : "text-slate-500"
+        } hover:text-slate-900`}
       >
         {label}
         <span className="text-[10px]">{active ? (dir === "asc" ? "▲" : "▼") : "↕"}</span>
@@ -279,16 +340,12 @@ function EmptyState({ hasFilters, onReset }: { hasFilters: boolean; onReset: () 
           : "Customers are created automatically from leads — add or import a lead to get started."}
       </p>
       {hasFilters ? (
-        <button
-          type="button"
-          onClick={onReset}
-          className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-        >
+        <PrimaryButton className="mt-4" onClick={onReset}>
           Clear filters
-        </button>
+        </PrimaryButton>
       ) : (
-        <Link href="/leads" className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
-          Go to Leads
+        <Link href="/leads">
+          <PrimaryButton className="mt-4">Go to Leads</PrimaryButton>
         </Link>
       )}
     </div>

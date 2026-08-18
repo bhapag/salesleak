@@ -19,7 +19,7 @@ export function OpportunitySummaryCard({ customer }: { customer: CustomerDetail 
         {items.map((item) => (
           <div key={item.label}>
             <dt className="text-xs text-slate-400">{item.label}</dt>
-            <dd className={`text-sm font-medium ${item.emphasis ?? "text-slate-800"}`}>{item.value}</dd>
+            <dd className={`text-sm font-medium tabular-nums ${item.emphasis ?? "text-slate-800"}`}>{item.value}</dd>
           </div>
         ))}
       </dl>
