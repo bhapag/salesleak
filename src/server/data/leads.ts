@@ -83,7 +83,11 @@ export async function getLeadDetail(leadId: string, companyId: string) {
     todayStart
   );
 
-  return { ...lead, lastActivityAt, risk };
+  // Exposed so embedded client components (FollowUpsCard) can classify this
+  // lead's tasks against the same company-timezone-aware boundary already
+  // computed here for the lead's own risk — instead of each defaulting to
+  // its own render-time instant and drifting out of sync with it.
+  return { ...lead, lastActivityAt, risk, todayStart };
 }
 
 export type LeadDetail = NonNullable<Awaited<ReturnType<typeof getLeadDetail>>>;

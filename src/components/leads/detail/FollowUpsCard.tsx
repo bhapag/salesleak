@@ -74,7 +74,7 @@ export function FollowUpsCard({
       {lead.tasks.length > 0 && (
         <ul className="flex flex-col divide-y divide-slate-100">
           {lead.tasks.map((task) => {
-            const risk = getTaskRisk(task, now);
+            const risk = getTaskRisk(task, now, lead.todayStart);
             const assignee = users.find((u) => u.id === task.assignedToId);
             return (
               <li key={task.id} className={`flex items-center justify-between gap-3 py-2.5 ${risk.isSeriouslyOverdue ? "bg-red-50/60 -mx-2 px-2 rounded-lg" : ""}`}>
