@@ -1,12 +1,21 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { getTeamOverview } from "@/server/data/team";
+import { getTeamOverview, type TeamOverviewRow } from "@/server/data/team";
 import { formatCurrency, labelize } from "@/lib/format";
 import { requireSession } from "@/server/auth/session";
 import { canManageTeam, canManageCompany } from "@/server/auth/permissions";
 import { NotAuthorized } from "@/components/auth/NotAuthorized";
 import { ManageTeamCard } from "@/components/team/ManageTeamCard";
+
+// A left rail, not a row wash — same pattern as Leads/Quotations/Customers.
+// Overdue follow-ups is the genuine red signal; missing-next-action or at-risk
+// quotation value is the amber attention signal; a clean row stays plain.
+function teamRiskRailClass(row: TeamOverviewRow): string {
+  if (row.overdueFollowUps > 0) return "border-l-[3px] border-l-red-500";
+  if (row.leadsMissingNextAction > 0 || row.quotationValueAtRisk > 0) return "border-l-[3px] border-l-amber-400";
+  return "border-l-[3px] border-l-transparent";
+}
 
 export const metadata: Metadata = { title: "Team" };
 
@@ -38,60 +47,70 @@ export default async function TeamPage() {
           />
         )}
 
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-card">
           <table className="w-full min-w-[1300px] text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500">
               <tr>
-                <th className="px-4 py-3 font-medium">Salesperson</th>
-                <th className="px-4 py-3 font-medium">Active Leads</th>
-                <th className="px-4 py-3 font-medium">New Leads</th>
-                <th className="px-4 py-3 font-medium">Due Today</th>
-                <th className="px-4 py-3 font-medium">Overdue Follow-ups</th>
-                <th className="px-4 py-3 font-medium">Missing Next Action</th>
-                <th className="px-4 py-3 font-medium">Open Quotation Value</th>
-                <th className="px-4 py-3 font-medium">Quotation Value at Risk</th>
-                <th className="px-4 py-3 font-medium">Won Deals</th>
-                <th className="px-4 py-3 font-medium">Won Value</th>
-                <th className="px-4 py-3 font-medium">Upcoming Tasks</th>
+                <th className="px-4 py-3">Salesperson</th>
+                <th className="px-4 py-3 text-right">Active Leads</th>
+                <th className="px-4 py-3 text-right">New Leads</th>
+                <th className="px-4 py-3 text-right">Due Today</th>
+                <th className="px-4 py-3 text-right">Overdue Follow-ups</th>
+                <th className="px-4 py-3 text-right">Missing Next Action</th>
+                <th className="px-4 py-3 text-right">Open Quotation Value</th>
+                <th className="px-4 py-3 text-right">Quotation Value at Risk</th>
+                <th className="px-4 py-3 text-right">Won Deals</th>
+                <th className="px-4 py-3 text-right">Won Value</th>
+                <th className="px-4 py-3 text-right">Upcoming Tasks</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {sorted.map((row) => (
-                <tr key={row.userId} className="cursor-pointer transition-colors hover:bg-slate-50">
+                <tr
+                  key={row.userId}
+                  className={`cursor-pointer transition-colors duration-(--dur-micro) hover:bg-slate-50 ${teamRiskRailClass(row)}`}
+                >
                   <td className="px-4 py-3">
                     <Link href={`/team/${row.userId}`} className="block">
-                      <span className="font-medium text-slate-900 hover:underline">{row.name}</span>
+                      <span className={`font-medium hover:underline ${row.isActive ? "text-slate-900" : "text-slate-400"}`}>{row.name}</span>
+                      {!row.isActive && (
+                        <span className="ml-1.5 inline-flex items-center rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
+                          Inactive
+                        </span>
+                      )}
                       <p className="text-xs text-slate-400">{labelize(row.role)}</p>
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">
+                  <td className="px-4 py-3 text-right tabular-nums text-slate-600">
                     <Link href={`/team/${row.userId}`}>{row.activeLeads}</Link>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">
+                  <td className="px-4 py-3 text-right tabular-nums text-slate-600">
                     <Link href={`/team/${row.userId}`}>{row.newLeads}</Link>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">
+                  <td className="px-4 py-3 text-right tabular-nums text-slate-600">
                     <Link href={`/team/${row.userId}`}>{row.followUpsDueToday}</Link>
                   </td>
-                  <td className={`px-4 py-3 ${row.overdueFollowUps > 0 ? "font-medium text-red-600" : "text-slate-600"}`}>
+                  <td className={`px-4 py-3 text-right tabular-nums ${row.overdueFollowUps > 0 ? "font-medium text-red-600" : "text-slate-600"}`}>
                     <Link href={`/team/${row.userId}`}>{row.overdueFollowUps}</Link>
                   </td>
-                  <td className={`px-4 py-3 ${row.leadsMissingNextAction > 0 ? "font-medium text-amber-700" : "text-slate-600"}`}>
+                  <td
+                    className={`px-4 py-3 text-right tabular-nums ${row.leadsMissingNextAction > 0 ? "font-medium text-amber-700" : "text-slate-600"}`}
+                  >
                     <Link href={`/team/${row.userId}`}>{row.leadsMissingNextAction}</Link>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">
+                  <td className="px-4 py-3 text-right tabular-nums text-slate-600">
                     <Link href={`/team/${row.userId}`}>{formatCurrency(row.openQuotationValue)}</Link>
                   </td>
-                  <td className={`px-4 py-3 ${row.quotationValueAtRisk > 0 ? "font-medium text-red-600" : "text-slate-600"}`}>
+                  <td className={`px-4 py-3 text-right tabular-nums ${row.quotationValueAtRisk > 0 ? "font-medium text-red-600" : "text-slate-600"}`}>
                     <Link href={`/team/${row.userId}`}>{formatCurrency(row.quotationValueAtRisk)}</Link>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">
+                  <td className="px-4 py-3 text-right tabular-nums text-slate-600">
                     <Link href={`/team/${row.userId}`}>{row.wonDeals}</Link>
                   </td>
-                  <td className="px-4 py-3 font-medium text-emerald-600">
+                  <td className="px-4 py-3 text-right font-medium tabular-nums text-emerald-600">
                     <Link href={`/team/${row.userId}`}>{formatCurrency(row.wonValue)}</Link>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">
+                  <td className="px-4 py-3 text-right tabular-nums text-slate-600">
                     <Link href={`/team/${row.userId}`}>{row.upcomingTasks}</Link>
                   </td>
                 </tr>

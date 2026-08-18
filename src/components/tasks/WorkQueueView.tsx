@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { TaskActionsCard } from "./TaskActionsCard";
+import { inputClass, selectClass } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import type { WorkQueue, WorkQueueTask } from "@/server/data/tasks";
 
@@ -37,19 +38,15 @@ export function WorkQueueView({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search customer, lead, action..."
-          className="w-full max-w-xs rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:outline-none"
+          className={`${inputClass} w-full max-w-xs`}
         />
-        <select
-          value={ownerFilter}
-          onChange={(e) => setOwnerFilter(e.target.value)}
-          className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
-        >
+        <select value={ownerFilter} onChange={(e) => setOwnerFilter(e.target.value)} className={selectClass} aria-label="Filter by salesperson">
           <option value="ALL">All salespeople</option>
           {users.map((u) => (
             <option key={u.id} value={u.id}>
@@ -66,11 +63,11 @@ export function WorkQueueView({
       <div>
         <div className="mb-3 flex items-center gap-2">
           <h2 className="text-sm font-semibold text-slate-900">Completed</h2>
-          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-100 px-1.5 text-xs font-semibold text-emerald-700">
+          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-slate-100 px-1.5 text-xs font-semibold tabular-nums text-slate-500">
             {completed.length}
           </span>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white shadow-card">
           {completed.length === 0 ? (
             <div className="px-5 py-8 text-center text-sm text-slate-500">No completed follow-ups yet.</div>
           ) : (
@@ -104,7 +101,7 @@ function WorkQueueSection({
     <div>
       <div className="mb-3 flex items-center gap-2">
         <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
-        <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-semibold ${toneClass}`}>
+        <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-semibold tabular-nums ${toneClass}`}>
           {tasks.length}
         </span>
       </div>
@@ -125,15 +122,15 @@ function CompletedTaskRow({ task }: { task: WorkQueueTask }) {
   return (
     <li className="flex items-center justify-between gap-3 px-4 py-3">
       <div className="min-w-0">
-        <p className="truncate text-sm text-slate-700">{task.title}</p>
+        <p className="truncate text-sm text-slate-500 line-through decoration-slate-300">{task.title}</p>
         <p className="text-xs text-slate-400">
           {task.lead.customer.name} ·{" "}
-          <Link href={`/leads/${task.leadId}`} className="hover:underline">
+          <Link href={`/leads/${task.leadId}`} className="transition-colors duration-(--dur-micro) hover:underline">
             {task.lead.title}
           </Link>
         </p>
       </div>
-      <span className="shrink-0 text-xs text-slate-400">{task.completedAt ? formatDate(task.completedAt) : ""}</span>
+      <span className="shrink-0 text-xs tabular-nums text-slate-400">{task.completedAt ? formatDate(task.completedAt) : ""}</span>
     </li>
   );
 }

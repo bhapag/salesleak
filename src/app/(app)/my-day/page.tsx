@@ -32,17 +32,29 @@ export default async function MyDayPage() {
           ))}
         </Section>
 
+        {data.upcoming.length > 0 && (
+          <Section title="Upcoming" tone="slate" count={data.upcoming.length} emptyText="">
+            {data.upcoming.map((task) => (
+              <TaskActionsCard key={task.id} task={task} actingUserId={session.userId} />
+            ))}
+          </Section>
+        )}
+
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <ListCard title="New Enquiries" count={data.newEnquiries.length} emptyText="No new enquiries assigned to you.">
             {data.newEnquiries.map((lead) => (
-              <Link key={lead.id} href={`/leads/${lead.id}`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-slate-50">
+              <Link
+                key={lead.id}
+                href={`/leads/${lead.id}`}
+                className="flex items-center justify-between gap-3 px-5 py-3 transition-colors duration-(--dur-micro) hover:bg-slate-50"
+              >
                 <div className="min-w-0">
                   <p className="truncate text-sm text-slate-800">{lead.title}</p>
                   <p className="text-xs text-slate-400">{lead.customer.name}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <StatusBadge status={lead.status} />
-                  <span className="text-sm font-medium text-slate-700">{formatCurrency(lead.estimatedValue)}</span>
+                  <span className="text-sm font-medium tabular-nums text-slate-700">{formatCurrency(lead.estimatedValue)}</span>
                 </div>
               </Link>
             ))}
@@ -50,7 +62,11 @@ export default async function MyDayPage() {
 
           <ListCard title="Quotations Needing Follow-up" count={data.quotationsNeedingFollowUp.length} emptyText="No quotations need follow-up.">
             {data.quotationsNeedingFollowUp.map((q) => (
-              <Link key={q.id} href={`/quotations/${q.id}`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-slate-50">
+              <Link
+                key={q.id}
+                href={`/quotations/${q.id}`}
+                className="flex items-center justify-between gap-3 px-5 py-3 transition-colors duration-(--dur-micro) hover:bg-slate-50"
+              >
                 <div className="min-w-0">
                   <p className="truncate text-sm text-slate-800">
                     {q.quotationNumber} <span className="text-slate-400">· {q.lead.customer.name}</span>
@@ -58,7 +74,7 @@ export default async function MyDayPage() {
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <QuotationStatusBadge status={q.risk.displayStatus} />
-                  <span className="text-sm font-medium text-slate-700">{formatCurrency(q.value)}</span>
+                  <span className="text-sm font-medium tabular-nums text-slate-700">{formatCurrency(q.value)}</span>
                 </div>
               </Link>
             ))}
@@ -66,12 +82,16 @@ export default async function MyDayPage() {
 
           <ListCard title="High-Value Opportunities" count={data.highValueAttention.length} emptyText="No high-value opportunities need attention.">
             {data.highValueAttention.map((lead) => (
-              <Link key={lead.id} href={`/leads/${lead.id}`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-slate-50">
+              <Link
+                key={lead.id}
+                href={`/leads/${lead.id}`}
+                className="flex items-center justify-between gap-3 px-5 py-3 transition-colors duration-(--dur-micro) hover:bg-slate-50"
+              >
                 <div className="min-w-0">
                   <p className="truncate text-sm text-slate-800">{lead.title}</p>
                   <p className="text-xs text-slate-400">{lead.customer.name}</p>
                 </div>
-                <span className="shrink-0 text-sm font-medium text-red-600">{formatCurrency(lead.estimatedValue)}</span>
+                <span className="shrink-0 text-sm font-medium tabular-nums text-red-600">{formatCurrency(lead.estimatedValue)}</span>
               </Link>
             ))}
           </ListCard>
@@ -82,7 +102,11 @@ export default async function MyDayPage() {
             emptyText="No repeat-order opportunities assigned to you."
           >
             {data.repeatOrderOpportunities.map((customer) => (
-              <Link key={customer.id} href={`/customers/${customer.id}`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-slate-50">
+              <Link
+                key={customer.id}
+                href={`/customers/${customer.id}`}
+                className="flex items-center justify-between gap-3 px-5 py-3 transition-colors duration-(--dur-micro) hover:bg-slate-50"
+              >
                 <div className="min-w-0">
                   <p className="truncate text-sm text-slate-800">{customer.name}</p>
                   <p className="text-xs text-slate-400">
@@ -94,14 +118,6 @@ export default async function MyDayPage() {
             ))}
           </ListCard>
         </div>
-
-        {data.upcoming.length > 0 && (
-          <Section title="Upcoming" tone="slate" count={data.upcoming.length} emptyText="">
-            {data.upcoming.map((task) => (
-              <TaskActionsCard key={task.id} task={task} actingUserId={session.userId} />
-            ))}
-          </Section>
-        )}
       </main>
     </div>
   );
@@ -125,7 +141,9 @@ function Section({
     <div>
       <div className="mb-3 flex items-center gap-2">
         <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
-        <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-semibold ${toneClass}`}>{count}</span>
+        <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-semibold tabular-nums ${toneClass}`}>
+          {count}
+        </span>
       </div>
       {count === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center text-sm text-slate-500">{emptyText}</div>
@@ -138,10 +156,10 @@ function Section({
 
 function ListCard({ title, count, emptyText, children }: { title: string; count: number; emptyText: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="rounded-xl border border-slate-200 bg-white shadow-card">
       <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
         <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
-        <span className="text-xs text-slate-400">{count}</span>
+        <span className="text-xs tabular-nums text-slate-400">{count}</span>
       </div>
       {count === 0 ? <div className="px-5 py-8 text-center text-sm text-slate-500">{emptyText}</div> : <div className="divide-y divide-slate-100">{children}</div>}
     </div>

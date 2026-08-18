@@ -4,10 +4,10 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { PriorityBadge } from "@/components/badges";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { TASK_BUCKET_LABEL, type TaskBucket } from "@/lib/taskRisk";
+import { TASK_BUCKET_LABEL, type TaskBucket, type TaskRisk } from "@/lib/taskRisk";
 import { completeTask, updateNextAction, addNote } from "@/server/actions/leads";
 import { rescheduleTask } from "@/server/actions/tasks";
-import { Field, PrimaryButton, SecondaryButton, ErrorText, inputClass } from "@/components/ui";
+import { Field, PrimaryButton, SecondaryButton, GhostButton, ErrorText, inputClass } from "@/components/ui";
 import type { WorkQueueTask } from "@/server/data/tasks";
 
 const bucketStyle: Record<TaskBucket, string> = {
@@ -17,6 +17,16 @@ const bucketStyle: Record<TaskBucket, string> = {
   completed: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   cancelled: "bg-slate-100 text-slate-400 ring-slate-200",
 };
+
+// A left rail, not a full-card wash — same pattern as Leads/Quotations/
+// Customers. Seriously overdue (3+ days, existing taskRisk.ts business logic)
+// gets a stronger solid rail+badge than a task that's merely a day late, so
+// urgency reads as a gradient rather than one flat "everything is red" state.
+function riskRailClass(risk: TaskRisk): string {
+  if (risk.bucket === "overdue") return risk.isSeriouslyOverdue ? "border-l-[3px] border-l-red-600" : "border-l-[3px] border-l-red-400";
+  if (risk.bucket === "due_today") return "border-l-[3px] border-l-amber-400";
+  return "border-l-[3px] border-l-transparent";
+}
 
 type ActiveForm = null | "reschedule" | "nextAction" | "note";
 
@@ -98,11 +108,7 @@ export function TaskActionsCard({ task, actingUserId }: { task: WorkQueueTask; a
   }
 
   return (
-    <div
-      className={`rounded-xl border p-4 shadow-sm ${
-        task.risk.bucket === "overdue" ? "border-red-200 bg-red-50/40" : task.risk.bucket === "due_today" ? "border-amber-200 bg-amber-50/30" : "border-slate-200 bg-white"
-      }`}
-    >
+    <div className={`rounded-xl border border-slate-200 bg-white p-4 shadow-card ${riskRailClass(task.risk)}`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-sm font-medium text-slate-900">{task.title}</p>
@@ -117,7 +123,9 @@ export function TaskActionsCard({ task, actingUserId }: { task: WorkQueueTask; a
         <div className="flex shrink-0 items-center gap-2">
           <PriorityBadge priority={task.lead.priority} />
           <span
-            className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${bucketStyle[task.risk.bucket]}`}
+            className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${
+              task.risk.isSeriouslyOverdue ? "bg-red-600 text-white font-semibold" : `ring-1 ring-inset ${bucketStyle[task.risk.bucket]}`
+            }`}
           >
             {task.risk.bucket === "overdue" ? `${task.risk.daysOverdue}d overdue` : TASK_BUCKET_LABEL[task.risk.bucket]}
           </span>
@@ -125,38 +133,38 @@ export function TaskActionsCard({ task, actingUserId }: { task: WorkQueueTask; a
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-        <span>Due {formatDate(task.dueDate)}</span>
-        <span>Value {formatCurrency(task.lead.estimatedValue)}</span>
+        <span className="tabular-nums">Due {formatDate(task.dueDate)}</span>
+        <span className="tabular-nums">Value {formatCurrency(task.lead.estimatedValue)}</span>
         {openQuotation && (
-          <Link href={`/quotations/${openQuotation.id}`} className="text-slate-600 hover:underline">
+          <Link href={`/quotations/${openQuotation.id}`} className="text-slate-600 transition-colors duration-(--dur-micro) hover:underline">
             Quotation {openQuotation.quotationNumber} →
           </Link>
         )}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <SecondaryButton onClick={handleComplete} disabled={pending} className="text-xs">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <PrimaryButton onClick={handleComplete} disabled={pending} className="!px-3 !py-1.5 text-xs">
           {pending && activeForm === null ? "…" : "Complete"}
-        </SecondaryButton>
-        <SecondaryButton onClick={() => toggleForm("reschedule")} className="text-xs">
+        </PrimaryButton>
+        <SecondaryButton onClick={() => toggleForm("reschedule")} className="!px-3 !py-1.5 text-xs">
           Reschedule
         </SecondaryButton>
-        <SecondaryButton onClick={() => toggleForm("nextAction")} className="text-xs">
+        <GhostButton onClick={() => toggleForm("nextAction")} className="!px-3 !py-1.5 text-xs">
           Update Next Action
-        </SecondaryButton>
-        <SecondaryButton onClick={() => toggleForm("note")} className="text-xs">
+        </GhostButton>
+        <GhostButton onClick={() => toggleForm("note")} className="!px-3 !py-1.5 text-xs">
           Add Note
-        </SecondaryButton>
+        </GhostButton>
         <Link
           href={`/leads/${task.leadId}`}
-          className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+          className="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 transition-colors duration-(--dur-micro) hover:bg-slate-100 hover:text-slate-900"
         >
           Open Lead
         </Link>
         {openQuotation && (
           <Link
             href={`/quotations/${openQuotation.id}`}
-            className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            className="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 transition-colors duration-(--dur-micro) hover:bg-slate-100 hover:text-slate-900"
           >
             Open Quotation
           </Link>

@@ -3,6 +3,7 @@ import { getLeadsForCompany } from "./leads";
 import { getQuotationsForCompany } from "./quotations";
 import { getWorkQueueForCompany } from "./tasks";
 import { getTaskRisk } from "@/lib/taskRisk";
+import { startOfDayInTimezone } from "@/lib/timezone";
 import { buildLeadAttentionItem, buildQuotationAttentionItem, type AttentionItem } from "@/lib/attentionItems";
 import { getWonValueForLead, groupQuotationsByLead } from "@/lib/wonValue";
 
@@ -14,6 +15,7 @@ export type TeamOverviewRow = {
   userId: string;
   name: string;
   role: string;
+  isActive: boolean;
   activeLeads: number;
   newLeads: number;
   followUpsDueToday: number;
@@ -34,14 +36,16 @@ export type TeamOverviewRow = {
 export async function getTeamOverview(companyId: string): Promise<TeamOverviewRow[]> {
   const now = new Date();
 
-  const [users, leads, quotations, tasks] = await Promise.all([
+  const [users, leads, quotations, tasks, company] = await Promise.all([
     prisma.user.findMany({ where: { companyId }, orderBy: { name: "asc" } }),
     getLeadsForCompany(companyId),
     getQuotationsForCompany(companyId),
     prisma.task.findMany({ where: { lead: { companyId }, status: "PENDING" } }),
+    prisma.company.findFirst({ where: { id: companyId }, select: { timezone: true } }),
   ]);
 
-  const tasksWithRisk = tasks.map((t) => ({ ...t, risk: getTaskRisk(t, now) }));
+  const todayStart = startOfDayInTimezone(now, company?.timezone ?? "Asia/Kolkata");
+  const tasksWithRisk = tasks.map((t) => ({ ...t, risk: getTaskRisk(t, now, todayStart) }));
   const quotationsByLead = groupQuotationsByLead(quotations);
 
   return users.map((u) => {
@@ -54,6 +58,7 @@ export async function getTeamOverview(companyId: string): Promise<TeamOverviewRo
       userId: u.id,
       name: u.name,
       role: u.role,
+      isActive: u.isActive,
       activeLeads: userLeads.filter((l) => l.risk.isActive).length,
       newLeads: userLeads.filter((l) => l.status === "NEW").length,
       followUpsDueToday: userTasks.filter((t) => t.risk.bucket === "due_today").length,

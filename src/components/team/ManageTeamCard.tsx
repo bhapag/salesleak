@@ -35,14 +35,24 @@ export function ManageTeamCard({ users, currentUserId }: { users: TeamUser[]; cu
   }
 
   function handleRoleChange(userId: string, newRole: (typeof ROLES)[number]) {
+    setError(null);
     startTransition(async () => {
-      await updateUserRole(userId, newRole);
+      try {
+        await updateUserRole(userId, newRole);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Something went wrong.");
+      }
     });
   }
 
   function handleToggleActive(userId: string, isActive: boolean) {
+    setError(null);
     startTransition(async () => {
-      await setUserActive(userId, !isActive);
+      try {
+        await setUserActive(userId, !isActive);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Something went wrong.");
+      }
     });
   }
 
@@ -72,7 +82,7 @@ export function ManageTeamCard({ users, currentUserId }: { users: TeamUser[]; cu
                 type="button"
                 onClick={() => handleToggleActive(u.id, u.isActive)}
                 disabled={pending || u.id === currentUserId}
-                className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-40 ${
+                className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors duration-(--dur-micro) disabled:cursor-not-allowed disabled:opacity-40 ${
                   u.isActive ? "border-slate-200 text-slate-600 hover:bg-slate-50" : "border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                 }`}
               >
@@ -82,6 +92,8 @@ export function ManageTeamCard({ users, currentUserId }: { users: TeamUser[]; cu
           </li>
         ))}
       </ul>
+
+      {!showForm && <ErrorText>{error}</ErrorText>}
 
       {showForm ? (
         <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4">
