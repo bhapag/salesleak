@@ -173,7 +173,7 @@ export function CreateQuotationForm({
         )}
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field label="Quotation number *">
+          <Field label="Quotation number" required>
             <input value={quotationNumber} onChange={(e) => setQuotationNumber(e.target.value)} className={inputClass} />
           </Field>
           <Field label="Sent date (leave blank to save as draft)">
@@ -217,7 +217,7 @@ export function CreateQuotationForm({
                       min="0"
                       value={item.quantity}
                       onChange={(e) => updateItem(item.key, { quantity: e.target.value })}
-                      className={inputClass}
+                      className={`${inputClass} text-right tabular-nums`}
                     />
                   </Field>
                   <Field label="Unit price (₹)">
@@ -226,17 +226,17 @@ export function CreateQuotationForm({
                       min="0"
                       value={item.unitPrice}
                       onChange={(e) => updateItem(item.key, { unitPrice: e.target.value })}
-                      className={inputClass}
+                      className={`${inputClass} text-right tabular-nums`}
                     />
                   </Field>
                   <Field label="Line total">
-                    <p className="px-1 py-2 text-sm text-slate-700">{formatCurrency(lineTotal)}</p>
+                    <p className="px-1 py-2 text-right text-sm tabular-nums font-medium text-slate-800">{formatCurrency(lineTotal)}</p>
                   </Field>
                   <button
                     type="button"
                     onClick={() => removeLine(item.key)}
                     disabled={items.length === 1}
-                    className="justify-self-start text-xs font-medium text-slate-400 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 sm:justify-self-center"
+                    className="justify-self-start text-xs font-medium text-slate-400 transition-colors duration-(--dur-micro) hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 sm:justify-self-center"
                   >
                     Remove
                   </button>
@@ -251,7 +251,7 @@ export function CreateQuotationForm({
 
         <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
           <p className="text-sm text-slate-500">Total</p>
-          <p className="text-lg font-semibold text-slate-900">{formatCurrency(total)}</p>
+          <p className="text-lg font-semibold tabular-nums text-brand-navy">{formatCurrency(total)}</p>
         </div>
 
         <div className="grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2">

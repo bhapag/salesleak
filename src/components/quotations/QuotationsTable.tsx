@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { QuotationWithRisk } from "@/server/data/quotations";
 import { QuotationStatusBadge, QuotationRiskBadges } from "@/components/badges";
+import { inputClass, selectClass, PrimaryButton } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { QUOTATION_DISPLAY_STATUSES } from "@/lib/constants";
 
@@ -11,8 +12,14 @@ type SortKey = "value" | "ageDays" | "followUpDate";
 type SortDir = "asc" | "desc";
 type DateFilter = "ALL" | "LAST_7" | "LAST_30" | "OLDER_30" | "NOT_SENT";
 
-const selectClass =
-  "rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none";
+// A left rail, not a background wash — obvious at a glance without tinting
+// the whole row. Reserved for genuine risk; a healthy/closed row stays plain.
+// Rejected/Lost is deliberately never red here — closed-neutral, not a risk.
+function riskRailClass(risk: QuotationWithRisk["risk"]): string {
+  if (risk.isHighRiskOpportunity) return "border-l-[3px] border-l-red-500";
+  if (risk.needsAttention) return "border-l-[3px] border-l-amber-400";
+  return "border-l-[3px] border-l-transparent";
+}
 
 export function QuotationsTable({ quotations, users }: { quotations: QuotationWithRisk[]; users: { id: string; name: string }[] }) {
   const [search, setSearch] = useState("");
@@ -90,7 +97,7 @@ export function QuotationsTable({ quotations, users }: { quotations: QuotationWi
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-card lg:flex-row lg:items-center lg:justify-between">
         <div className="relative w-full lg:max-w-xs">
           <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -98,7 +105,7 @@ export function QuotationsTable({ quotations, users }: { quotations: QuotationWi
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search quotations, customers, products..."
-            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:outline-none"
+            className={`${inputClass} pl-9`}
           />
         </div>
 
@@ -146,7 +153,11 @@ export function QuotationsTable({ quotations, users }: { quotations: QuotationWi
           </label>
 
           {activeFilterCount > 0 && (
-            <button type="button" onClick={resetFilters} className="text-sm font-medium text-slate-500 hover:text-slate-900">
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="text-sm font-medium text-slate-500 transition-colors duration-(--dur-micro) hover:text-slate-900"
+            >
               Clear filters
             </button>
           )}
@@ -161,19 +172,19 @@ export function QuotationsTable({ quotations, users }: { quotations: QuotationWi
         <EmptyState hasFilters={activeFilterCount > 0 || search.length > 0} onReset={resetFilters} />
       ) : (
         <>
-          <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm md:block">
+          <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-card md:block">
             <table className="w-full min-w-[1150px] text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Quotation</th>
-                  <th className="px-4 py-3 font-medium">Lead</th>
-                  <th className="px-4 py-3 font-medium">Products</th>
-                  <th className="px-4 py-3 font-medium">Salesperson</th>
-                  <SortableHeader label="Amount" active={sortKey === "value"} dir={sortDir} onClick={() => toggleSort("value")} />
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Date Sent</th>
+                  <th className="px-4 py-3">Quotation</th>
+                  <th className="px-4 py-3">Lead</th>
+                  <th className="px-4 py-3">Products</th>
+                  <th className="px-4 py-3">Salesperson</th>
+                  <SortableHeader label="Amount" align="right" active={sortKey === "value"} dir={sortDir} onClick={() => toggleSort("value")} />
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Date Sent</th>
                   <SortableHeader label="Age" active={sortKey === "ageDays"} dir={sortDir} onClick={() => toggleSort("ageDays")} />
-                  <th className="px-4 py-3 font-medium">Next Follow-up</th>
+                  <th className="px-4 py-3">Next Follow-up</th>
                   <SortableHeader
                     label="Deadline"
                     active={sortKey === "followUpDate"}
@@ -202,47 +213,40 @@ export function QuotationsTable({ quotations, users }: { quotations: QuotationWi
 }
 
 function QuotationRow({ quotation }: { quotation: QuotationWithRisk }) {
-  const rowClass = quotation.risk.isHighRiskOpportunity
-    ? "bg-red-50/60"
-    : quotation.risk.isOverdueFollowUp
-      ? "bg-red-50/40"
-      : quotation.risk.needsAttention
-        ? "bg-amber-50/40"
-        : "";
   const products = quotation.items.map((i) => i.description).join(", ") || "—";
 
   return (
-    <tr className={`transition-colors hover:bg-slate-50 ${rowClass}`}>
-      <td className="max-w-[200px] px-4 py-3 align-top">
+    <tr className={`transition-colors duration-(--dur-micro) hover:bg-slate-50 ${riskRailClass(quotation.risk)}`}>
+      <td className="max-w-[200px] px-4 py-3.5 align-top">
         <Link href={`/quotations/${quotation.id}`} className="font-medium text-slate-900 hover:underline">
           {quotation.quotationNumber}
         </Link>
         <p className="truncate text-xs text-slate-500">{quotation.lead.customer.name}</p>
-        <div className="mt-1">
+        <div className="mt-1.5">
           <QuotationRiskBadges risk={quotation.risk} />
         </div>
       </td>
-      <td className="max-w-[180px] px-4 py-3 align-top text-slate-600">
+      <td className="max-w-[180px] px-4 py-3.5 align-top text-slate-600">
         <Link href={`/leads/${quotation.leadId}`} className="truncate hover:underline">
           {quotation.lead.title}
         </Link>
       </td>
-      <td className="max-w-[200px] px-4 py-3 align-top text-slate-600">
+      <td className="max-w-[200px] px-4 py-3.5 align-top text-slate-600">
         <span className="line-clamp-2">{products}</span>
       </td>
-      <td className="px-4 py-3 align-top text-slate-600">
+      <td className="px-4 py-3.5 align-top text-slate-600">
         {quotation.lead.owner ? quotation.lead.owner.name : <span className="font-medium text-amber-700">Unassigned</span>}
       </td>
-      <td className="px-4 py-3 align-top font-medium text-slate-700">{formatCurrency(quotation.value)}</td>
-      <td className="px-4 py-3 align-top">
+      <td className="px-4 py-3.5 align-top text-right font-semibold tabular-nums text-slate-900">{formatCurrency(quotation.value)}</td>
+      <td className="px-4 py-3.5 align-top">
         <QuotationStatusBadge status={quotation.risk.displayStatus} />
       </td>
-      <td className="px-4 py-3 align-top text-slate-600">{quotation.sentAt ? formatDate(quotation.sentAt) : "Not sent"}</td>
-      <td className="px-4 py-3 align-top text-slate-600">{quotation.risk.ageDays}d</td>
-      <td className="max-w-[180px] px-4 py-3 align-top text-slate-600">
+      <td className="px-4 py-3.5 align-top tabular-nums text-slate-600">{quotation.sentAt ? formatDate(quotation.sentAt) : "Not sent"}</td>
+      <td className="px-4 py-3.5 align-top tabular-nums text-slate-600">{quotation.risk.ageDays}d</td>
+      <td className="max-w-[180px] px-4 py-3.5 align-top text-slate-600">
         {quotation.nextAction ?? (quotation.risk.isOpen ? <span className="font-medium text-amber-700">Not set</span> : "—")}
       </td>
-      <td className={`px-4 py-3 align-top ${quotation.risk.isOverdueFollowUp ? "font-medium text-red-600" : "text-slate-600"}`}>
+      <td className={`px-4 py-3.5 align-top tabular-nums ${quotation.risk.isOverdueFollowUp ? "font-medium text-red-600" : "text-slate-600"}`}>
         {quotation.followUpDate
           ? formatDate(quotation.followUpDate)
           : quotation.risk.isOpen
@@ -258,12 +262,8 @@ function QuotationCard({ quotation }: { quotation: QuotationWithRisk }) {
   return (
     <Link
       href={`/quotations/${quotation.id}`}
-      className={`block rounded-xl border p-4 shadow-sm ${
-        quotation.risk.isHighRiskOpportunity
-          ? "border-red-200 bg-red-50/60"
-          : quotation.risk.needsAttention
-            ? "border-amber-200 bg-amber-50/40"
-            : "border-slate-200 bg-white"
+      className={`block rounded-xl border bg-white p-4 shadow-card transition-colors duration-(--dur-micro) hover:border-slate-300 ${
+        quotation.risk.isHighRiskOpportunity ? "border-red-200" : quotation.risk.needsAttention ? "border-amber-200" : "border-slate-200"
       }`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -271,23 +271,17 @@ function QuotationCard({ quotation }: { quotation: QuotationWithRisk }) {
           <p className="truncate font-medium text-slate-900">{quotation.quotationNumber}</p>
           <p className="text-xs text-slate-500">{quotation.lead.customer.name}</p>
         </div>
-        <span className="shrink-0 text-sm font-medium text-slate-700">{formatCurrency(quotation.value)}</span>
+        <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-900">{formatCurrency(quotation.value)}</span>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
         <QuotationStatusBadge status={quotation.risk.displayStatus} />
       </div>
-      <div className="mt-2">
-        <QuotationRiskBadges risk={quotation.risk} />
-      </div>
+      {quotation.risk.needsAttention && (
+        <div className="mt-2">
+          <QuotationRiskBadges risk={quotation.risk} />
+        </div>
+      )}
       <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
-        <div>
-          <dt className="text-slate-400">Salesperson</dt>
-          <dd className="text-slate-700">{quotation.lead.owner?.name ?? "Unassigned"}</dd>
-        </div>
-        <div>
-          <dt className="text-slate-400">Products</dt>
-          <dd className="truncate text-slate-700">{products}</dd>
-        </div>
         <div>
           <dt className="text-slate-400">Next follow-up</dt>
           <dd className="text-slate-700">{quotation.nextAction ?? "Not set"}</dd>
@@ -298,18 +292,40 @@ function QuotationCard({ quotation }: { quotation: QuotationWithRisk }) {
             {formatDate(quotation.followUpDate)}
           </dd>
         </div>
+        <div>
+          <dt className="text-slate-400">Salesperson</dt>
+          <dd className="text-slate-700">{quotation.lead.owner?.name ?? "Unassigned"}</dd>
+        </div>
+        <div>
+          <dt className="text-slate-400">Products</dt>
+          <dd className="truncate text-slate-700">{products}</dd>
+        </div>
       </dl>
     </Link>
   );
 }
 
-function SortableHeader({ label, active, dir, onClick }: { label: string; active: boolean; dir: SortDir; onClick: () => void }) {
+function SortableHeader({
+  label,
+  active,
+  dir,
+  onClick,
+  align = "left",
+}: {
+  label: string;
+  active: boolean;
+  dir: SortDir;
+  onClick: () => void;
+  align?: "left" | "right";
+}) {
   return (
-    <th className="px-4 py-3 font-medium">
+    <th className={`px-4 py-3 ${align === "right" ? "text-right" : "text-left"}`}>
       <button
         type="button"
         onClick={onClick}
-        className={`flex items-center gap-1 ${active ? "text-slate-900" : "text-slate-500"} hover:text-slate-900`}
+        className={`inline-flex items-center gap-1 transition-colors duration-(--dur-micro) ${align === "right" ? "flex-row-reverse" : ""} ${
+          active ? "text-slate-900" : "text-slate-500"
+        } hover:text-slate-900`}
       >
         {label}
         <span className="text-[10px]">{active ? (dir === "asc" ? "▲" : "▼") : "↕"}</span>
@@ -328,16 +344,12 @@ function EmptyState({ hasFilters, onReset }: { hasFilters: boolean; onReset: () 
           : "Quotations are created from a lead once you're ready to send pricing."}
       </p>
       {hasFilters ? (
-        <button
-          type="button"
-          onClick={onReset}
-          className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-        >
+        <PrimaryButton className="mt-4" onClick={onReset}>
           Clear filters
-        </button>
+        </PrimaryButton>
       ) : (
-        <Link href="/leads" className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
-          Go to Leads
+        <Link href="/leads">
+          <PrimaryButton className="mt-4">Go to Leads</PrimaryButton>
         </Link>
       )}
     </div>

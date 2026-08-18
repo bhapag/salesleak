@@ -39,7 +39,7 @@ export function CloseDealCard({
   if (quotation.status === "REJECTED") {
     return (
       <Card title="Deal Outcome">
-        <p className="text-sm font-medium text-red-700">Lost{quotation.lostAt && ` on ${formatDate(quotation.lostAt)}`}</p>
+        <p className="text-sm font-medium text-slate-600">Lost{quotation.lostAt && ` on ${formatDate(quotation.lostAt)}`}</p>
         {quotation.lostReason && <p className="mt-1 text-sm text-slate-600">Reason: {quotation.lostReason}</p>}
       </Card>
     );
