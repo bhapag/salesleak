@@ -158,6 +158,11 @@ model Company {
   lostReasonPresets   String? // JSON string array
   activeLeadSources   String? // JSON array of LeadSource values the company actually uses
 
+  // Monotonic per-company counter backing quotation-number suggestion
+  // (see getSuggestedQuotationNumber). Incremented atomically, never
+  // decremented — deleting a quotation never frees or reuses a number.
+  lastQuotationSequence Int @default(0)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -165,6 +170,7 @@ model Company {
   customers        Customer[]
   leads            Lead[]
   products         Product[]
+  quotations       Quotation[]
   integrations     Integration[]
   notifications    Notification[]
   auditLogs        AuditLog[]
@@ -320,6 +326,10 @@ model Product {
 model Quotation {
   id              String          @id @default(cuid())
   leadId          String
+  // Explicit tenant/integrity field (Lead remains the business relationship;
+  // this is what makes @@unique([companyId, quotationNumber]) expressible —
+  // Postgres cannot enforce uniqueness scoped through a transitive relation).
+  companyId       String
   quotationNumber String
   value           Float
   status          QuotationStatus @default(DRAFT)
@@ -333,10 +343,13 @@ model Quotation {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  lead  Lead            @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  items QuotationItem[]
+  lead    Lead            @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  company Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  items   QuotationItem[]
 
+  @@unique([companyId, quotationNumber])
   @@index([leadId])
+  @@index([companyId])
   @@index([status])
 }
 

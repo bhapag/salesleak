@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import type { QuotationStatus } from "@/generated/prisma/client";
+import { Prisma, type QuotationStatus } from "@/generated/prisma/client";
 import { QUOTATION_STATUS_LABEL } from "@/lib/quotationRisk";
 import { formatCurrency } from "@/lib/format";
 import { QUOTATION_ACTIVE_STATUSES } from "@/lib/constants";
@@ -32,11 +32,9 @@ function revalidateQuotation(quotationId: string, leadId: string) {
   revalidatePath("/team", "layout");
 }
 
-// Quotation has no companyId column of its own, so tenant scoping goes
-// through its lead — same enforcement point as leads.ts's getOwnedLead.
 async function getOwnedQuotation(quotationId: string, session: AuthSession) {
   await assertMutationAllowed(session);
-  const quotation = await prisma.quotation.findFirst({ where: { id: quotationId, lead: { companyId: session.companyId } } });
+  const quotation = await prisma.quotation.findFirst({ where: { id: quotationId, companyId: session.companyId } });
   if (!quotation) throw new ForbiddenError();
   return quotation;
 }
@@ -126,19 +124,30 @@ export async function createQuotation(input: CreateQuotationInput, _actingUserId
   const sentAt = input.sentAt ? new Date(input.sentAt) : null;
   const status: QuotationStatus = sentAt ? "SENT" : "DRAFT";
 
-  const quotation = await prisma.quotation.create({
-    data: {
-      leadId: lead.id,
-      quotationNumber,
-      value,
-      status,
-      sentAt,
-      validUntil: input.validUntil ? new Date(input.validUntil) : null,
-      nextAction: input.nextAction?.trim() || null,
-      followUpDate: input.followUpDate ? new Date(input.followUpDate) : null,
-      items: { create: itemsData },
-    },
-  });
+  let quotation;
+  try {
+    quotation = await prisma.quotation.create({
+      data: {
+        leadId: lead.id,
+        // Derived from the session, never trusted from the client — a
+        // company can only ever create quotations scoped to itself.
+        companyId: session.companyId,
+        quotationNumber,
+        value,
+        status,
+        sentAt,
+        validUntil: input.validUntil ? new Date(input.validUntil) : null,
+        nextAction: input.nextAction?.trim() || null,
+        followUpDate: input.followUpDate ? new Date(input.followUpDate) : null,
+        items: { create: itemsData },
+      },
+    });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      return { success: false, error: "This quotation number is already used in your company. Pick another." };
+    }
+    throw e;
+  }
 
   const notes = input.notes?.trim();
   await logOnLead(

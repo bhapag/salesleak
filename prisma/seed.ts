@@ -74,6 +74,7 @@ async function createWonOrder(opts: {
   const quotation = await prisma.quotation.create({
     data: {
       leadId: lead.id,
+      companyId: opts.companyId,
       quotationNumber: opts.quotationNumber,
       value: opts.value,
       status: "ACCEPTED",
@@ -490,6 +491,7 @@ async function main() {
   const q1 = await prisma.quotation.create({
     data: {
       leadId: leadOverdue.id,
+      companyId: company.id,
       quotationNumber: "QT-2026-0041",
       value: 72500,
       status: "SENT",
@@ -506,6 +508,7 @@ async function main() {
   const q2 = await prisma.quotation.create({
     data: {
       leadId: leadDueToday.id,
+      companyId: company.id,
       quotationNumber: "QT-2026-0044",
       value: 55500,
       status: "FOLLOWED_UP",
@@ -522,6 +525,7 @@ async function main() {
   const q3 = await prisma.quotation.create({
     data: {
       leadId: leadWon.id,
+      companyId: company.id,
       quotationNumber: "QT-2026-0022",
       value: 96000,
       status: "ACCEPTED",
@@ -540,6 +544,7 @@ async function main() {
   const q4 = await prisma.quotation.create({
     data: {
       leadId: leadOverdueQuote.id,
+      companyId: company.id,
       quotationNumber: "QT-2026-0038",
       value: 33500,
       status: "SENT",
@@ -556,6 +561,7 @@ async function main() {
   const q5 = await prisma.quotation.create({
     data: {
       leadId: leadManual.id,
+      companyId: company.id,
       quotationNumber: "QT-2026-0047",
       value: 9600,
       status: "DRAFT",
@@ -569,6 +575,7 @@ async function main() {
   const q6 = await prisma.quotation.create({
     data: {
       leadId: leadLost.id,
+      companyId: company.id,
       quotationNumber: "QT-2026-0030",
       value: 61000,
       status: "REJECTED",
@@ -587,6 +594,7 @@ async function main() {
   const q7 = await prisma.quotation.create({
     data: {
       leadId: leadUrgent.id,
+      companyId: company.id,
       quotationNumber: "QT-2026-0033",
       value: 128000,
       status: "SENT",
@@ -1031,6 +1039,7 @@ async function main() {
   const c2Quotation = await prisma.quotation.create({
     data: {
       leadId: c2LeadOpen.id,
+      companyId: company2.id,
       quotationNumber: "OMP-2025-0044",
       value: 290000,
       status: "SENT",

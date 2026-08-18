@@ -5,7 +5,7 @@ import { getCompanyRiskThresholds } from "@/server/data/companySettings";
 export async function getQuotationsForCompany(companyId: string) {
   const [quotations, thresholds] = await Promise.all([
     prisma.quotation.findMany({
-      where: { lead: { companyId } },
+      where: { companyId },
       include: {
         items: true,
         lead: { include: { customer: true, owner: true } },
@@ -36,9 +36,8 @@ export async function getQuotationsForCompany(companyId: string) {
 export type QuotationWithRisk = Awaited<ReturnType<typeof getQuotationsForCompany>>[number];
 
 export async function getQuotationDetail(quotationId: string, companyId: string) {
-  // Quotation has no companyId column of its own — scoped via its lead.
   const quotation = await prisma.quotation.findFirst({
-    where: { id: quotationId, lead: { companyId } },
+    where: { id: quotationId, companyId },
     include: {
       items: { include: { product: true } },
       lead: {
@@ -93,8 +92,20 @@ export async function getLeadPickerOptions(companyId: string, ownerScope?: strin
 
 export type LeadPickerOption = Awaited<ReturnType<typeof getLeadPickerOptions>>[number];
 
-/** A sensible pre-filled quotation number the user can freely edit — no uniqueness is enforced (matches existing schema), this is just a helpful default. */
+/**
+ * A pre-filled quotation number the user can freely edit. The number is
+ * reserved atomically here (via Company.lastQuotationSequence) rather than
+ * merely "peeked" from a count — two concurrent page loads/creations always
+ * get different numbers, at the cost of an occasional gap if a form is
+ * abandoned without saving (the standard invoicing-system tradeoff). The DB's
+ * @@unique([companyId, quotationNumber]) constraint is the actual source of
+ * truth for uniqueness; this just makes collisions rare in the common case.
+ */
 export async function getSuggestedQuotationNumber(companyId: string): Promise<string> {
-  const count = await prisma.quotation.count({ where: { lead: { companyId } } });
-  return `QT-${new Date().getFullYear()}-${String(count + 1).padStart(4, "0")}`;
+  const company = await prisma.company.update({
+    where: { id: companyId },
+    data: { lastQuotationSequence: { increment: 1 } },
+    select: { lastQuotationSequence: true },
+  });
+  return `QT-${new Date().getFullYear()}-${String(company.lastQuotationSequence).padStart(4, "0")}`;
 }
