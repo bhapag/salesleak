@@ -15,7 +15,10 @@ function revalidateWorkQueue(leadId: string) {
   revalidatePath(`/leads/${leadId}`);
 }
 
-export async function rescheduleTask(taskId: string, newDueDate: string, actingUserId: string | null) {
+// `_actingUserId` is accepted for call-site compatibility but ignored —
+// activity attribution always uses the authenticated session's own userId,
+// never a client-supplied value, same discipline as leads.ts/quotations.ts.
+export async function rescheduleTask(taskId: string, newDueDate: string, _actingUserId: string | null) {
   const session = await requireSession();
   await assertMutationAllowed(session);
   if (!newDueDate) throw new Error("A new due date is required.");
@@ -28,7 +31,7 @@ export async function rescheduleTask(taskId: string, newDueDate: string, actingU
   await prisma.activity.create({
     data: {
       leadId: task.leadId,
-      userId: actingUserId,
+      userId: session.userId,
       type: "NOTE",
       notes: `Follow-up "${task.title}" rescheduled to ${formatDate(new Date(newDueDate))}.`,
     },
