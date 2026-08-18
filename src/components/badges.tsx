@@ -212,13 +212,13 @@ export function CustomerStatusBadge({ status }: { status: CustomerStatus }) {
   );
 }
 
-// Only the two states that actually call for action get color: Overdue is
-// genuine red risk, Repeat Order Due is amber attention. Normal and Due Soon
-// both stay a calm neutral — the text label still distinguishes them, but
-// neither is worth competing for attention against the states that matter.
+// Overdue is genuine red risk. Due Soon and Repeat Order Due are both
+// pre-overdue attention states (approaching, then past, the expected repeat
+// date) and share the same warning amber — the text label distinguishes
+// them. Normal/upcoming stays a calm neutral, same as "not enough history".
 const repeatOrderStyles: Record<RepeatOrderStatus, string> = {
   Normal: "bg-slate-100 text-slate-600 ring-slate-200",
-  "Due Soon": "bg-slate-100 text-slate-600 ring-slate-200",
+  "Due Soon": "bg-amber-50 text-amber-700 ring-amber-200",
   "Repeat Order Due": "bg-amber-50 text-amber-700 ring-amber-200",
   "Overdue / Dormant": "bg-red-50 text-red-700 ring-red-200",
 };

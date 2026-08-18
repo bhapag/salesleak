@@ -42,7 +42,7 @@ export function RepeatOrderCard({ customer }: { customer: CustomerDetail }) {
                 className={`text-sm font-medium ${
                   signal.status === "Overdue / Dormant"
                     ? "text-red-600"
-                    : signal.status === "Repeat Order Due"
+                    : signal.status === "Repeat Order Due" || signal.status === "Due Soon"
                       ? "text-amber-700"
                       : "text-slate-600"
                 }`}
