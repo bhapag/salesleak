@@ -61,6 +61,11 @@ export type CreateQuotationInput = {
 
 export type CreateQuotationResult = { success: true; quotationId: string } | { success: false; error: string };
 
+// Below, every `_actingUserId` parameter is accepted for call-site
+// compatibility but ignored — activity/audit attribution always uses the
+// authenticated session's own userId, never a client-supplied value, so one
+// user can never make an action record claim another user did it.
+
 /**
  * The only place a Quotation is created. Totals are always computed here from
  * quantity × unitPrice — a client-submitted total/value is never accepted or
@@ -68,7 +73,7 @@ export type CreateQuotationResult = { success: true; quotationId: string } | { s
  * validation failures, so the form can show an inline message instead of a
  * generic server-action error (same fix as scheduleFollowUp/updateNextAction).
  */
-export async function createQuotation(input: CreateQuotationInput, actingUserId: string | null): Promise<CreateQuotationResult> {
+export async function createQuotation(input: CreateQuotationInput, _actingUserId: string | null): Promise<CreateQuotationResult> {
   const session = await requireSession();
   await assertMutationAllowed(session);
 
@@ -139,13 +144,13 @@ export async function createQuotation(input: CreateQuotationInput, actingUserId:
   await logOnLead(
     lead.id,
     quotationNumber,
-    actingUserId,
+    session.userId,
     `Quotation created${status === "SENT" ? " and sent" : " as draft"} — ${itemsData.length} item${itemsData.length === 1 ? "" : "s"}, ${formatCurrency(value)}.${notes ? ` ${notes}` : ""}`
   );
   await prisma.auditLog.create({
     data: {
       companyId: session.companyId,
-      userId: actingUserId,
+      userId: session.userId,
       action: "QUOTATION_CREATED",
       entityType: "Quotation",
       entityId: quotation.id,
@@ -157,7 +162,7 @@ export async function createQuotation(input: CreateQuotationInput, actingUserId:
   return { success: true, quotationId: quotation.id };
 }
 
-export async function markQuotationSent(quotationId: string, actingUserId: string | null) {
+export async function markQuotationSent(quotationId: string, _actingUserId: string | null) {
   const session = await requireSession();
   const quotation = await getOwnedQuotation(quotationId, session);
 
@@ -165,7 +170,7 @@ export async function markQuotationSent(quotationId: string, actingUserId: strin
     where: { id: quotationId },
     data: { status: "SENT", sentAt: quotation.sentAt ?? new Date() },
   });
-  await logOnLead(quotation.leadId, quotation.quotationNumber, actingUserId, "Quotation marked as sent.");
+  await logOnLead(quotation.leadId, quotation.quotationNumber, session.userId, "Quotation marked as sent.");
 
   revalidateQuotation(quotationId, quotation.leadId);
 }
@@ -173,7 +178,7 @@ export async function markQuotationSent(quotationId: string, actingUserId: strin
 export async function changeQuotationStatus(
   quotationId: string,
   status: Exclude<QuotationStatus, "ACCEPTED" | "REJECTED">,
-  actingUserId: string | null
+  _actingUserId: string | null
 ) {
   const session = await requireSession();
   const quotation = await getOwnedQuotation(quotationId, session);
@@ -183,13 +188,13 @@ export async function changeQuotationStatus(
   await logOnLead(
     quotation.leadId,
     quotation.quotationNumber,
-    actingUserId,
+    session.userId,
     `Status changed: ${QUOTATION_STATUS_LABEL[quotation.status]} → ${QUOTATION_STATUS_LABEL[status]}.`
   );
   await prisma.auditLog.create({
     data: {
       companyId: session.companyId,
-      userId: actingUserId,
+      userId: session.userId,
       action: "QUOTATION_STATUS_CHANGED",
       entityType: "Quotation",
       entityId: quotationId,
@@ -210,7 +215,7 @@ export async function updateQuotationNextAction(
   quotationId: string,
   nextAction: string,
   followUpDate: string,
-  actingUserId: string | null
+  _actingUserId: string | null
 ): Promise<UpdateNextActionResult> {
   const session = await requireSession();
   const quotation = await getOwnedQuotation(quotationId, session);
@@ -223,20 +228,20 @@ export async function updateQuotationNextAction(
     where: { id: quotationId },
     data: { nextAction: trimmed, followUpDate: new Date(followUpDate) },
   });
-  await logOnLead(quotation.leadId, quotation.quotationNumber, actingUserId, `Next action updated: "${trimmed}".`);
+  await logOnLead(quotation.leadId, quotation.quotationNumber, session.userId, `Next action updated: "${trimmed}".`);
 
   revalidateQuotation(quotationId, quotation.leadId);
   return { success: true };
 }
 
-export async function addQuotationNote(quotationId: string, notes: string, actingUserId: string | null) {
+export async function addQuotationNote(quotationId: string, notes: string, _actingUserId: string | null) {
   const session = await requireSession();
   const quotation = await getOwnedQuotation(quotationId, session);
 
   const trimmed = notes.trim();
   if (!trimmed) throw new Error("Note cannot be empty.");
 
-  await logOnLead(quotation.leadId, quotation.quotationNumber, actingUserId, trimmed);
+  await logOnLead(quotation.leadId, quotation.quotationNumber, session.userId, trimmed);
   // Touch updatedAt so "no recent activity" staleness tracking reflects this note.
   await prisma.quotation.update({ where: { id: quotationId }, data: { updatedAt: new Date() } });
 
@@ -249,7 +254,7 @@ export async function addQuotationNote(quotationId: string, notes: string, actin
  * the lead itself is won that we offer it, but we still only apply it if
  * the lead isn't already closed (never overwrite an existing Won/Lost).
  */
-export async function markQuotationWon(quotationId: string, actingUserId: string | null, alsoMarkLeadWon = false) {
+export async function markQuotationWon(quotationId: string, _actingUserId: string | null, alsoMarkLeadWon = false) {
   const session = await requireSession();
   const quotation = await getOwnedQuotation(quotationId, session);
 
@@ -257,13 +262,13 @@ export async function markQuotationWon(quotationId: string, actingUserId: string
   await logOnLead(
     quotation.leadId,
     quotation.quotationNumber,
-    actingUserId,
+    session.userId,
     `Quotation marked as Won (was ${QUOTATION_STATUS_LABEL[quotation.status]}).`
   );
   await prisma.auditLog.create({
     data: {
       companyId: session.companyId,
-      userId: actingUserId,
+      userId: session.userId,
       action: "QUOTATION_STATUS_CHANGED",
       entityType: "Quotation",
       entityId: quotationId,
@@ -274,7 +279,7 @@ export async function markQuotationWon(quotationId: string, actingUserId: string
   if (alsoMarkLeadWon) {
     const lead = await prisma.lead.findFirst({ where: { id: quotation.leadId, companyId: session.companyId } });
     if (lead && lead.status !== "WON" && lead.status !== "LOST") {
-      await markLeadWon(lead.id, actingUserId);
+      await markLeadWon(lead.id, session.userId);
     }
   }
 
@@ -292,7 +297,7 @@ export async function markQuotationWon(quotationId: string, actingUserId: string
 export async function markQuotationLost(
   quotationId: string,
   lostReason: string,
-  actingUserId: string | null,
+  _actingUserId: string | null,
   alsoMarkLeadLost = false
 ) {
   const session = await requireSession();
@@ -308,13 +313,13 @@ export async function markQuotationLost(
   await logOnLead(
     quotation.leadId,
     quotation.quotationNumber,
-    actingUserId,
+    session.userId,
     `Quotation marked as Lost (was ${QUOTATION_STATUS_LABEL[quotation.status]}). Reason: ${trimmed}`
   );
   await prisma.auditLog.create({
     data: {
       companyId: session.companyId,
-      userId: actingUserId,
+      userId: session.userId,
       action: "QUOTATION_STATUS_CHANGED",
       entityType: "Quotation",
       entityId: quotationId,
@@ -329,7 +334,7 @@ export async function markQuotationLost(
     if (otherOpenQuotations === 0) {
       const lead = await prisma.lead.findFirst({ where: { id: quotation.leadId, companyId: session.companyId } });
       if (lead && lead.status !== "WON" && lead.status !== "LOST") {
-        await markLeadLost(lead.id, trimmed, actingUserId);
+        await markLeadLost(lead.id, trimmed, session.userId);
       }
     }
   }

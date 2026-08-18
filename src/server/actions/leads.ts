@@ -33,25 +33,32 @@ async function getOwnedLead(leadId: string, session: AuthSession) {
   return lead;
 }
 
-export async function markContacted(leadId: string, actingUserId: string | null) {
+// Every action below accepts a leftover `_actingUserId` parameter for call-
+// site compatibility, but ignores it — Activity/AuditLog attribution is
+// always the authenticated session's own userId, never a client-supplied
+// value, so one user can never make an action record claim another user did
+// it. Kept as a parameter (not removed) so none of this file's many callers
+// need to change; the parameter itself is simply dead going forward.
+
+export async function markContacted(leadId: string, _actingUserId: string | null) {
   const session = await requireSession();
   const lead = await getOwnedLead(leadId, session);
 
   if (lead.status === "NEW") {
     await prisma.lead.update({ where: { id: leadId }, data: { status: "CONTACTED" } });
     await prisma.activity.create({
-      data: { leadId, userId: actingUserId, type: "STATUS_CHANGE", notes: "Marked as contacted (New → Contacted)." },
+      data: { leadId, userId: session.userId, type: "STATUS_CHANGE", notes: "Marked as contacted (New → Contacted)." },
     });
   } else {
     await prisma.activity.create({
-      data: { leadId, userId: actingUserId, type: "NOTE", notes: "Marked as contacted." },
+      data: { leadId, userId: session.userId, type: "NOTE", notes: "Marked as contacted." },
     });
   }
 
   revalidateLead(leadId);
 }
 
-export async function changeStatus(leadId: string, status: Exclude<LeadStatus, "WON" | "LOST">, actingUserId: string | null) {
+export async function changeStatus(leadId: string, status: Exclude<LeadStatus, "WON" | "LOST">, _actingUserId: string | null) {
   const session = await requireSession();
   const lead = await getOwnedLead(leadId, session);
   if (lead.status === status) return;
@@ -60,7 +67,7 @@ export async function changeStatus(leadId: string, status: Exclude<LeadStatus, "
   await prisma.activity.create({
     data: {
       leadId,
-      userId: actingUserId,
+      userId: session.userId,
       type: "STATUS_CHANGE",
       notes: `Status changed: ${lead.status.replace("_", " ")} → ${status.replace("_", " ")}.`,
     },
@@ -69,7 +76,7 @@ export async function changeStatus(leadId: string, status: Exclude<LeadStatus, "
   revalidateLead(leadId);
 }
 
-export async function assignSalesperson(leadId: string, ownerId: string | null, actingUserId: string | null) {
+export async function assignSalesperson(leadId: string, ownerId: string | null, _actingUserId: string | null) {
   const session = await requireSession();
   const lead = await getOwnedLead(leadId, session);
   const previousOwner = lead.ownerId ? await prisma.user.findUnique({ where: { id: lead.ownerId } }) : null;
@@ -83,7 +90,7 @@ export async function assignSalesperson(leadId: string, ownerId: string | null, 
   await prisma.activity.create({
     data: {
       leadId,
-      userId: actingUserId,
+      userId: session.userId,
       type: "NOTE",
       notes: newOwner ? `Assigned to ${newOwner.name}.` : `Unassigned (was ${previousOwner?.name ?? "unassigned"}).`,
     },
@@ -91,7 +98,7 @@ export async function assignSalesperson(leadId: string, ownerId: string | null, 
   await prisma.auditLog.create({
     data: {
       companyId: session.companyId,
-      userId: actingUserId,
+      userId: session.userId,
       action: "LEAD_OWNER_CHANGED",
       entityType: "Lead",
       entityId: leadId,
@@ -116,7 +123,7 @@ export async function updateNextAction(
   leadId: string,
   nextAction: string,
   nextActionDeadline: string,
-  actingUserId: string | null
+  _actingUserId: string | null
 ): Promise<LeadActionResult> {
   const session = await requireSession();
   await getOwnedLead(leadId, session);
@@ -130,7 +137,7 @@ export async function updateNextAction(
     data: { nextAction: trimmedAction, nextActionDeadline: new Date(nextActionDeadline) },
   });
   await prisma.activity.create({
-    data: { leadId, userId: actingUserId, type: "NOTE", notes: `Next action updated: "${trimmedAction}".` },
+    data: { leadId, userId: session.userId, type: "NOTE", notes: `Next action updated: "${trimmedAction}".` },
   });
 
   revalidateLead(leadId);
@@ -142,7 +149,7 @@ export async function scheduleFollowUp(
   title: string,
   dueDate: string,
   assignedToId: string | null,
-  actingUserId: string | null
+  _actingUserId: string | null
 ): Promise<LeadActionResult> {
   const session = await requireSession();
   await getOwnedLead(leadId, session);
@@ -155,14 +162,14 @@ export async function scheduleFollowUp(
     data: { leadId, title: trimmedTitle, dueDate: new Date(dueDate), assignedToId },
   });
   await prisma.activity.create({
-    data: { leadId, userId: actingUserId, type: "NOTE", notes: `Follow-up scheduled: "${trimmedTitle}".` },
+    data: { leadId, userId: session.userId, type: "NOTE", notes: `Follow-up scheduled: "${trimmedTitle}".` },
   });
 
   revalidateLead(leadId);
   return { success: true };
 }
 
-export async function completeTask(taskId: string, leadId: string, actingUserId: string | null) {
+export async function completeTask(taskId: string, leadId: string, _actingUserId: string | null) {
   const session = await requireSession();
   await getOwnedLead(leadId, session);
 
@@ -171,36 +178,36 @@ export async function completeTask(taskId: string, leadId: string, actingUserId:
 
   await prisma.task.update({ where: { id: taskId }, data: { status: "COMPLETED", completedAt: new Date() } });
   await prisma.activity.create({
-    data: { leadId, userId: actingUserId, type: "NOTE", notes: `Follow-up completed: "${task.title}".` },
+    data: { leadId, userId: session.userId, type: "NOTE", notes: `Follow-up completed: "${task.title}".` },
   });
 
   revalidateLead(leadId);
 }
 
-export async function addNote(leadId: string, notes: string, actingUserId: string | null) {
+export async function addNote(leadId: string, notes: string, _actingUserId: string | null) {
   const session = await requireSession();
   await getOwnedLead(leadId, session);
 
   const trimmed = notes.trim();
   if (!trimmed) throw new Error("Note cannot be empty.");
 
-  await prisma.activity.create({ data: { leadId, userId: actingUserId, type: "NOTE", notes: trimmed } });
+  await prisma.activity.create({ data: { leadId, userId: session.userId, type: "NOTE", notes: trimmed } });
 
   revalidateLead(leadId);
 }
 
-export async function markWon(leadId: string, actingUserId: string | null) {
+export async function markWon(leadId: string, _actingUserId: string | null) {
   const session = await requireSession();
   const lead = await getOwnedLead(leadId, session);
 
   await prisma.lead.update({ where: { id: leadId }, data: { status: "WON", wonAt: new Date() } });
   await prisma.activity.create({
-    data: { leadId, userId: actingUserId, type: "STATUS_CHANGE", notes: `Marked as Won (was ${lead.status.replace("_", " ")}).` },
+    data: { leadId, userId: session.userId, type: "STATUS_CHANGE", notes: `Marked as Won (was ${lead.status.replace("_", " ")}).` },
   });
   await prisma.auditLog.create({
     data: {
       companyId: session.companyId,
-      userId: actingUserId,
+      userId: session.userId,
       action: "LEAD_WON",
       entityType: "Lead",
       entityId: leadId,
@@ -211,7 +218,7 @@ export async function markWon(leadId: string, actingUserId: string | null) {
   revalidateLead(leadId);
 }
 
-export async function markLost(leadId: string, lostReason: string, actingUserId: string | null) {
+export async function markLost(leadId: string, lostReason: string, _actingUserId: string | null) {
   const session = await requireSession();
   const lead = await getOwnedLead(leadId, session);
 
@@ -225,7 +232,7 @@ export async function markLost(leadId: string, lostReason: string, actingUserId:
   await prisma.activity.create({
     data: {
       leadId,
-      userId: actingUserId,
+      userId: session.userId,
       type: "STATUS_CHANGE",
       notes: `Marked as Lost (was ${lead.status.replace("_", " ")}). Reason: ${trimmed}`,
     },
@@ -233,7 +240,7 @@ export async function markLost(leadId: string, lostReason: string, actingUserId:
   await prisma.auditLog.create({
     data: {
       companyId: session.companyId,
-      userId: actingUserId,
+      userId: session.userId,
       action: "LEAD_LOST",
       entityType: "Lead",
       entityId: leadId,

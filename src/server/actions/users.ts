@@ -68,6 +68,18 @@ export async function updateUserRole(userId: string, role: UserRole): Promise<vo
   const user = await getOwnedTeamUser(userId, session.companyId);
   if (user.role === role) return;
 
+  // A company can never be left with zero active Owners — only meaningful to
+  // check when demoting a currently-active Owner; changing an already-
+  // inactive Owner's role never reduces the active count.
+  if (user.role === "OWNER" && user.isActive && role !== "OWNER") {
+    const activeOwnerCount = await prisma.user.count({
+      where: { companyId: session.companyId, role: "OWNER", isActive: true },
+    });
+    if (activeOwnerCount <= 1) {
+      throw new Error("This company must have at least one active Owner — promote another teammate to Owner first.");
+    }
+  }
+
   await prisma.user.update({ where: { id: userId }, data: { role } });
   await prisma.auditLog.create({
     data: {

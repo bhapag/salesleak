@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { AuthSession } from "@/server/auth/session";
 import type { SubscriptionPlan, SubscriptionStatus } from "@/generated/prisma/client";
+import { logger } from "@/lib/logger";
 
 export class SubscriptionRequiredError extends Error {
   constructor(message = "This workspace's subscription needs attention before you can make changes. Ask the Owner to check Billing.") {
@@ -39,8 +40,12 @@ export async function getSubscriptionState(companyId: string): Promise<Subscript
   // or the Phase 14 backfill — but must never silently lock a real company
   // out. Fail OPEN here (treat as good standing); the tenant-isolation
   // checks elsewhere in the app are what actually protects data, and those
-  // fail closed as normal.
+  // fail closed as normal. Logged (companyId only — never billing secrets)
+  // so this abnormal state is actually diagnosable rather than silent.
   if (!sub) {
+    logger.billingFailure("No Subscription row found for company — entitlement evaluation failed open (treated as ACTIVE).", {
+      companyId,
+    });
     return {
       plan: "STARTER",
       status: "ACTIVE",

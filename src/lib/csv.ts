@@ -69,10 +69,24 @@ export function parseCsv(text: string): ParsedCsv {
   return { headers, rows: dataRows };
 }
 
+// A leading =, +, -, @, tab, or CR makes Excel/Sheets interpret a cell as a
+// formula when the CSV is opened — dangerous here because export values (lead/
+// customer names, etc.) can originate from untrusted, unauthenticated sources
+// (the public website form, CSV import). Prefixing with a single quote forces
+// text interpretation; Excel treats a leading `'` as a formatting marker and
+// doesn't display it, so ordinary values (including phone numbers starting
+// with "+") still show correctly to the person opening the export.
+const FORMULA_INJECTION_RE = /^[=+\-@\t\r]/;
+
+function neutralizeFormula(value: string): string {
+  return FORMULA_INJECTION_RE.test(value) ? `'${value}` : value;
+}
+
 /** Quotes a single CSV field only when it needs it (contains a comma, quote, or newline) — same escaping convention parseCsv() reads back. */
 function csvField(value: string): string {
-  if (/[",\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`;
-  return value;
+  const safe = neutralizeFormula(value);
+  if (/[",\n]/.test(safe)) return `"${safe.replace(/"/g, '""')}"`;
+  return safe;
 }
 
 /** The write-side counterpart to parseCsv() — used by the company-data export (Phase 13), not by CSV import. */

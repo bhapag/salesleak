@@ -12,6 +12,11 @@ export type GlobalSearchResult = {
 
 const RESULT_LIMIT = 5;
 
+// Postgres `contains` is case-sensitive by default; every text filter below
+// opts into Prisma's case-insensitive mode so "acme"/"Acme"/"ACME" all match
+// the same records.
+const insensitive = { mode: "insensitive" as const };
+
 /** Tenant-scoped search across customers, leads, and quotations by name, phone, email, company name, or quotation number. */
 export async function globalSearch(rawQuery: string): Promise<GlobalSearchResult> {
   const session = await requireSession();
@@ -22,7 +27,12 @@ export async function globalSearch(rawQuery: string): Promise<GlobalSearchResult
     prisma.customer.findMany({
       where: {
         companyId: session.companyId,
-        OR: [{ name: { contains: query } }, { companyName: { contains: query } }, { phone: { contains: query } }, { email: { contains: query } }],
+        OR: [
+          { name: { contains: query, ...insensitive } },
+          { companyName: { contains: query, ...insensitive } },
+          { phone: { contains: query, ...insensitive } },
+          { email: { contains: query, ...insensitive } },
+        ],
       },
       take: RESULT_LIMIT,
       orderBy: { updatedAt: "desc" },
@@ -31,11 +41,11 @@ export async function globalSearch(rawQuery: string): Promise<GlobalSearchResult
       where: {
         companyId: session.companyId,
         OR: [
-          { title: { contains: query } },
-          { customer: { name: { contains: query } } },
-          { customer: { companyName: { contains: query } } },
-          { customer: { phone: { contains: query } } },
-          { customer: { email: { contains: query } } },
+          { title: { contains: query, ...insensitive } },
+          { customer: { name: { contains: query, ...insensitive } } },
+          { customer: { companyName: { contains: query, ...insensitive } } },
+          { customer: { phone: { contains: query, ...insensitive } } },
+          { customer: { email: { contains: query, ...insensitive } } },
         ],
       },
       include: { customer: true },
@@ -46,11 +56,11 @@ export async function globalSearch(rawQuery: string): Promise<GlobalSearchResult
       where: {
         lead: { companyId: session.companyId },
         OR: [
-          { quotationNumber: { contains: query } },
-          { lead: { customer: { name: { contains: query } } } },
-          { lead: { customer: { companyName: { contains: query } } } },
-          { lead: { customer: { phone: { contains: query } } } },
-          { lead: { customer: { email: { contains: query } } } },
+          { quotationNumber: { contains: query, ...insensitive } },
+          { lead: { customer: { name: { contains: query, ...insensitive } } } },
+          { lead: { customer: { companyName: { contains: query, ...insensitive } } } },
+          { lead: { customer: { phone: { contains: query, ...insensitive } } } },
+          { lead: { customer: { email: { contains: query, ...insensitive } } } },
         ],
       },
       include: { lead: { include: { customer: true } } },
