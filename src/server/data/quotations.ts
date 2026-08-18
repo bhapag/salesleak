@@ -100,12 +100,29 @@ export type LeadPickerOption = Awaited<ReturnType<typeof getLeadPickerOptions>>[
  * abandoned without saving (the standard invoicing-system tradeoff). The DB's
  * @@unique([companyId, quotationNumber]) constraint is the actual source of
  * truth for uniqueness; this just makes collisions rare in the common case.
+ *
+ * Each candidate is checked against existing rows before being returned —
+ * a defensive skip for the rare case where a manually-entered number happens
+ * to already occupy the auto sequence's next value (concurrent siblings
+ * never collide with each other here, since each gets its own atomically
+ * incremented value; this only guards against pre-existing rows). Bounded so
+ * a pathological run of manual collisions can't loop forever — if the bound
+ * is ever hit, the last candidate is returned as-is and createQuotation's
+ * P2002 handling remains the actual backstop.
  */
 export async function getSuggestedQuotationNumber(companyId: string): Promise<string> {
-  const company = await prisma.company.update({
-    where: { id: companyId },
-    data: { lastQuotationSequence: { increment: 1 } },
-    select: { lastQuotationSequence: true },
-  });
-  return `QT-${new Date().getFullYear()}-${String(company.lastQuotationSequence).padStart(4, "0")}`;
+  const year = new Date().getFullYear();
+  const MAX_ATTEMPTS = 50;
+  let candidate = "";
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const company = await prisma.company.update({
+      where: { id: companyId },
+      data: { lastQuotationSequence: { increment: 1 } },
+      select: { lastQuotationSequence: true },
+    });
+    candidate = `QT-${year}-${String(company.lastQuotationSequence).padStart(4, "0")}`;
+    const collision = await prisma.quotation.findFirst({ where: { companyId, quotationNumber: candidate }, select: { id: true } });
+    if (!collision) return candidate;
+  }
+  return candidate;
 }
