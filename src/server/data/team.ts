@@ -4,6 +4,7 @@ import { getQuotationsForCompany } from "./quotations";
 import { getWorkQueueForCompany } from "./tasks";
 import { getTaskRisk } from "@/lib/taskRisk";
 import { buildLeadAttentionItem, buildQuotationAttentionItem, type AttentionItem } from "@/lib/attentionItems";
+import { getWonValueForLead, groupQuotationsByLead } from "@/lib/wonValue";
 
 function sum(values: number[]): number {
   return values.reduce((a, b) => a + b, 0);
@@ -41,6 +42,7 @@ export async function getTeamOverview(companyId: string): Promise<TeamOverviewRo
   ]);
 
   const tasksWithRisk = tasks.map((t) => ({ ...t, risk: getTaskRisk(t, now) }));
+  const quotationsByLead = groupQuotationsByLead(quotations);
 
   return users.map((u) => {
     const userLeads = leads.filter((l) => l.ownerId === u.id);
@@ -58,7 +60,7 @@ export async function getTeamOverview(companyId: string): Promise<TeamOverviewRo
       overdueFollowUps: userTasks.filter((t) => t.risk.bucket === "overdue").length,
       openQuotationValue: sum(userQuotations.filter((q) => q.risk.isOpen).map((q) => q.value)),
       quotationValueAtRisk: sum(userQuotations.filter((q) => q.risk.needsAttention).map((q) => q.value)),
-      wonValue: sum(userLeads.filter((l) => l.status === "WON").map((l) => l.estimatedValue ?? 0)),
+      wonValue: sum(userLeads.filter((l) => l.status === "WON").map((l) => getWonValueForLead(l, quotationsByLead.get(l.id) ?? []))),
       wonDeals: userLeads.filter((l) => l.status === "WON").length,
       leadsMissingNextAction: userLeads.filter((l) => l.risk.isActive && (l.risk.missingNextAction || l.risk.missingDeadline)).length,
       upcomingTasks: userTasks.filter((t) => t.risk.bucket === "upcoming").length,

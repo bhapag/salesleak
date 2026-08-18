@@ -5,13 +5,11 @@ import { getCustomersForCompany } from "./customers";
 import { getTeamOverview, type TeamOverviewRow } from "./team";
 import { getNotificationsForUser } from "./notifications";
 import { buildLeadAttentionItem, buildQuotationAttentionItem, buildCustomerAttentionItem, type AttentionItem } from "@/lib/attentionItems";
+import { getWonValueForLead, groupQuotationsByLead } from "@/lib/wonValue";
+import { startOfDayInTimezone } from "@/lib/timezone";
 
 function sum(values: number[]): number {
   return values.reduce((a, b) => a + b, 0);
-}
-
-function startOfDay(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
 export type DashboardStats = {
@@ -73,16 +71,23 @@ export type DashboardData = {
  */
 export async function getDashboardData(companyId: string, userId: string, ownerScope?: string): Promise<DashboardData> {
   const now = new Date();
-  const today = startOfDay(now);
 
-  const [allLeads, allQuotations, allTasks, allCustomers, teamSnapshot, userNotifications] = await Promise.all([
+  const [allLeads, allQuotations, allTasks, allCustomers, teamSnapshot, userNotifications, company] = await Promise.all([
     getLeadsForCompany(companyId),
     getQuotationsForCompany(companyId),
     prisma.task.findMany({ where: { status: "PENDING", lead: { companyId, ...(ownerScope ? { ownerId: ownerScope } : {}) } } }),
     getCustomersForCompany(companyId),
     ownerScope ? Promise.resolve([]) : getTeamOverview(companyId),
     getNotificationsForUser(companyId, userId),
+    prisma.company.findFirst({ where: { id: companyId }, select: { timezone: true } }),
   ]);
+
+  // Day boundaries in the company's own timezone, not server-local/UTC —
+  // otherwise "due today"/"overdue" can flip hours early or late depending
+  // on where the app happens to be deployed.
+  const timezone = company?.timezone ?? "Asia/Kolkata";
+  const today = startOfDayInTimezone(now, timezone);
+  const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
 
   const leads = ownerScope ? allLeads.filter((l) => l.ownerId === ownerScope) : allLeads;
   const quotations = ownerScope ? allQuotations.filter((q) => q.lead.ownerId === ownerScope) : allQuotations;
@@ -95,12 +100,14 @@ export async function getDashboardData(companyId: string, userId: string, ownerS
   const uncontactedLeads = activeLeads.filter((l) => l.risk.isUntouched);
   const missingNextActionLeads = activeLeads.filter((l) => l.risk.missingNextAction || l.risk.missingDeadline);
 
-  const followUpsDueToday = tasks.filter((t) => startOfDay(t.dueDate).getTime() === today.getTime()).length;
+  const followUpsDueToday = tasks.filter((t) => t.dueDate >= today && t.dueDate < tomorrow).length;
   const overdueFollowUps = tasks.filter((t) => t.dueDate < today).length;
 
   const openQuotations = quotations.filter((q) => q.risk.isOpen);
   const overdueQuotations = quotations.filter((q) => q.risk.isOverdueFollowUp);
   const staleQuotations = quotations.filter((q) => q.risk.isStale);
+
+  const quotationsByLead = groupQuotationsByLead(quotations);
 
   const stats: DashboardStats = {
     newEnquiries: leads.filter((l) => l.status === "NEW").length,
@@ -110,7 +117,7 @@ export async function getDashboardData(companyId: string, userId: string, ownerS
     openQuotationValue: sum(openQuotations.map((q) => q.value)),
     quotationValueOverdue: sum(overdueQuotations.map((q) => q.value)),
     opportunitiesWithoutNextAction: missingNextActionLeads.length,
-    wonValue: sum(leads.filter((l) => l.status === "WON").map((l) => l.estimatedValue ?? 0)),
+    wonValue: sum(leads.filter((l) => l.status === "WON").map((l) => getWonValueForLead(l, quotationsByLead.get(l.id) ?? []))),
   };
 
   const atRiskLeadIds = new Set([...uncontactedLeads, ...missingNextActionLeads].map((l) => l.id));
