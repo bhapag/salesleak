@@ -85,7 +85,7 @@ export function GlobalSearch() {
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           onKeyDown={handleKeyDown}
           placeholder="Search customers, leads, quotations…"
-          className="w-full rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-8 pr-14 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:outline-none"
+          className="w-full rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-8 pr-14 text-sm text-slate-900 placeholder:text-slate-400 transition-colors duration-(--dur-micro) focus:border-brand-navy focus:bg-white focus:outline-none"
         />
         <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
           Ctrl K
@@ -93,7 +93,7 @@ export function GlobalSearch() {
       </div>
 
       {showDropdown && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-96 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+        <div className="dropdown-enter absolute left-0 right-0 top-full z-30 mt-1 max-h-96 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-dropdown">
           {pending && flatResults.length === 0 ? (
             <p className="px-3 py-3 text-xs text-slate-400">Searching…</p>
           ) : flatResults.length === 0 ? (

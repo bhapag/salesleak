@@ -42,7 +42,9 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Notifications"
-        className="relative rounded-lg p-2 text-slate-600 hover:bg-slate-100"
+        aria-haspopup="true"
+        aria-expanded={open}
+        className="relative rounded-lg p-2 text-slate-600 transition-colors duration-(--dur-micro) hover:bg-slate-100"
       >
         <BellIcon className="h-5 w-5" />
         {unreadCount > 0 && (
@@ -55,7 +57,7 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-20 mt-2 w-80 rounded-xl border border-slate-200 bg-white shadow-lg sm:w-96">
+          <div className="dropdown-enter absolute right-0 z-20 mt-2 w-80 rounded-xl border border-slate-200 bg-white shadow-dropdown sm:w-96">
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
               <p className="text-sm font-semibold text-slate-900">Notifications</p>
               {unreadCount > 0 && (

@@ -101,6 +101,50 @@ body {
 }
 
 /* ---------------------------------------------------------------------
+   Header dropdown panels (notifications, profile menu) — short fade+
+   scale on open. Mount-triggered only, no exit animation.
+--------------------------------------------------------------------- */
+@keyframes dropdown-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.dropdown-enter {
+  animation: dropdown-enter var(--dur-short) var(--ease-brand-out) both;
+}
+
+/* ---------------------------------------------------------------------
+   Mobile navigation drawer — backdrop fade + panel slide from the left.
+--------------------------------------------------------------------- */
+@keyframes drawer-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes drawer-panel-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.drawer-backdrop-enter {
+  animation: drawer-backdrop-in var(--dur-short) var(--ease-brand-out) both;
+}
+.drawer-panel-enter {
+  animation: drawer-panel-in var(--dur-medium) var(--ease-brand-out) both;
+}
+
+/* ---------------------------------------------------------------------
    Navy-tinted shadows (vs. Tailwind's default pure-black shadows). One
    layer each, no glow, no color beyond the navy tint. Hand-written utility
    classes — Tailwind v4's @theme namespace doesn't auto-generate shadow
