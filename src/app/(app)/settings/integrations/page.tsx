@@ -40,7 +40,7 @@ export default async function IntegrationsPage() {
 
         <FailedIngestionQueue entries={failedIngestions} />
 
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white shadow-card">
           <div className="border-b border-slate-200 px-5 py-4">
             <h2 className="text-sm font-semibold text-slate-900">Import History</h2>
             <p className="text-xs text-slate-500">Every CSV import, manual add, and webhook delivery, most recent first.</p>
@@ -53,29 +53,29 @@ export default async function IntegrationsPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[700px] text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th className="px-5 py-3 font-medium">Source</th>
-                    <th className="px-5 py-3 font-medium">File</th>
-                    <th className="px-5 py-3 font-medium">By</th>
-                    <th className="px-5 py-3 font-medium">Received</th>
-                    <th className="px-5 py-3 font-medium">Created</th>
-                    <th className="px-5 py-3 font-medium">Duplicates</th>
-                    <th className="px-5 py-3 font-medium">Invalid</th>
-                    <th className="px-5 py-3 font-medium">When</th>
+                    <th className="px-5 py-3">Source</th>
+                    <th className="px-5 py-3">File</th>
+                    <th className="px-5 py-3">By</th>
+                    <th className="px-5 py-3 text-right">Received</th>
+                    <th className="px-5 py-3 text-right">Created</th>
+                    <th className="px-5 py-3 text-right">Duplicates</th>
+                    <th className="px-5 py-3 text-right">Invalid</th>
+                    <th className="px-5 py-3">When</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {history.map((h) => (
-                    <tr key={h.id} className="hover:bg-slate-50">
+                    <tr key={h.id} className="transition-colors duration-(--dur-micro) hover:bg-slate-50">
                       <td className="px-5 py-3 text-slate-700">{formatSource(h.source)}</td>
                       <td className="px-5 py-3 text-slate-500">{h.fileName ?? "—"}</td>
                       <td className="px-5 py-3 text-slate-500">{h.triggeredBy?.name ?? "—"}</td>
-                      <td className="px-5 py-3 text-slate-600">{h.recordsReceived}</td>
-                      <td className="px-5 py-3 font-medium text-emerald-600">{h.recordsCreated}</td>
-                      <td className="px-5 py-3 text-amber-700">{h.duplicatesSkipped}</td>
-                      <td className="px-5 py-3 text-red-600">{h.invalidRows}</td>
-                      <td className="px-5 py-3 text-slate-400">{formatDateTime(h.createdAt)}</td>
+                      <td className="px-5 py-3 text-right tabular-nums text-slate-600">{h.recordsReceived}</td>
+                      <td className="px-5 py-3 text-right font-medium tabular-nums text-emerald-600">{h.recordsCreated}</td>
+                      <td className="px-5 py-3 text-right tabular-nums text-amber-700">{h.duplicatesSkipped}</td>
+                      <td className="px-5 py-3 text-right tabular-nums text-red-600">{h.invalidRows}</td>
+                      <td className="px-5 py-3 tabular-nums text-slate-400">{formatDateTime(h.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>

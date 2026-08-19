@@ -34,18 +34,18 @@ export default async function PilotReadinessPage() {
           <div className="flex flex-wrap items-baseline gap-x-8 gap-y-2">
             <div>
               <p className="text-xs text-slate-500">Open opportunities</p>
-              <p className="text-2xl font-semibold text-slate-900">{report.openOpportunities.count}</p>
+              <p className="text-2xl font-semibold tabular-nums text-slate-900">{report.openOpportunities.count}</p>
             </div>
             <div>
               <p className="text-xs text-slate-500">Open opportunity value</p>
-              <p className="text-2xl font-semibold text-slate-900">{formatCurrency(report.openOpportunities.value)}</p>
+              <p className="text-2xl font-semibold tabular-nums text-slate-900">{formatCurrency(report.openOpportunities.value)}</p>
             </div>
           </div>
         </Card>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {report.checks.map((check) => (
-            <Card key={check.key}>
+            <Card key={check.key} className={`border-l-[3px] ${check.ok ? "border-l-transparent" : "border-l-amber-400"}`}>
               <div className="flex items-start gap-3">
                 <span
                   className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
@@ -58,7 +58,10 @@ export default async function PilotReadinessPage() {
                   <p className="text-sm font-medium text-slate-900">{check.label}</p>
                   <p className="mt-0.5 text-xs text-slate-500">{check.detail}</p>
                   {check.href && (
-                    <Link href={check.href} className="mt-1.5 inline-block text-xs font-medium text-slate-600 hover:text-slate-900 hover:underline">
+                    <Link
+                      href={check.href}
+                      className="mt-1.5 inline-block text-xs font-medium text-slate-600 transition-colors duration-(--dur-micro) hover:text-slate-900 hover:underline"
+                    >
                       {check.ok ? "Review →" : "Fix this →"}
                     </Link>
                   )}

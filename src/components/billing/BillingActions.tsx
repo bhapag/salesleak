@@ -24,7 +24,7 @@ export function UpgradeButton({ plan, billingConfigured }: { plan: "STARTER" | "
     return (
       <div className="flex flex-col gap-1">
         <SecondaryButton disabled>Upgrade (billing not connected yet)</SecondaryButton>
-        <p className="text-[11px] text-slate-400">Contact us to upgrade while billing is being set up in this environment.</p>
+        <p className="text-[11px] text-slate-400">Online billing isn&apos;t configured in this environment yet.</p>
       </div>
     );
   }

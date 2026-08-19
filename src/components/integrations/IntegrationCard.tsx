@@ -92,15 +92,15 @@ export function IntegrationCard({ connector }: { connector: ConnectorView }) {
           <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
             <div>
               <dt className="text-slate-400">Records received</dt>
-              <dd className="text-slate-700">{connector.totalReceived}</dd>
+              <dd className="tabular-nums text-slate-700">{connector.totalReceived}</dd>
             </div>
             <div>
               <dt className="text-slate-400">Last success</dt>
-              <dd className="text-slate-700">{connector.lastSuccessAt ? formatDateTime(connector.lastSuccessAt) : "Never"}</dd>
+              <dd className="tabular-nums text-slate-700">{connector.lastSuccessAt ? formatDateTime(connector.lastSuccessAt) : "Never"}</dd>
             </div>
             <div className="col-span-2">
               <dt className="text-slate-400">Last attempt</dt>
-              <dd className="text-slate-700">{connector.lastSyncAt ? formatDateTime(connector.lastSyncAt) : "Never"}</dd>
+              <dd className="tabular-nums text-slate-700">{connector.lastSyncAt ? formatDateTime(connector.lastSyncAt) : "Never"}</dd>
             </div>
             {connector.lastError && (
               <div className="col-span-2">
@@ -122,7 +122,7 @@ export function IntegrationCard({ connector }: { connector: ConnectorView }) {
                 <button
                   type="button"
                   onClick={() => copy(absoluteUrl(webhookUrl!))}
-                  className="shrink-0 rounded px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-200"
+                  className="shrink-0 rounded px-2 py-1 text-[11px] font-medium text-slate-600 transition-colors duration-(--dur-micro) hover:bg-slate-200"
                 >
                   {copied ? "Copied" : "Copy"}
                 </button>
@@ -174,7 +174,7 @@ export function IntegrationCard({ connector }: { connector: ConnectorView }) {
               type="button"
               onClick={handleToggle}
               disabled={pending}
-              className="text-xs font-medium text-slate-500 hover:text-slate-900 disabled:opacity-50"
+              className="text-xs font-medium text-slate-500 transition-colors duration-(--dur-micro) hover:text-slate-900 disabled:opacity-50"
             >
               {connector.enabled ? "Disable" : "Enable"}
             </button>

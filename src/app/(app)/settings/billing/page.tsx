@@ -70,24 +70,29 @@ export default async function BillingPage() {
                   {state.trialDaysRemaining !== null && state.trialDaysRemaining > 0
                     ? `${state.trialDaysRemaining} day${state.trialDaysRemaining === 1 ? "" : "s"} left in your trial`
                     : "Your trial has ended"}{" "}
-                  — ends {formatDate(state.trialEnd)}.
+                  — ends <span className="tabular-nums">{formatDate(state.trialEnd)}</span>.
                 </p>
               )}
               {state.currentPeriodEnd && (
                 <p className="mt-2 text-sm text-slate-600">
-                  Current billing period ends {formatDate(state.currentPeriodEnd)}
+                  Current billing period ends <span className="tabular-nums">{formatDate(state.currentPeriodEnd)}</span>
                   {state.cancelAtPeriodEnd && " — will not renew"}.
-                </p>
-              )}
-              {state.isReadOnly && (
-                <p className="mt-2 text-sm font-medium text-red-700">
-                  This workspace is read-only until the subscription is reactivated. Your data is safe and export always works.
                 </p>
               )}
             </div>
             <ManageBillingButton billingConfigured={billingConfigured} hasBillingAccount={!!subscription?.billingCustomerId} />
           </div>
         </Card>
+
+        {state.isReadOnly && (
+          <Card className="border-red-200 bg-red-50">
+            <p className="text-sm font-medium text-red-800">This workspace is read-only</p>
+            <p className="mt-1 text-xs text-red-700">
+              Your subscription needs attention before changes can be made again. Your data is safe, and export always works regardless of
+              subscription state.
+            </p>
+          </Card>
+        )}
 
         {!billingConfigured && (
           <Card className="border-sky-200 bg-sky-50">
@@ -107,13 +112,16 @@ export default async function BillingPage() {
               const plan = PLAN_CONFIG[planId];
               const isCurrent = state.plan === planId;
               return (
-                <Card key={planId} className={isCurrent ? "border-slate-900" : ""}>
+                <Card
+                  key={planId}
+                  className={`transition-colors duration-(--dur-micro) ${isCurrent ? "border-slate-900" : "hover:border-slate-300"}`}
+                >
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-slate-900">{plan.name}</p>
                     {isCurrent && <span className="text-xs font-medium text-slate-500">Current plan</span>}
                   </div>
                   <p className="mt-1 text-xs text-slate-500">{plan.tagline}</p>
-                  <p className="mt-3 text-2xl font-semibold text-slate-900">
+                  <p className="mt-3 text-2xl font-semibold tabular-nums text-slate-900">
                     {plan.priceMonthlyInr != null ? `${formatCurrency(plan.priceMonthlyInr)}/mo` : "Contact us"}
                   </p>
                   <ul className="mt-3 flex flex-col gap-1.5 text-xs text-slate-600">

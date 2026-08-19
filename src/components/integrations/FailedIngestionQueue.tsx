@@ -22,7 +22,7 @@ export function FailedIngestionQueue({ entries }: { entries: FailedIngestionEntr
   if (entries.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-amber-200 bg-white shadow-sm">
+    <div className="rounded-xl border border-amber-200 bg-white shadow-card">
       <div className="border-b border-amber-100 px-5 py-4">
         <h2 className="text-sm font-semibold text-slate-900">Failed Ingestion Queue</h2>
         <p className="text-xs text-slate-500">
@@ -92,8 +92,8 @@ function FailedIngestionRow({ entry }: { entry: FailedIngestionEntry }) {
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <SourceBadge source={entry.provider} />
-            <span className="text-xs text-slate-400">{formatDateTime(entry.createdAt)}</span>
-            {entry.retryCount > 0 && <span className="text-xs text-slate-400">· retried {entry.retryCount}x</span>}
+            <span className="text-xs tabular-nums text-slate-400">{formatDateTime(entry.createdAt)}</span>
+            {entry.retryCount > 0 && <span className="text-xs tabular-nums text-slate-400">· retried {entry.retryCount}x</span>}
           </div>
           <p className="mt-1 text-sm font-medium text-red-700">{entry.errorMessage}</p>
         </div>
@@ -101,7 +101,12 @@ function FailedIngestionRow({ entry }: { entry: FailedIngestionEntry }) {
           <SecondaryButton onClick={() => setExpanded((v) => !v)} className="!py-1.5 !text-xs">
             {expanded ? "Hide" : "Inspect & Retry"}
           </SecondaryButton>
-          <button type="button" onClick={handleDismiss} disabled={pending} className="text-xs font-medium text-slate-400 hover:text-slate-700">
+          <button
+            type="button"
+            onClick={handleDismiss}
+            disabled={pending}
+            className="text-xs font-medium text-slate-400 transition-colors duration-(--dur-micro) hover:text-slate-700"
+          >
             Dismiss
           </button>
         </div>

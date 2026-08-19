@@ -7,12 +7,28 @@ import { formatSource } from "@/lib/format";
 
 const LEAD_SOURCE_OPTIONS = ["INDIAMART", "WEBSITE", "WHATSAPP", "JUSTDIAL", "EXPORTERS_INDIA", "TRADEINDIA", "EMAIL", "PHONE", "REFERRAL"] as const;
 
+// A real dropdown of every IANA zone the runtime knows about, rather than a
+// free-text field — this value drives Dashboard/Lead risk/Tasks/My Day/Team
+// day-boundary calculations everywhere else in the app, so an invalid typo
+// here would silently break all of them. Falls back to a short curated list
+// only if the browser doesn't support Intl.supportedValuesOf (very old browsers).
+function getTimezoneOptions(current: string): string[] {
+  try {
+    const zones = Intl.supportedValuesOf("timeZone");
+    return zones.includes(current) ? zones : [current, ...zones];
+  } catch {
+    const fallback = ["Asia/Kolkata", "Asia/Dubai", "Asia/Singapore", "Europe/London", "America/New_York", "America/Los_Angeles", "UTC"];
+    return fallback.includes(current) ? fallback : [current, ...fallback];
+  }
+}
+
 export function CompanySettingsForm({ initial }: { initial: CompanySettingsInput }) {
   const [form, setForm] = useState(initial);
   const [newReason, setNewReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [timezoneOptions] = useState(() => getTimezoneOptions(initial.timezone));
 
   function set<K extends keyof CompanySettingsInput>(key: K, value: CompanySettingsInput[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -43,31 +59,40 @@ export function CompanySettingsForm({ initial }: { initial: CompanySettingsInput
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label="Company name">
-          <input value={form.name} onChange={(e) => set("name", e.target.value)} className={inputClass} required />
-        </Field>
-        <Field label="Industry">
-          <input value={form.industry} onChange={(e) => set("industry", e.target.value)} className={inputClass} />
-        </Field>
-        <Field label="Phone">
-          <input value={form.phone} onChange={(e) => set("phone", e.target.value)} className={inputClass} />
-        </Field>
-        <Field label="Email">
-          <input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} className={inputClass} />
-        </Field>
-        <Field label="City">
-          <input value={form.city} onChange={(e) => set("city", e.target.value)} className={inputClass} />
-        </Field>
-        <Field label="State">
-          <input value={form.state} onChange={(e) => set("state", e.target.value)} className={inputClass} />
-        </Field>
-        <Field label="Timezone">
-          <input value={form.timezone} onChange={(e) => set("timezone", e.target.value)} className={inputClass} />
-        </Field>
-        <Field label="Currency">
-          <input value={form.currency} onChange={(e) => set("currency", e.target.value)} className={inputClass} />
-        </Field>
+      <div>
+        <h3 className="mb-3 text-sm font-semibold text-slate-900">Company profile</h3>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Company name">
+            <input value={form.name} onChange={(e) => set("name", e.target.value)} className={inputClass} required />
+          </Field>
+          <Field label="Industry">
+            <input value={form.industry} onChange={(e) => set("industry", e.target.value)} className={inputClass} />
+          </Field>
+          <Field label="Phone">
+            <input value={form.phone} onChange={(e) => set("phone", e.target.value)} className={inputClass} />
+          </Field>
+          <Field label="Email">
+            <input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} className={inputClass} />
+          </Field>
+          <Field label="City">
+            <input value={form.city} onChange={(e) => set("city", e.target.value)} className={inputClass} />
+          </Field>
+          <Field label="State">
+            <input value={form.state} onChange={(e) => set("state", e.target.value)} className={inputClass} />
+          </Field>
+          <Field label="Timezone" helper="Used for every due-today/overdue calculation across the app.">
+            <select value={form.timezone} onChange={(e) => set("timezone", e.target.value)} className={selectClass}>
+              {timezoneOptions.map((tz) => (
+                <option key={tz} value={tz}>
+                  {tz}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Currency">
+            <input value={form.currency} onChange={(e) => set("currency", e.target.value)} className={inputClass} />
+          </Field>
+        </div>
       </div>
 
       <div className="border-t border-slate-100 pt-5">
@@ -119,7 +144,7 @@ export function CompanySettingsForm({ initial }: { initial: CompanySettingsInput
                 <button
                   type="button"
                   onClick={() => set("lostReasonPresets", form.lostReasonPresets.filter((x) => x !== reason))}
-                  className="text-slate-400 hover:text-slate-600"
+                  className="text-slate-400 transition-colors duration-(--dur-micro) hover:text-slate-600"
                   aria-label={`Remove ${reason}`}
                 >
                   ×
@@ -152,7 +177,10 @@ export function CompanySettingsForm({ initial }: { initial: CompanySettingsInput
             {LEAD_SOURCE_OPTIONS.map((source) => {
               const checked = form.activeLeadSources.includes(source as never);
               return (
-                <label key={source} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${checked ? "border-slate-900 bg-slate-50" : "border-slate-200"}`}>
+                <label
+                  key={source}
+                  className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors duration-(--dur-micro) ${checked ? "border-slate-900 bg-slate-50" : "border-slate-200 hover:border-slate-300"}`}
+                >
                   <input type="checkbox" checked={checked} onChange={() => toggleSource(source)} />
                   {formatSource(source)}
                 </label>
