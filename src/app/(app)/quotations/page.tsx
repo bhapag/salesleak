@@ -26,8 +26,8 @@ export default async function QuotationsPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-5 sm:px-8">
-        <h1 className="text-xl font-semibold text-slate-900">Quotations</h1>
+      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Quotations</h1>
         <p className="text-sm text-slate-500">
           {quotations.length} quotation{quotations.length === 1 ? "" : "s"} · {session.companyName}
         </p>

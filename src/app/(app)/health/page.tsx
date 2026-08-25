@@ -19,9 +19,9 @@ export default async function HealthPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-5 sm:px-8">
+      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-xl font-semibold text-slate-900">Sales Process Health</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Sales Process Health</h1>
           <span
             className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${
               healthy ? "bg-emerald-50 text-emerald-700 ring-emerald-200" : "bg-amber-50 text-amber-700 ring-amber-200"

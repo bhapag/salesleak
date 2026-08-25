@@ -26,7 +26,7 @@ export function QuotationDetailView({ quotation, currentUserId }: { quotation: Q
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-5 sm:px-8">
+      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
         <Link
           href="/quotations"
           className="text-sm font-medium text-slate-500 transition-colors duration-(--dur-micro) hover:text-slate-900"
@@ -35,7 +35,7 @@ export function QuotationDetailView({ quotation, currentUserId }: { quotation: Q
         </Link>
         <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <h1 className="text-xl font-semibold text-slate-900">{quotation.quotationNumber}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{quotation.quotationNumber}</h1>
             <p className="mt-0.5 text-sm text-slate-500">{quotation.lead.customer.name}</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <QuotationStatusBadge status={quotation.risk.displayStatus} />

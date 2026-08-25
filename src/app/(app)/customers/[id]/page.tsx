@@ -28,7 +28,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-5 sm:px-8">
+      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
         <Link
           href="/customers"
           className="text-sm font-medium text-slate-500 transition-colors duration-(--dur-micro) hover:text-slate-900"
@@ -37,7 +37,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
         </Link>
         <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-slate-900">{customer.name}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{customer.name}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <CustomerStatusBadge status={customer.customerStatus} />
               <RepeatOrderBadge eligible={customer.repeatOrderSignal.eligible} status={customer.repeatOrderSignal.status} />

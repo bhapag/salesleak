@@ -43,8 +43,8 @@ export default async function BillingPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-5 sm:px-8">
-        <h1 className="text-xl font-semibold text-slate-900">Billing</h1>
+      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Billing</h1>
         <p className="text-sm text-slate-500">Plan, subscription status, and payment for {session.companyName}.</p>
         <p className="mt-1 text-xs text-slate-400">
           SalesLeak by <span className="text-[#B08A45]">NobleArc</span>

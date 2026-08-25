@@ -21,8 +21,8 @@ export default async function CompanySettingsPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-5 sm:px-8">
-        <h1 className="text-xl font-semibold text-slate-900">Company Settings</h1>
+      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Company Settings</h1>
         <p className="text-sm text-slate-500">Basic workspace information for {company.name}.</p>
       </header>
 

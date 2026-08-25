@@ -81,7 +81,7 @@ export function OnboardingShell({
   children: ReactNode;
 }) {
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="auth-fade-in mx-auto w-full max-w-2xl">
       <div className="mb-8 flex flex-col items-center text-center">
         <div className="flex items-center gap-2">
           <Image src="/brand/salesleak/salesleak-icon-master.png" alt="SalesLeak" width={28} height={28} priority className="shrink-0 rounded-[8px]" />

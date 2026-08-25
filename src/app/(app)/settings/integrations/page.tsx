@@ -23,8 +23,8 @@ export default async function IntegrationsPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-5 sm:px-8">
-        <h1 className="text-xl font-semibold text-slate-900">Integrations</h1>
+      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Integrations</h1>
         <p className="text-sm text-slate-500">
           Where enquiries can come from. Every source normalizes into the same lead — CSV import, manual entry, IndiaMART (test mode), and website
           forms work today; the rest are on the way.
