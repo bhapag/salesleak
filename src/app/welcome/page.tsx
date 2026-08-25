@@ -36,10 +36,10 @@ const LEAK_POINTS = [
 ];
 
 const INVARIANT = [
-  { k: "Owner", d: "Someone specific is responsible — never \"the team.\"" },
+  { k: "Owner", d: "Someone specific is responsible — never “the team.”" },
   { k: "Status", d: "Where it actually stands, not where it was last week." },
   { k: "Next action", d: "The next concrete thing that needs to happen." },
-  { k: "Deadline", d: "A date it needs to happen by — so \"soon\" becomes real." },
+  { k: "Deadline", d: "A date it needs to happen by — so “soon” becomes real." },
 ];
 
 const FUNNEL = ["Enquiry", "Contact", "Requirement", "Quotation", "Follow-up", "Negotiation", "Won / Lost", "Repeat order"];
@@ -138,7 +138,7 @@ export default async function WelcomePage() {
           <div className="mt-14 grid grid-cols-1 items-center gap-12 pb-20 lg:mt-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 lg:pb-28">
             <div className="auth-fade-in">
               <p className="text-xs font-semibold uppercase tracking-wide text-brand-gold">Sales-leakage prevention for B2B</p>
-              <h1 className="mt-3 text-4xl font-semibold leading-[1.08] tracking-tight text-brand-warm-white sm:text-5xl">
+              <h1 className="mt-3 text-4xl font-semibold text-balance leading-[1.08] tracking-tight text-brand-warm-white sm:text-5xl">
                 Catch what your sales process misses.
               </h1>
               <p className="mt-5 max-w-lg text-base leading-relaxed text-brand-warm-white/65">{DESCRIPTION}</p>
@@ -170,7 +170,7 @@ export default async function WelcomePage() {
       <section className="mx-auto max-w-6xl px-6 py-20 sm:px-8">
         <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">The problem</p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+          <h2 className="mt-2 text-2xl font-semibold text-balance tracking-tight text-slate-900 sm:text-3xl">
             Deals don&apos;t usually die on merit. They die from silence.
           </h2>
           <p className="mt-3 text-slate-600 leading-relaxed">
@@ -196,7 +196,7 @@ export default async function WelcomePage() {
         <div className="mx-auto max-w-6xl px-6 sm:px-8">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">The core rule</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+            <h2 className="mt-2 text-2xl font-semibold text-balance tracking-tight text-slate-900 sm:text-3xl">
               Every active lead should have four things. SalesLeak makes it obvious when one is missing.
             </h2>
           </div>
@@ -225,7 +225,7 @@ export default async function WelcomePage() {
       <section id="how-it-works" className="mx-auto max-w-6xl px-6 py-20 sm:px-8">
         <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">How it works</p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+          <h2 className="mt-2 text-2xl font-semibold text-balance tracking-tight text-slate-900 sm:text-3xl">
             The funnel doesn&apos;t stop at Won.
           </h2>
           <p className="mt-3 text-slate-600 leading-relaxed">
@@ -257,7 +257,7 @@ export default async function WelcomePage() {
         <div className="mx-auto max-w-6xl px-6 sm:px-8">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">What you get</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+            <h2 className="mt-2 text-2xl font-semibold text-balance tracking-tight text-slate-900 sm:text-3xl">
               One workspace for the whole sales process.
             </h2>
           </div>
@@ -281,7 +281,7 @@ export default async function WelcomePage() {
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Who it&apos;s for</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+            <h2 className="mt-2 text-2xl font-semibold text-balance tracking-tight text-slate-900 sm:text-3xl">
               Built for industrial B2B — manufacturers, distributors, and traders.
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-slate-500">
@@ -313,7 +313,7 @@ export default async function WelcomePage() {
       <section className="border-t border-slate-200 bg-white py-20">
         <div className="mx-auto max-w-6xl px-6 sm:px-8">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Questions</p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Before you start</h2>
+          <h2 className="mt-2 text-2xl font-semibold text-balance tracking-tight text-slate-900 sm:text-3xl">Before you start</h2>
 
           <div className="mt-10 grid grid-cols-1 gap-x-12 gap-y-8 sm:grid-cols-2">
             {FAQ.map((item) => (
@@ -329,7 +329,7 @@ export default async function WelcomePage() {
       {/* ---------- FINAL CTA (navy) ---------- */}
       <div className="bg-brand-navy">
         <div className="mx-auto max-w-6xl px-6 py-16 text-center sm:px-8">
-          <h2 className="text-2xl font-semibold tracking-tight text-brand-warm-white sm:text-3xl">
+          <h2 className="text-2xl font-semibold text-balance tracking-tight text-brand-warm-white sm:text-3xl">
             See what your pipeline is missing.
           </h2>
           <p className="mx-auto mt-3 max-w-md text-sm text-brand-warm-white/60">

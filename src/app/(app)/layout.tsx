@@ -18,11 +18,19 @@ export default async function AppShellLayout({ children }: { children: React.Rea
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 md:flex-row">
+      <a
+        href="#main-content"
+        className="fixed left-2 top-2 z-[60] -translate-y-16 rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-brand-warm-white transition-transform duration-(--dur-micro) focus-visible:translate-y-0"
+      >
+        Skip to content
+      </a>
       <Sidebar companyName={session.companyName} role={session.role} />
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader session={session} />
         <SubscriptionBanner state={subscriptionState} isOwner={session.role === "OWNER"} />
-        <div className="min-w-0 flex-1">{children}</div>
+        <div id="main-content" className="min-w-0 flex-1">
+          {children}
+        </div>
       </div>
     </div>
   );
