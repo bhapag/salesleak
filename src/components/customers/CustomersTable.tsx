@@ -87,7 +87,7 @@ export function CustomersTable({ customers, users }: { customers: CustomerSummar
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className={selectClass} aria-label="Filter by status">
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className={`${selectClass} lg:w-44`} aria-label="Filter by status">
             <option value="ALL">All statuses</option>
             {CUSTOMER_STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -96,7 +96,7 @@ export function CustomersTable({ customers, users }: { customers: CustomerSummar
             ))}
           </select>
 
-          <select value={ownerFilter} onChange={(e) => setOwnerFilter(e.target.value)} className={selectClass} aria-label="Filter by salesperson">
+          <select value={ownerFilter} onChange={(e) => setOwnerFilter(e.target.value)} className={`${selectClass} lg:w-48`} aria-label="Filter by salesperson">
             <option value="ALL">All salespeople</option>
             <option value="UNASSIGNED">Unassigned</option>
             {users.map((u) => (

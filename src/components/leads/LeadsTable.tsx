@@ -96,7 +96,7 @@ export function LeadsTable({ leads, users }: { leads: LeadWithRisk[]; users: { i
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className={selectClass} aria-label="Filter by status">
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className={`${selectClass} lg:w-44`} aria-label="Filter by status">
             <option value="ALL">All statuses</option>
             {LEAD_STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -105,7 +105,7 @@ export function LeadsTable({ leads, users }: { leads: LeadWithRisk[]; users: { i
             ))}
           </select>
 
-          <select value={ownerFilter} onChange={(e) => setOwnerFilter(e.target.value)} className={selectClass} aria-label="Filter by salesperson">
+          <select value={ownerFilter} onChange={(e) => setOwnerFilter(e.target.value)} className={`${selectClass} lg:w-48`} aria-label="Filter by salesperson">
             <option value="ALL">All salespeople</option>
             <option value="UNASSIGNED">Unassigned</option>
             {users.map((u) => (
@@ -115,7 +115,7 @@ export function LeadsTable({ leads, users }: { leads: LeadWithRisk[]; users: { i
             ))}
           </select>
 
-          <select value={source} onChange={(e) => setSource(e.target.value)} className={selectClass} aria-label="Filter by source">
+          <select value={source} onChange={(e) => setSource(e.target.value)} className={`${selectClass} lg:w-44`} aria-label="Filter by source">
             <option value="ALL">All sources</option>
             {LEAD_SOURCES.map((s) => (
               <option key={s} value={s}>

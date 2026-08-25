@@ -31,6 +31,20 @@ const LEAD_SOURCE_OPTIONS = ["INDIAMART", "WEBSITE", "WHATSAPP", "JUSTDIAL", "EX
 
 const DEFAULT_LOST_REASONS = ["Price too high", "Chose a competitor", "No budget", "Project cancelled", "No response"];
 
+// Same real, zero-maintenance IANA zone list Company Settings uses — this
+// value drives every day-boundary calculation in the app, so a brand-new
+// Owner's very first interaction with SalesLeak shouldn't be a free-text
+// field that can silently corrupt all of them with a typo.
+function getTimezoneOptions(current: string): string[] {
+  try {
+    const zones = Intl.supportedValuesOf("timeZone");
+    return zones.includes(current) ? zones : [current, ...zones];
+  } catch {
+    const fallback = ["Asia/Kolkata", "Asia/Dubai", "Asia/Singapore", "Europe/London", "America/New_York", "America/Los_Angeles", "UTC"];
+    return fallback.includes(current) ? fallback : [current, ...fallback];
+  }
+}
+
 type AddedMember = { name: string; email: string; role: "SALES_MANAGER" | "SALESPERSON"; password: string };
 type LeadPlan = "csv" | "manual" | "skip" | null;
 
@@ -53,6 +67,7 @@ export function OnboardingWizard({ company }: { company: CompanyInit }) {
   });
 
   const [members, setMembers] = useState<AddedMember[]>([]);
+  const [timezoneOptions] = useState(() => getTimezoneOptions(company.timezone));
 
   const [highValueThreshold, setHighValueThreshold] = useState(String(company.highValueThreshold));
   const [defaultPriority, setDefaultPriority] = useState(company.defaultPriority);
@@ -128,8 +143,18 @@ export function OnboardingWizard({ company }: { company: CompanyInit }) {
               <Field label="State">
                 <input value={details.state} onChange={(e) => setDetails((d) => ({ ...d, state: e.target.value }))} className={inputClass} />
               </Field>
-              <Field label="Timezone">
-                <input value={details.timezone} onChange={(e) => setDetails((d) => ({ ...d, timezone: e.target.value }))} className={inputClass} />
+              <Field label="Timezone" helper="Used for every due-today/overdue calculation across the app.">
+                <select
+                  value={details.timezone}
+                  onChange={(e) => setDetails((d) => ({ ...d, timezone: e.target.value }))}
+                  className={selectClass}
+                >
+                  {timezoneOptions.map((tz) => (
+                    <option key={tz} value={tz}>
+                      {tz}
+                    </option>
+                  ))}
+                </select>
               </Field>
               <Field label="Currency">
                 <input value={details.currency} onChange={(e) => setDetails((d) => ({ ...d, currency: e.target.value }))} className={inputClass} />

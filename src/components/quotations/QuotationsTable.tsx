@@ -110,7 +110,7 @@ export function QuotationsTable({ quotations, users }: { quotations: QuotationWi
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className={selectClass} aria-label="Filter by status">
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className={`${selectClass} lg:w-44`} aria-label="Filter by status">
             <option value="ALL">All statuses</option>
             {QUOTATION_DISPLAY_STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -119,7 +119,7 @@ export function QuotationsTable({ quotations, users }: { quotations: QuotationWi
             ))}
           </select>
 
-          <select value={ownerFilter} onChange={(e) => setOwnerFilter(e.target.value)} className={selectClass} aria-label="Filter by salesperson">
+          <select value={ownerFilter} onChange={(e) => setOwnerFilter(e.target.value)} className={`${selectClass} lg:w-48`} aria-label="Filter by salesperson">
             <option value="ALL">All salespeople</option>
             <option value="UNASSIGNED">Unassigned</option>
             {users.map((u) => (
@@ -132,7 +132,7 @@ export function QuotationsTable({ quotations, users }: { quotations: QuotationWi
           <select
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value as DateFilter)}
-            className={selectClass}
+            className={`${selectClass} lg:w-48`}
             aria-label="Filter by date sent"
           >
             <option value="ALL">Any date sent</option>
@@ -227,7 +227,7 @@ function QuotationRow({ quotation }: { quotation: QuotationWithRisk }) {
         </div>
       </td>
       <td className="max-w-[180px] px-4 py-3.5 align-top text-slate-600">
-        <Link href={`/leads/${quotation.leadId}`} className="truncate hover:underline">
+        <Link href={`/leads/${quotation.leadId}`} className="block truncate hover:underline">
           {quotation.lead.title}
         </Link>
       </td>
