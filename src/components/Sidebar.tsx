@@ -161,8 +161,9 @@ export function Sidebar({ companyName, role }: { companyName: string; role: Role
         </div>
       )}
 
-      {/* Desktop sidebar */}
-      <aside className="hidden w-60 shrink-0 flex-col bg-brand-navy md:flex">
+      {/* Desktop sidebar — sticky and self-scrolling so primary nav stays reachable
+          regardless of how tall the main content column grows. */}
+      <aside className="hidden w-60 shrink-0 flex-col self-start bg-brand-navy md:sticky md:top-0 md:flex md:h-screen md:overflow-y-auto">
         <div className="flex flex-col gap-0.5 px-5 py-6">
           <BrandMark />
           <span className="truncate text-xs text-brand-warm-white/45">{companyName}</span>
