@@ -32,9 +32,9 @@ function BrandMark() {
     <div className="flex items-center gap-2">
       <Image src="/brand/salesleak/salesleak-icon-master.png" alt="SalesLeak" width={26} height={26} priority className="shrink-0 rounded-[7px]" />
       <div className="flex items-baseline gap-1.5">
-        <span className="text-lg font-semibold tracking-tight text-brand-navy">SalesLeak</span>
-        <span className="text-[10px] text-slate-400">
-          by <span className="text-[#B08A45]">NobleArc</span>
+        <span className="text-lg font-semibold tracking-tight text-brand-warm-white">SalesLeak</span>
+        <span className="text-[10px] text-brand-warm-white/45">
+          by <span className="text-brand-gold">NobleArc</span>
         </span>
       </div>
     </div>
@@ -91,19 +91,21 @@ export function Sidebar({ companyName, role }: { companyName: string; role: Role
 
   function renderNavLinks(onNavigate?: () => void) {
     return (
-      <nav className="flex flex-1 flex-col gap-1 px-3" aria-label="Primary">
+      <nav className="on-dark flex flex-1 flex-col gap-1 px-3" aria-label="Primary">
         {visibleItems.map((item, i) => {
           const active = isActive(item.href);
           const showDivider = i > 0 && item.group !== visibleItems[i - 1].group;
           return (
             <Fragment key={item.href}>
-              {showDivider && <div className="my-2 border-t border-slate-100" aria-hidden="true" />}
+              {showDivider && <div className="my-2 border-t border-white/10" aria-hidden="true" />}
               <Link
                 href={item.href}
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-(--dur-micro) ${
-                  active ? "bg-brand-navy text-brand-warm-white" : "text-slate-600 hover:bg-slate-100 hover:text-brand-navy"
+                className={`flex items-center gap-3 rounded-lg border-l-2 px-3 py-2 text-sm font-medium transition-colors duration-(--dur-micro) ${
+                  active
+                    ? "border-l-brand-gold bg-white/10 text-brand-warm-white"
+                    : "border-l-transparent text-brand-warm-white/65 hover:bg-white/5 hover:text-brand-warm-white"
                 }`}
               >
                 <item.icon className="h-4 w-4 shrink-0" />
@@ -119,13 +121,13 @@ export function Sidebar({ companyName, role }: { companyName: string; role: Role
   return (
     <>
       {/* Mobile top bar — sticky so it stays above the drawer regardless of scroll position */}
-      <div className="sticky top-0 z-50 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
+      <div className="on-dark sticky top-0 z-50 flex items-center justify-between border-b border-white/10 bg-brand-navy px-4 py-3 md:hidden">
         <div className="flex items-center gap-2">
           <Image src="/brand/salesleak/salesleak-icon-master.png" alt="SalesLeak" width={22} height={22} priority className="shrink-0 rounded-[6px]" />
           <div className="flex items-baseline gap-1.5">
-            <span className="text-lg font-semibold tracking-tight text-brand-navy">SalesLeak</span>
-            <span className="text-[10px] text-slate-400">
-              by <span className="text-[#B08A45]">NobleArc</span>
+            <span className="text-lg font-semibold tracking-tight text-brand-warm-white">SalesLeak</span>
+            <span className="text-[10px] text-brand-warm-white/45">
+              by <span className="text-brand-gold">NobleArc</span>
             </span>
           </div>
         </div>
@@ -136,7 +138,7 @@ export function Sidebar({ companyName, role }: { companyName: string; role: Role
           aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav-drawer"
-          className="rounded-lg p-2 text-slate-600 transition-colors duration-(--dur-micro) hover:bg-slate-100 hover:text-slate-900"
+          className="rounded-lg p-2 text-brand-warm-white/70 transition-colors duration-(--dur-micro) hover:bg-white/10 hover:text-brand-warm-white"
         >
           {mobileOpen ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
         </button>
@@ -151,19 +153,19 @@ export function Sidebar({ companyName, role }: { companyName: string; role: Role
             role="dialog"
             aria-modal="true"
             aria-label="Navigation"
-            className="drawer-panel-enter fixed inset-y-0 left-0 z-40 flex w-72 max-w-[85vw] flex-col overflow-y-auto bg-white pt-4 shadow-modal"
+            className="drawer-panel-enter fixed inset-y-0 left-0 z-40 flex w-72 max-w-[85vw] flex-col overflow-y-auto bg-brand-navy pt-4 shadow-modal"
           >
-            <span className="truncate px-5 pb-2 text-xs text-slate-500">{companyName}</span>
+            <span className="truncate px-5 pb-2 text-xs text-brand-warm-white/45">{companyName}</span>
             <div className="pb-4">{renderNavLinks(() => setMobileOpen(false))}</div>
           </div>
         </div>
       )}
 
       {/* Desktop sidebar */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
+      <aside className="hidden w-60 shrink-0 flex-col bg-brand-navy md:flex">
         <div className="flex flex-col gap-0.5 px-5 py-6">
           <BrandMark />
-          <span className="truncate text-xs text-slate-500">{companyName}</span>
+          <span className="truncate text-xs text-brand-warm-white/45">{companyName}</span>
         </div>
         {renderNavLinks()}
       </aside>

@@ -8,7 +8,7 @@ export async function AppHeader({ session }: { session: AuthSession }) {
   const notifications = await getNotificationsForUser(session.companyId, session.userId);
 
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-2 sm:px-8">
+    <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-8">
       <GlobalSearch />
       <div className="flex items-center gap-3">
         <NotificationBell notifications={notifications} />

@@ -54,9 +54,9 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-5 sm:px-8">
-        <h1 className="text-xl font-semibold text-slate-900">Dashboard</h1>
-        <p className="text-sm text-slate-500">
+      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Dashboard</h1>
+        <p className="mt-0.5 text-sm text-slate-500">
           {session.companyName} · {ownerScope ? "Your pipeline" : "Whole company"}
         </p>
       </header>
@@ -72,7 +72,7 @@ export default async function Home() {
                   Money at Risk
                 </h2>
               </div>
-              <p className={`mt-1 text-3xl tabular-nums font-semibold ${isAllClear ? "text-slate-900" : "text-red-700"}`}>
+              <p className={`mt-1 text-4xl font-semibold tracking-tight tabular-nums ${isAllClear ? "text-slate-900" : "text-red-700"}`}>
                 {formatCurrency(moneyAtRisk.totalAtRiskValue)}
               </p>
             </div>
@@ -162,51 +162,40 @@ export default async function Home() {
           )}
         </section>
 
-        {/* TODAY — quick access to today's work */}
-        <div className={`grid grid-cols-2 gap-3 ${ownerScope ? "sm:grid-cols-3" : "sm:grid-cols-4"}`}>
-          <Link
-            href="/my-day"
-            className="rounded-xl border border-slate-200 bg-white p-3 shadow-card transition-colors duration-(--dur-micro) hover:border-slate-300"
-          >
+        {/* SECONDARY METRICS — today's work + calmer commercial context, one flat
+            strip rather than eight separate boxed cards, so the hero and the
+            risk tier above keep the visual weight. */}
+        <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+          <Link href="/my-day" className="flex flex-col gap-1 border-t-2 border-slate-200 pt-3 transition-colors duration-(--dur-micro) hover:border-slate-400">
             <p className="text-xs text-slate-500">Today&apos;s Work</p>
-            <p className={`mt-0.5 text-lg tabular-nums ${metricClass}`}>{workToday.todaysWorkCount}</p>
+            <p className={`text-lg tabular-nums ${metricClass}`}>{workToday.todaysWorkCount}</p>
           </Link>
-          <Link
-            href="/tasks"
-            className="rounded-xl border border-slate-200 bg-white p-3 shadow-card transition-colors duration-(--dur-micro) hover:border-slate-300"
-          >
+          <Link href="/tasks" className="flex flex-col gap-1 border-t-2 border-slate-200 pt-3 transition-colors duration-(--dur-micro) hover:border-slate-400">
             <p className="text-xs text-slate-500">{ownerScope ? "Overdue Follow-ups" : "Overdue Across Team"}</p>
-            <p className={`mt-0.5 text-lg tabular-nums font-semibold ${workToday.teamOverdueCount > 0 ? "text-red-600" : "text-slate-900"}`}>
+            <p className={`text-lg font-semibold tabular-nums ${workToday.teamOverdueCount > 0 ? "text-red-600" : "text-slate-900"}`}>
               {workToday.teamOverdueCount}
             </p>
           </Link>
           {!ownerScope && (
-            <Link
-              href="/team"
-              className="rounded-xl border border-slate-200 bg-white p-3 shadow-card transition-colors duration-(--dur-micro) hover:border-slate-300"
-            >
+            <Link href="/team" className="flex flex-col gap-1 border-t-2 border-slate-200 pt-3 transition-colors duration-(--dur-micro) hover:border-slate-400">
               <p className="text-xs text-slate-500">Team Workload</p>
-              <p className={`mt-0.5 text-lg ${metricClass}`}>{teamSnapshot.length} people →</p>
+              <p className={`text-lg ${metricClass}`}>{teamSnapshot.length} people →</p>
             </Link>
           )}
-          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-card">
+          <div className="flex flex-col gap-1 border-t-2 border-slate-200 pt-3">
             <p className="text-xs text-slate-500">Unread Notifications</p>
-            <p className={`mt-0.5 text-lg tabular-nums font-semibold ${workToday.unreadNotificationCount > 0 ? "text-blue-600" : "text-slate-900"}`}>
+            <p className={`text-lg font-semibold tabular-nums ${workToday.unreadNotificationCount > 0 ? "text-blue-600" : "text-slate-900"}`}>
               {workToday.unreadNotificationCount}
             </p>
           </div>
-        </div>
-
-        {/* SUPPORTING KPI ROW — calmer commercial context */}
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {contextCards.map((c) => (
             <Link
               key={c.label}
               href={c.href}
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-card transition-colors duration-(--dur-micro) hover:border-slate-300"
+              className="flex flex-col gap-1 border-t-2 border-slate-200 pt-3 transition-colors duration-(--dur-micro) hover:border-slate-400"
             >
-              <p className="text-sm text-slate-500">{c.label}</p>
-              <p className={`mt-1 text-2xl tabular-nums font-semibold ${c.success ? "text-emerald-600" : "text-brand-navy"}`}>{c.value}</p>
+              <p className="text-xs text-slate-500">{c.label}</p>
+              <p className={`text-lg font-semibold tabular-nums ${c.success ? "text-emerald-600" : "text-brand-navy"}`}>{c.value}</p>
             </Link>
           ))}
         </div>

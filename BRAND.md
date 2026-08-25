@@ -61,7 +61,7 @@ SalesLeak is the product. NobleArc is the parent/master brand behind it (and beh
 | Warm White | `#F7F5F0` |
 | Metallic Gold | `#C6A15B` |
 
-This palette is for NobleArc endorsement moments only (login/signup footer, sidebar endorsement, billing/company attribution, the formal master lockup). It does not replace SalesLeak's existing product UI palette (slate/white) — this is brand integration, not a UI redesign.
+This palette is for NobleArc endorsement moments (login/signup footer, billing/company attribution, the formal master lockup) and, as of the Sonnet 5 visual transformation pass, the primary navigation shell itself: the desktop sidebar and mobile top bar/drawer are now a deep-navy surface (`bg-brand-navy`) with warm-white text and a gold left-rail on the active item, rather than white. The rest of the product UI (page content, cards, tables, forms) stays on the slate/white palette — the navy moment is deliberately confined to navigation structure, not spread across the whole app.
 
 ## Assets
 
