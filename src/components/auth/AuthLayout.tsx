@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { Card } from "@/components/ui";
 
@@ -38,15 +39,17 @@ export function AuthLayout({
 
       <div className="relative w-full max-w-sm">
         <div className="auth-fade-in flex flex-col items-center text-center">
-          <Image
-            src="/brand/salesleak/salesleak-master-dark.png"
-            alt="SalesLeak by NobleArc"
-            width={1774}
-            height={887}
-            priority
-            sizes="240px"
-            className="h-auto w-full max-w-[190px] sm:max-w-[230px]"
-          />
+          <Link href="/welcome" aria-label="About SalesLeak">
+            <Image
+              src="/brand/salesleak/salesleak-master-dark.png"
+              alt="SalesLeak by NobleArc"
+              width={1774}
+              height={887}
+              priority
+              sizes="240px"
+              className="h-auto w-full max-w-[190px] sm:max-w-[230px]"
+            />
+          </Link>
           <div className="metallic-gold mt-5 h-[2px] w-10 rounded-full" />
           <p className="mt-4 text-lg font-semibold tracking-tight text-brand-warm-white sm:text-xl">Catch what your sales process misses.</p>
           <p className="mt-2 max-w-[300px] text-sm leading-relaxed text-brand-warm-white/55">
