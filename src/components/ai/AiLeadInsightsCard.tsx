@@ -61,7 +61,7 @@ export function AiLeadInsightsCard({ leadId, initial, actingUserId }: { leadId: 
           <h2 className="text-sm font-semibold text-slate-900">AI Insights</h2>
           {data && <AiBadge mocked={data.mocked} />}
         </div>
-        <SecondaryButton onClick={() => generate(true)} disabled={pending} className="!py-1 !text-xs">
+        <SecondaryButton onClick={() => generate(true)} loading={pending} className="!py-1 !text-xs">
           {pending ? "Generating…" : data ? "Regenerate" : "Generate"}
         </SecondaryButton>
       </div>
@@ -94,7 +94,7 @@ export function AiLeadInsightsCard({ leadId, initial, actingUserId }: { leadId: 
             {approved ? (
               <p className="mt-2 text-xs font-medium text-emerald-700">Scheduled as a follow-up.</p>
             ) : (
-              <SecondaryButton onClick={approve} disabled={pending} className="mt-2 !py-1 !text-xs">
+              <SecondaryButton onClick={approve} loading={pending} className="mt-2 !py-1 !text-xs">
                 Approve &amp; Schedule
               </SecondaryButton>
             )}

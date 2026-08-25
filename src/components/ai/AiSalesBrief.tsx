@@ -25,13 +25,13 @@ export function AiSalesBrief({ initial }: { initial: SalesBriefData | null }) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="rounded-xl border border-slate-200 bg-white shadow-card">
       <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-5 py-4">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold text-slate-900">AI Sales Brief</h2>
           {data && <AiBadge mocked={data.mocked} />}
         </div>
-        <SecondaryButton onClick={generate} disabled={pending} className="!py-1 !text-xs">
+        <SecondaryButton onClick={generate} loading={pending} className="!py-1 !text-xs">
           {pending ? "Generating…" : data ? "Regenerate" : "Generate"}
         </SecondaryButton>
       </div>

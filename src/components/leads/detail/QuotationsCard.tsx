@@ -76,7 +76,7 @@ export function QuotationsCard({
                       <span>
                         {item.description} × {item.quantity}
                       </span>
-                      <span>{formatCurrency(item.total)}</span>
+                      <span className="tabular-nums">{formatCurrency(item.total)}</span>
                     </li>
                   ))}
                 </ul>

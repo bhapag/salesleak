@@ -93,11 +93,11 @@ export function GlobalSearch() {
       </div>
 
       {showDropdown && (
-        <div className="dropdown-enter absolute left-0 right-0 top-full z-30 mt-1 max-h-96 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-dropdown">
+        <div className="dropdown-enter absolute left-0 right-0 top-full z-20 mt-2 max-h-96 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-dropdown">
           {pending && flatResults.length === 0 ? (
-            <p className="px-3 py-3 text-xs text-slate-400">Searching…</p>
+            <p className="px-3 py-3 text-sm text-slate-500">Searching…</p>
           ) : flatResults.length === 0 ? (
-            <p className="px-3 py-3 text-xs text-slate-400">No matches for &ldquo;{query}&rdquo;.</p>
+            <p className="px-3 py-3 text-sm text-slate-500">No matches for &ldquo;{query}&rdquo;.</p>
           ) : (
             (["Customers", "Leads", "Quotations"] as const).map((group) => {
               const items = flatResults.filter((r) => r.group === group);

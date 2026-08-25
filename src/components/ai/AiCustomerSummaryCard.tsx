@@ -36,7 +36,7 @@ export function AiCustomerSummaryCard({ customerId, initial }: { customerId: str
           <h2 className="text-sm font-semibold text-slate-900">AI Summary</h2>
           {data && <AiBadge mocked={data.mocked} />}
         </div>
-        <SecondaryButton onClick={generate} disabled={pending} className="!py-1 !text-xs">
+        <SecondaryButton onClick={generate} loading={pending} className="!py-1 !text-xs">
           {pending ? "Generating…" : data ? "Regenerate" : "Generate"}
         </SecondaryButton>
       </div>

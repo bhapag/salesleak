@@ -136,7 +136,7 @@ export function Sidebar({ companyName, role }: { companyName: string; role: Role
           aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav-drawer"
-          className="rounded-md p-2 text-slate-600 transition-colors duration-(--dur-micro) hover:bg-slate-100"
+          className="rounded-lg p-2 text-slate-600 transition-colors duration-(--dur-micro) hover:bg-slate-100 hover:text-slate-900"
         >
           {mobileOpen ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
         </button>

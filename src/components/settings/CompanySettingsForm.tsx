@@ -194,7 +194,7 @@ export function CompanySettingsForm({ initial }: { initial: CompanySettingsInput
       {saved && !error && <p className="text-xs font-medium text-emerald-600">Saved.</p>}
 
       <div>
-        <PrimaryButton type="submit" disabled={pending}>
+        <PrimaryButton type="submit" loading={pending}>
           {pending ? "Saving…" : "Save changes"}
         </PrimaryButton>
       </div>

@@ -42,7 +42,7 @@ export function ExportDataCard() {
     <Card title="Export Data" description="Download your company's customers, leads, and quotations as CSV — for your own records or backup.">
       <div className="flex flex-wrap gap-2">
         {ENTITIES.map((e) => (
-          <SecondaryButton key={e.id} onClick={() => handleExport(e.id)} disabled={pending}>
+          <SecondaryButton key={e.id} onClick={() => handleExport(e.id)} loading={pending && pendingEntity === e.id} disabled={pending}>
             {pending && pendingEntity === e.id ? "Preparing…" : `Export ${e.label} (CSV)`}
           </SecondaryButton>
         ))}

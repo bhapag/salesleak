@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { logout } from "@/server/actions/auth";
 import { labelize } from "@/lib/format";
 
@@ -17,6 +17,15 @@ function initials(name: string): string {
 export function ProfileMenu({ name, role }: { name: string; role: string }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
 
   function handleLogout() {
     startTransition(async () => {
@@ -45,7 +54,7 @@ export function ProfileMenu({ name, role }: { name: string; role: string }) {
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="dropdown-enter absolute right-0 z-20 mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-dropdown">
+          <div role="menu" aria-label="Account" className="dropdown-enter absolute right-0 z-20 mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-dropdown">
             <div className="border-b border-slate-100 px-3 py-2">
               <p className="truncate text-sm font-medium text-slate-900">{name}</p>
               <p className="text-xs text-slate-500">{labelize(role)}</p>

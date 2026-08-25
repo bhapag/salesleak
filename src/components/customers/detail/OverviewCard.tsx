@@ -15,9 +15,9 @@ export function OverviewCard({ customer }: { customer: CustomerDetail }) {
     <Card title="Customer Information">
       <dl className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
         {items.map((item) => (
-          <div key={item.label}>
+          <div key={item.label} className="min-w-0">
             <dt className="text-xs text-slate-400">{item.label}</dt>
-            <dd className="text-sm text-slate-800">{item.value}</dd>
+            <dd className="truncate text-sm text-slate-800">{item.value}</dd>
           </div>
         ))}
       </dl>

@@ -143,8 +143,8 @@ export function TaskActionsCard({ task, actingUserId }: { task: WorkQueueTask; a
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <PrimaryButton onClick={handleComplete} disabled={pending} className="!px-3 !py-1.5 text-xs">
-          {pending && activeForm === null ? "…" : "Complete"}
+        <PrimaryButton onClick={handleComplete} loading={pending && activeForm === null} disabled={pending} className="!px-3 !py-1.5 text-xs">
+          Complete
         </PrimaryButton>
         <SecondaryButton onClick={() => toggleForm("reschedule")} className="!px-3 !py-1.5 text-xs">
           Reschedule
@@ -178,8 +178,8 @@ export function TaskActionsCard({ task, actingUserId }: { task: WorkQueueTask; a
           <Field label="New due date">
             <input type="date" value={rescheduleDate} onChange={(e) => setRescheduleDate(e.target.value)} className={inputClass} />
           </Field>
-          <PrimaryButton onClick={handleReschedule} disabled={pending || !rescheduleDate}>
-            {pending ? "Saving…" : "Save"}
+          <PrimaryButton onClick={handleReschedule} loading={pending} disabled={!rescheduleDate}>
+            Save
           </PrimaryButton>
         </div>
       )}
@@ -191,8 +191,8 @@ export function TaskActionsCard({ task, actingUserId }: { task: WorkQueueTask; a
           <Field label="Deadline">
             <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className={inputClass} />
           </Field>
-          <PrimaryButton onClick={handleUpdateNextAction} disabled={pending}>
-            {pending ? "Saving…" : "Save"}
+          <PrimaryButton onClick={handleUpdateNextAction} loading={pending}>
+            Save
           </PrimaryButton>
         </div>
       )}
@@ -206,8 +206,8 @@ export function TaskActionsCard({ task, actingUserId }: { task: WorkQueueTask; a
             className={`${inputClass} resize-none`}
           />
           <div>
-            <PrimaryButton onClick={handleAddNote} disabled={pending || !note.trim()}>
-              {pending ? "Adding…" : "Add note"}
+            <PrimaryButton onClick={handleAddNote} loading={pending} disabled={!note.trim()}>
+              Add note
             </PrimaryButton>
           </div>
         </div>

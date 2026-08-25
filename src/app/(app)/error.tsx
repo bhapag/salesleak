@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { PrimaryButton, SecondaryButton } from "@/components/ui";
 
 export default function AppError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
@@ -16,15 +17,11 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
       </p>
       {error.digest && <p className="mt-1 text-xs text-slate-400">Reference: {error.digest}</p>}
       <div className="mt-5 flex gap-2">
-        <button
-          type="button"
-          onClick={reset}
-          className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-        >
+        <PrimaryButton type="button" onClick={reset}>
           Try again
-        </button>
-        <Link href="/" className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-          Back to Dashboard
+        </PrimaryButton>
+        <Link href="/">
+          <SecondaryButton type="button">Back to Dashboard</SecondaryButton>
         </Link>
       </div>
     </div>

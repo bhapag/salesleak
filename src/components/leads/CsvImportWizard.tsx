@@ -7,7 +7,7 @@ import { autoMapColumns, matchLeadSource, parseEstimatedValue, parseCsvDate, LEA
 import { normalizePhone, normalizeEmail } from "@/lib/contactMatch";
 import { LEAD_SOURCES } from "@/lib/constants";
 import { formatSource, formatCurrency } from "@/lib/format";
-import { Card, PrimaryButton, SecondaryButton, selectClass } from "@/components/ui";
+import { Card, PrimaryButton, SecondaryButton, RequiredMark, selectClass } from "@/components/ui";
 import {
   getExistingContactsForImportPreview,
   importCsvLeads,
@@ -281,7 +281,7 @@ export function CsvImportWizard({ users }: { users: { id: string; name: string }
               <div key={field.key} className="flex flex-col gap-1">
                 <span className="text-xs font-medium text-slate-500">
                   {field.label}
-                  {field.required && <span className="text-red-500"> *</span>}
+                  {field.required && <RequiredMark />}
                 </span>
                 <select
                   value={mapping[field.key] ?? ""}
@@ -335,23 +335,26 @@ export function CsvImportWizard({ users }: { users: { id: string; name: string }
 
           <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">
             <table className="w-full min-w-[900px] text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th className="px-3 py-2 font-medium">#</th>
-                  <th className="px-3 py-2 font-medium">Customer</th>
-                  <th className="px-3 py-2 font-medium">Phone / Email</th>
-                  <th className="px-3 py-2 font-medium">Product</th>
-                  <th className="px-3 py-2 font-medium">Value</th>
-                  <th className="px-3 py-2 font-medium">Source</th>
-                  <th className="px-3 py-2 font-medium">Salesperson</th>
-                  <th className="px-3 py-2 font-medium">Status</th>
+                  <th className="px-4 py-3">#</th>
+                  <th className="px-4 py-3">Customer</th>
+                  <th className="px-4 py-3">Phone / Email</th>
+                  <th className="px-4 py-3">Product</th>
+                  <th className="px-4 py-3">Value</th>
+                  <th className="px-4 py-3">Source</th>
+                  <th className="px-4 py-3">Salesperson</th>
+                  <th className="px-4 py-3">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {displayedRows.map((row) => {
                   const isInvalid = row.errors.length > 0;
                   return (
-                    <tr key={row.index} className={isInvalid ? "bg-red-50/40" : row.duplicateReason ? "bg-amber-50/40" : ""}>
+                    <tr
+                      key={row.index}
+                      className={`transition-colors duration-(--dur-micro) hover:bg-slate-50 ${isInvalid ? "bg-red-50/40" : row.duplicateReason ? "bg-amber-50/40" : ""}`}
+                    >
                       <td className="px-3 py-2 align-top">
                         <input
                           type="checkbox"
@@ -370,7 +373,7 @@ export function CsvImportWizard({ users }: { users: { id: string; name: string }
                         {row.email && <p className="text-xs text-slate-400">{row.email}</p>}
                       </td>
                       <td className="px-3 py-2 align-top text-slate-600">{row.product ?? "—"}</td>
-                      <td className="px-3 py-2 align-top text-slate-600">{formatCurrency(row.estimatedValue)}</td>
+                      <td className="px-3 py-2 align-top tabular-nums text-slate-600">{formatCurrency(row.estimatedValue)}</td>
                       <td className="px-3 py-2 align-top text-slate-600">{formatSource(row.source)}</td>
                       <td className="px-3 py-2 align-top text-slate-600">{row.assignToUserName ?? "Unassigned"}</td>
                       <td className="px-3 py-2 align-top">
@@ -397,8 +400,8 @@ export function CsvImportWizard({ users }: { users: { id: string; name: string }
           {importError && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{importError}</p>}
 
           <div className="mt-5 flex gap-2 border-t border-slate-100 pt-4">
-            <PrimaryButton onClick={handleImport} disabled={selected.size === 0 || importing}>
-              {importing ? "Importing…" : `Import ${selected.size} Lead${selected.size === 1 ? "" : "s"}`}
+            <PrimaryButton onClick={handleImport} loading={importing} disabled={selected.size === 0}>
+              {`Import ${selected.size} Lead${selected.size === 1 ? "" : "s"}`}
             </PrimaryButton>
             <SecondaryButton onClick={() => setStep("map")} disabled={importing}>
               Back to Mapping
@@ -414,15 +417,15 @@ export function CsvImportWizard({ users }: { users: { id: string; name: string }
         <Card title="Import Complete">
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="rounded-lg bg-emerald-50 px-3 py-4">
-              <p className="text-2xl font-semibold text-emerald-700">{summary.created}</p>
+              <p className="text-2xl font-semibold tabular-nums text-emerald-700">{summary.created}</p>
               <p className="text-xs text-emerald-700">Leads created</p>
             </div>
             <div className="rounded-lg bg-amber-50 px-3 py-4">
-              <p className="text-2xl font-semibold text-amber-700">{summary.duplicates}</p>
+              <p className="text-2xl font-semibold tabular-nums text-amber-700">{summary.duplicates}</p>
               <p className="text-xs text-amber-700">Duplicates skipped</p>
             </div>
             <div className="rounded-lg bg-red-50 px-3 py-4">
-              <p className="text-2xl font-semibold text-red-700">{summary.invalid}</p>
+              <p className="text-2xl font-semibold tabular-nums text-red-700">{summary.invalid}</p>
               <p className="text-xs text-red-700">Invalid rows</p>
             </div>
           </div>
@@ -441,7 +444,7 @@ export function CsvImportWizard({ users }: { users: { id: string; name: string }
 function Stepper({ current }: { current: Step }) {
   const currentIndex = STEPS.findIndex((s) => s.key === current || (current === "importing" && s.key === "done"));
   return (
-    <div className="flex items-center gap-2 overflow-x-auto rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+    <div className="flex items-center gap-2 overflow-x-auto rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-card">
       {STEPS.map((s, i) => (
         <div key={s.key} className="flex items-center gap-2">
           <div className="flex items-center gap-1.5">
@@ -450,7 +453,7 @@ function Stepper({ current }: { current: Step }) {
                 i < currentIndex
                   ? "bg-emerald-600 text-white"
                   : i === currentIndex
-                    ? "bg-slate-900 text-white"
+                    ? "bg-brand-navy text-brand-warm-white"
                     : "bg-slate-100 text-slate-400"
               }`}
             >
@@ -475,7 +478,7 @@ function SummaryPill({ label, count, tone }: { label: string; count: number; ton
   }[tone];
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset ${styles}`}>
-      {count} {label}
+      <span className="tabular-nums">{count}</span> {label}
     </span>
   );
 }

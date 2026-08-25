@@ -82,8 +82,10 @@ export function CloseDealCard({
                   key={reason}
                   type="button"
                   onClick={() => setLostReason(reason)}
-                  className={`rounded-full border px-2.5 py-1 text-xs ${
-                    lostReason === reason ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 text-slate-600 hover:border-slate-400"
+                  className={`rounded-full border px-2.5 py-1 text-xs transition-colors duration-(--dur-micro) ${
+                    lostReason === reason
+                      ? "border-brand-navy bg-brand-navy text-brand-warm-white"
+                      : "border-slate-200 text-slate-600 hover:border-slate-400"
                   }`}
                 >
                   {reason}

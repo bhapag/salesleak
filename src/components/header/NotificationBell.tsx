@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { formatRelativeToNow } from "@/lib/format";
 import { markNotificationRead, markAllNotificationsRead } from "@/server/actions/notifications";
@@ -20,6 +20,15 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
 
   function handleMarkAll() {
     startTransition(async () => {
@@ -57,7 +66,7 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="dropdown-enter absolute right-0 z-20 mt-2 w-80 rounded-xl border border-slate-200 bg-white shadow-dropdown sm:w-96">
+          <div role="menu" aria-label="Notifications" className="dropdown-enter absolute right-0 z-20 mt-2 w-80 rounded-xl border border-slate-200 bg-white shadow-dropdown sm:w-96">
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
               <p className="text-sm font-semibold text-slate-900">Notifications</p>
               {unreadCount > 0 && (

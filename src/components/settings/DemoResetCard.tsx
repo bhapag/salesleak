@@ -35,7 +35,7 @@ export function DemoResetCard() {
       </label>
       <ErrorText>{error}</ErrorText>
       <div className="mt-3">
-        <DangerButton onClick={handleReset} disabled={pending || confirmation.trim() !== CONFIRMATION_PHRASE}>
+        <DangerButton onClick={handleReset} loading={pending} disabled={confirmation.trim() !== CONFIRMATION_PHRASE}>
           {pending ? "Resetting…" : "Reset demo data"}
         </DangerButton>
       </div>

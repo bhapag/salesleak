@@ -23,7 +23,7 @@ export default async function TasksPage() {
       <header className="border-b border-slate-200 bg-white px-4 py-5 sm:px-8">
         <h1 className="text-xl font-semibold text-slate-900">Daily Work Queue</h1>
         <p className="text-sm text-slate-500">
-          {totalOpen} open follow-up{totalOpen === 1 ? "" : "s"}
+          <span className="tabular-nums">{totalOpen}</span> open follow-up{totalOpen === 1 ? "" : "s"}
           {ownerScope ? " assigned to you" : " across the team"} · {session.companyName}
         </p>
       </header>

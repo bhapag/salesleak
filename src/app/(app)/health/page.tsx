@@ -61,7 +61,7 @@ export default async function HealthPage() {
               </div>
 
               {category.count === 0 ? (
-                <p className="text-xs text-emerald-600">Nothing to fix here.</p>
+                <p className="text-sm text-emerald-600">Nothing to fix here.</p>
               ) : (
                 <ul className="flex flex-col divide-y divide-slate-100">
                   {category.items.map((item) => (

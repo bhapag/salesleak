@@ -55,7 +55,7 @@ export function AiEnquiryExtractor({ onExtracted }: { onExtracted: (data: Extrac
         </p>
       )}
       <div className="mt-2 flex gap-2">
-        <SecondaryButton onClick={extract} disabled={pending || !text.trim()} className="!py-1 !text-xs">
+        <SecondaryButton onClick={extract} loading={pending} disabled={!text.trim()} className="!py-1 !text-xs">
           {pending ? "Extracting…" : "Extract with AI"}
         </SecondaryButton>
         <button
