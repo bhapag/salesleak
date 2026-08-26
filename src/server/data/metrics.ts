@@ -7,6 +7,7 @@ import { getNotificationsForUser } from "./notifications";
 import { buildLeadAttentionItem, buildQuotationAttentionItem, buildCustomerAttentionItem, type AttentionItem } from "@/lib/attentionItems";
 import { getWonValueForLead, groupQuotationsByLead } from "@/lib/wonValue";
 import { startOfDayInTimezone } from "@/lib/timezone";
+import { getCompanyRuntimeSettings } from "@/server/data/companySettings";
 
 function sum(values: number[]): number {
   return values.reduce((a, b) => a + b, 0);
@@ -72,20 +73,20 @@ export type DashboardData = {
 export async function getDashboardData(companyId: string, userId: string, ownerScope?: string): Promise<DashboardData> {
   const now = new Date();
 
-  const [allLeads, allQuotations, allTasks, allCustomers, teamSnapshot, userNotifications, company] = await Promise.all([
+  const [allLeads, allQuotations, allTasks, allCustomers, teamSnapshot, userNotifications, settings] = await Promise.all([
     getLeadsForCompany(companyId),
     getQuotationsForCompany(companyId),
     prisma.task.findMany({ where: { status: "PENDING", lead: { companyId, ...(ownerScope ? { ownerId: ownerScope } : {}) } } }),
     getCustomersForCompany(companyId),
     ownerScope ? Promise.resolve([]) : getTeamOverview(companyId),
     getNotificationsForUser(companyId, userId),
-    prisma.company.findFirst({ where: { id: companyId }, select: { timezone: true } }),
+    getCompanyRuntimeSettings(companyId),
   ]);
 
   // Day boundaries in the company's own timezone, not server-local/UTC —
   // otherwise "due today"/"overdue" can flip hours early or late depending
   // on where the app happens to be deployed.
-  const timezone = company?.timezone ?? "Asia/Kolkata";
+  const timezone = settings.timezone;
   const today = startOfDayInTimezone(now, timezone);
   const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
 

@@ -6,6 +6,7 @@ import { getTaskRisk } from "@/lib/taskRisk";
 import { startOfDayInTimezone } from "@/lib/timezone";
 import { buildLeadAttentionItem, buildQuotationAttentionItem, type AttentionItem } from "@/lib/attentionItems";
 import { getWonValueForLead, groupQuotationsByLead } from "@/lib/wonValue";
+import { getCompanyRuntimeSettings } from "@/server/data/companySettings";
 
 function sum(values: number[]): number {
   return values.reduce((a, b) => a + b, 0);
@@ -36,15 +37,15 @@ export type TeamOverviewRow = {
 export async function getTeamOverview(companyId: string): Promise<TeamOverviewRow[]> {
   const now = new Date();
 
-  const [users, leads, quotations, tasks, company] = await Promise.all([
+  const [users, leads, quotations, tasks, settings] = await Promise.all([
     prisma.user.findMany({ where: { companyId }, orderBy: { name: "asc" } }),
     getLeadsForCompany(companyId),
     getQuotationsForCompany(companyId),
     prisma.task.findMany({ where: { lead: { companyId }, status: "PENDING" } }),
-    prisma.company.findFirst({ where: { id: companyId }, select: { timezone: true } }),
+    getCompanyRuntimeSettings(companyId),
   ]);
 
-  const todayStart = startOfDayInTimezone(now, company?.timezone ?? "Asia/Kolkata");
+  const todayStart = startOfDayInTimezone(now, settings.timezone);
   const tasksWithRisk = tasks.map((t) => ({ ...t, risk: getTaskRisk(t, now, todayStart) }));
   const quotationsByLead = groupQuotationsByLead(quotations);
 
