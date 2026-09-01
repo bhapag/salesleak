@@ -23,4 +23,8 @@ _Living status file — current source of truth for build/verification state. No
 Not yet started.
 
 ## Next recommended action
-Not yet decided.
+Commercial validation — identify and speak to the first 2-3 real
+prospects on whether SalesLeak beats their current CRM/process for
+catching missed follow-ups. Infrastructure items (custom domain,
+Stripe, IndiaMART activation, backup-tier upgrade) intentionally
+queued behind this.
