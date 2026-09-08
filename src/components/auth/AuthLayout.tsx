@@ -73,6 +73,18 @@ export function AuthLayout({
             {extra}
           </div>
         )}
+
+        <div className="auth-fade-in mt-8 flex items-center justify-center gap-4 text-xs text-brand-warm-white/35" style={{ animationDelay: "160ms" }}>
+          <Link href="/terms" className="transition-colors duration-(--dur-micro) hover:text-brand-warm-white/60">
+            Terms
+          </Link>
+          <Link href="/privacy" className="transition-colors duration-(--dur-micro) hover:text-brand-warm-white/60">
+            Privacy
+          </Link>
+          <a href="mailto:salesleak.support@gmail.com" className="transition-colors duration-(--dur-micro) hover:text-brand-warm-white/60">
+            Support
+          </a>
+        </div>
       </div>
     </div>
   );

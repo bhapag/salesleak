@@ -62,6 +62,12 @@ export default async function CompanySettingsPage() {
           <p className="mt-8 text-xs text-slate-400">
             SalesLeak is a product of <span className="text-[#B08A45]">NobleArc</span> Technologies.
           </p>
+          <p className="mt-1 text-xs text-slate-400">
+            Questions or need help?{" "}
+            <a href="mailto:salesleak.support@gmail.com" className="text-slate-500 underline underline-offset-2 hover:text-slate-700">
+              salesleak.support@gmail.com
+            </a>
+          </p>
         </div>
       </main>
     </div>

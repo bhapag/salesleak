@@ -354,10 +354,21 @@ export default async function WelcomePage() {
 
       {/* ---------- FOOTER ---------- */}
       <footer className="bg-brand-navy">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 border-t border-white/10 px-6 py-8 text-center sm:px-8">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 border-t border-white/10 px-6 py-8 text-center sm:px-8">
           <p className="text-xs text-brand-warm-white/45">
             SalesLeak is a product of <span className="text-brand-gold">NobleArc</span> Technologies.
           </p>
+          <div className="flex items-center gap-4 text-xs text-brand-warm-white/40">
+            <Link href="/terms" className="transition-colors duration-(--dur-micro) hover:text-brand-warm-white/70">
+              Terms
+            </Link>
+            <Link href="/privacy" className="transition-colors duration-(--dur-micro) hover:text-brand-warm-white/70">
+              Privacy
+            </Link>
+            <a href="mailto:salesleak.support@gmail.com" className="transition-colors duration-(--dur-micro) hover:text-brand-warm-white/70">
+              Support
+            </a>
+          </div>
           <p className="text-[11px] text-brand-warm-white/30">© {new Date().getFullYear()} NobleArc Technologies.</p>
         </div>
       </footer>
