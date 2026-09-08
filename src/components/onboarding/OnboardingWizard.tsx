@@ -213,7 +213,14 @@ export function OnboardingWizard({ company }: { company: CompanyInit }) {
                 {lostReasons.map((reason) => (
                   <span key={reason} className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-700">
                     {reason}
-                    <button type="button" onClick={() => setLostReasons((r) => r.filter((x) => x !== reason))} className="text-slate-400 hover:text-slate-600" aria-label={`Remove ${reason}`}>
+                    <button
+                      type="button"
+                      onClick={() => setLostReasons((r) => r.filter((x) => x !== reason))}
+                      // Same 24x24 touch target as the equivalent chip in
+                      // CompanySettingsForm — the bare glyph is ~6px wide.
+                      className="-my-1 -mr-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-slate-400 hover:text-slate-600"
+                      aria-label={`Remove ${reason}`}
+                    >
                       ×
                     </button>
                   </span>

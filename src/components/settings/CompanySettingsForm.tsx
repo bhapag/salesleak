@@ -144,7 +144,11 @@ export function CompanySettingsForm({ initial }: { initial: CompanySettingsInput
                 <button
                   type="button"
                   onClick={() => set("lostReasonPresets", form.lostReasonPresets.filter((x) => x !== reason))}
-                  className="text-slate-400 transition-colors duration-(--dur-micro) hover:text-slate-600"
+                  // The glyph is only ~6px wide, which is far below a usable
+                  // touch target. The negative margins let the button occupy a
+                  // full 24x24 hit area (WCAG 2.2 target size) without making
+                  // the chip itself any taller.
+                  className="-my-1 -mr-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors duration-(--dur-micro) hover:text-slate-600"
                   aria-label={`Remove ${reason}`}
                 >
                   ×
