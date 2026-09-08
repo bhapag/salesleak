@@ -46,7 +46,7 @@ export async function exportCompanyDataCsv(entity: ExportEntity): Promise<{ file
   if (entity === "leads") {
     const leads = await getLeadsForCompany(session.companyId);
     const csv = toCsv(
-      ["Title", "Customer", "Source", "Product", "Quantity", "Estimated Value", "Owner", "Status", "Priority", "Next Action", "Deadline", "Created"],
+      ["Title", "Customer", "Source", "Product", "Quantity", "Estimated Value", "Salesperson", "Status", "Priority", "Next Action", "Deadline", "Created"],
       leads.map((l) => [
         l.title,
         l.customer.name,

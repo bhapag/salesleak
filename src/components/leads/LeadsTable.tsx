@@ -168,7 +168,7 @@ export function LeadsTable({ leads, users }: { leads: LeadWithRisk[]; users: { i
                     dir={sortDir}
                     onClick={() => toggleSort("estimatedValue")}
                   />
-                  <th className="px-4 py-3">Owner</th>
+                  <th className="px-4 py-3">Salesperson</th>
                   <SortableHeader label="Priority" active={sortKey === "priority"} dir={sortDir} onClick={() => toggleSort("priority")} />
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Last Activity</th>
@@ -278,7 +278,7 @@ function LeadCard({ lead }: { lead: LeadWithRisk }) {
           <dd className={lead.risk.isOverdue ? "font-medium text-red-600" : "text-slate-700"}>{formatDate(lead.nextActionDeadline)}</dd>
         </div>
         <div>
-          <dt className="text-slate-400">Owner</dt>
+          <dt className="text-slate-400">Salesperson</dt>
           <dd className="text-slate-700">{lead.owner?.name ?? "Unassigned"}</dd>
         </div>
         <div>

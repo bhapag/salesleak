@@ -63,7 +63,7 @@ export function LeadDetailView({
             status, and value are already covered above. */}
         <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-slate-100 pt-4 text-sm sm:grid-cols-4">
           <div>
-            <dt className="text-xs text-slate-400">Owner</dt>
+            <dt className="text-xs text-slate-400">Salesperson</dt>
             <dd className={lead.owner ? "text-slate-800" : "font-medium text-amber-700"}>{lead.owner ? lead.owner.name : "Unassigned"}</dd>
           </div>
           <div>
