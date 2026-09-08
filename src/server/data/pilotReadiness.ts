@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getLeadsForCompany } from "@/server/data/leads";
 import { getWorkQueueForCompany } from "@/server/data/tasks";
 import { getIntegrationsForCompany, getFailedIngestions } from "@/server/data/ingestion";
+import { USER_TEAM_SELECT } from "@/server/data/userSelect";
 
 export type PilotReadinessCheck = {
   key: string;
@@ -26,7 +27,7 @@ export type PilotReadinessReport = {
 export async function getPilotReadinessReport(companyId: string): Promise<PilotReadinessReport> {
   const [company, users, leads, workQueue, integrations, failedIngestions] = await Promise.all([
     prisma.company.findFirstOrThrow({ where: { id: companyId } }),
-    prisma.user.findMany({ where: { companyId, isActive: true } }),
+    prisma.user.findMany({ where: { companyId, isActive: true }, select: USER_TEAM_SELECT }),
     getLeadsForCompany(companyId),
     getWorkQueueForCompany(companyId),
     getIntegrationsForCompany(companyId),

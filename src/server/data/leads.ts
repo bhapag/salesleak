@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getLeadRisk } from "@/lib/leadRisk";
 import { getCompanyRuntimeSettings } from "@/server/data/companySettings";
 import { startOfDayInTimezone } from "@/lib/timezone";
+import { USER_DISPLAY_SELECT } from "@/server/data/userSelect";
 
 export async function getLeadsForCompany(companyId: string) {
   const [leads, settings] = await Promise.all([
@@ -9,7 +10,7 @@ export async function getLeadsForCompany(companyId: string) {
       where: { companyId },
       include: {
         customer: true,
-        owner: true,
+        owner: { select: USER_DISPLAY_SELECT },
         quotations: { orderBy: { createdAt: "desc" } },
         activities: { orderBy: { createdAt: "desc" }, take: 1 },
       },
@@ -53,11 +54,11 @@ export async function getLeadDetail(leadId: string, companyId: string) {
     where: { id: leadId, companyId },
     include: {
       customer: true,
-      owner: true,
+      owner: { select: USER_DISPLAY_SELECT },
       company: true,
       quotations: { include: { items: true }, orderBy: { createdAt: "desc" } },
       tasks: { orderBy: { dueDate: "asc" } },
-      activities: { include: { user: true }, orderBy: { createdAt: "desc" } },
+      activities: { include: { user: { select: USER_DISPLAY_SELECT } }, orderBy: { createdAt: "desc" } },
     },
   });
 

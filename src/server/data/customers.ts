@@ -6,6 +6,7 @@ import { getWonValueForLead } from "@/lib/wonValue";
 import { formatCurrency, formatSource, labelize } from "@/lib/format";
 import { getCompanyRiskThresholds, type CompanyRiskThresholds } from "@/server/data/companySettings";
 import type { LeadStatus, LeadPriority, QuotationStatus } from "@/generated/prisma/client";
+import { USER_DISPLAY_SELECT } from "@/server/data/userSelect";
 
 function sum(values: number[]): number {
   return values.reduce((a, b) => a + b, 0);
@@ -157,7 +158,7 @@ export async function getCustomersForCompany(companyId: string) {
       include: {
         leads: {
           include: {
-            owner: true,
+            owner: { select: USER_DISPLAY_SELECT },
             quotations: true,
             activities: { orderBy: { createdAt: "desc" }, take: 1 },
           },
@@ -264,9 +265,9 @@ export async function getCustomerDetail(customerId: string, companyId: string) {
     include: {
       leads: {
         include: {
-          owner: true,
+          owner: { select: USER_DISPLAY_SELECT },
           quotations: { include: { items: true }, orderBy: { createdAt: "desc" } },
-          activities: { include: { user: true }, orderBy: { createdAt: "desc" } },
+          activities: { include: { user: { select: USER_DISPLAY_SELECT } }, orderBy: { createdAt: "desc" } },
         },
         orderBy: { createdAt: "desc" },
       },

@@ -6,6 +6,7 @@ import { getTaskRisk } from "@/lib/taskRisk";
 import { startOfDayInTimezone } from "@/lib/timezone";
 import { buildLeadAttentionItem, buildQuotationAttentionItem, type AttentionItem } from "@/lib/attentionItems";
 import { getWonValueForLead, groupQuotationsByLead } from "@/lib/wonValue";
+import { USER_TEAM_SELECT } from "@/server/data/userSelect";
 import { getCompanyRuntimeSettings } from "@/server/data/companySettings";
 
 function sum(values: number[]): number {
@@ -38,7 +39,7 @@ export async function getTeamOverview(companyId: string): Promise<TeamOverviewRo
   const now = new Date();
 
   const [users, leads, quotations, tasks, settings] = await Promise.all([
-    prisma.user.findMany({ where: { companyId }, orderBy: { name: "asc" } }),
+    prisma.user.findMany({ where: { companyId }, orderBy: { name: "asc" }, select: USER_TEAM_SELECT }),
     getLeadsForCompany(companyId),
     getQuotationsForCompany(companyId),
     prisma.task.findMany({ where: { lead: { companyId }, status: "PENDING" } }),
@@ -77,7 +78,9 @@ export async function getTeamOverview(companyId: string): Promise<TeamOverviewRo
 export async function getSalespersonDetail(companyId: string, userId: string) {
   const now = new Date();
   const [user, leads, quotations, workQueue, recentActivities] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId } }),
+    // Scoped by companyId in the query itself (and projected to non-sensitive
+    // fields), rather than fetching any user by id and comparing afterwards.
+    prisma.user.findFirst({ where: { id: userId, companyId }, select: USER_TEAM_SELECT }),
     getLeadsForCompany(companyId),
     getQuotationsForCompany(companyId),
     getWorkQueueForCompany(companyId, { userId }),
@@ -89,7 +92,7 @@ export async function getSalespersonDetail(companyId: string, userId: string) {
     }),
   ]);
 
-  if (!user || user.companyId !== companyId) return null;
+  if (!user) return null;
 
   const userLeads = leads.filter((l) => l.ownerId === userId);
   const userQuotations = quotations.filter((q) => q.lead.ownerId === userId);

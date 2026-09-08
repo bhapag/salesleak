@@ -102,6 +102,25 @@ export async function ingestLead(
     return { status: "invalid", errors };
   }
 
+  // Defense in depth: the assignee must belong to the company this lead is
+  // being ingested into. Both current callers already check this first, but
+  // this function owns the tenant invariant on everything it writes, and
+  // Lead.ownerId is a bare foreign key to User with no company column — so
+  // nothing further down would catch an id from another tenant. Treated as
+  // an ordinary invalid row rather than a throw, so one bad row in a large
+  // CSV import is recorded and skipped instead of aborting the whole batch.
+  if (input.assignToUserId) {
+    const owner = await prisma.user.findFirst({
+      where: { id: input.assignToUserId, companyId },
+      select: { id: true },
+    });
+    if (!owner) {
+      const reason = "Assigned salesperson does not belong to this company.";
+      await recordIngestion(batchId, companyId, input, "INVALID", { reason });
+      return { status: "invalid", errors: [reason] };
+    }
+  }
+
   const dup = await checkForDuplicate(companyId, input);
   if (dup.kind === "exact") {
     await recordIngestion(batchId, companyId, input, "DUPLICATE", { reason: dup.reason });

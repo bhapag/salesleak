@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getQuotationRisk } from "@/lib/quotationRisk";
 import { getCompanyRiskThresholds } from "@/server/data/companySettings";
+import { USER_DISPLAY_SELECT } from "@/server/data/userSelect";
 
 export async function getQuotationsForCompany(companyId: string) {
   const [quotations, thresholds] = await Promise.all([
@@ -8,7 +9,7 @@ export async function getQuotationsForCompany(companyId: string) {
       where: { companyId },
       include: {
         items: true,
-        lead: { include: { customer: true, owner: true } },
+        lead: { include: { customer: true, owner: { select: USER_DISPLAY_SELECT } } },
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -43,9 +44,9 @@ export async function getQuotationDetail(quotationId: string, companyId: string)
       lead: {
         include: {
           customer: true,
-          owner: true,
+          owner: { select: USER_DISPLAY_SELECT },
           company: { select: { lostReasonPresets: true } },
-          activities: { include: { user: true }, orderBy: { createdAt: "desc" } },
+          activities: { include: { user: { select: USER_DISPLAY_SELECT } }, orderBy: { createdAt: "desc" } },
           quotations: { select: { id: true, status: true } },
         },
       },

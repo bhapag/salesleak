@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getTaskRisk } from "@/lib/taskRisk";
 import { startOfDayInTimezone } from "@/lib/timezone";
 import { getCompanyRuntimeSettings } from "@/server/data/companySettings";
+import { USER_DISPLAY_SELECT } from "@/server/data/userSelect";
 
 const OPEN_QUOTATION_STATUSES = ["DRAFT", "SENT", "FOLLOWED_UP"] as const;
 
@@ -20,7 +21,7 @@ export async function getWorkQueueForCompany(companyId: string, opts?: { userId?
         lead: { companyId },
         ...(opts?.userId ? { assignedToId: opts.userId } : {}),
       },
-      include: { lead: true, assignedTo: true },
+      include: { lead: true, assignedTo: { select: USER_DISPLAY_SELECT } },
       orderBy: { dueDate: "asc" },
     }),
     getCompanyRuntimeSettings(companyId),
@@ -32,7 +33,7 @@ export async function getWorkQueueForCompany(companyId: string, opts?: { userId?
 
   const [customers, owners, openQuotations] = await Promise.all([
     prisma.customer.findMany({ where: { id: { in: customerIds } } }),
-    prisma.user.findMany({ where: { id: { in: ownerIds } } }),
+    prisma.user.findMany({ where: { id: { in: ownerIds } }, select: USER_DISPLAY_SELECT }),
     prisma.quotation.findMany({
       where: { leadId: { in: leadIds }, status: { in: [...OPEN_QUOTATION_STATUSES] } },
       orderBy: { createdAt: "desc" },

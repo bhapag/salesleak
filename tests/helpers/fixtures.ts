@@ -33,6 +33,17 @@ export const BETA = {
 
 const HOUR = 60 * 60 * 1000;
 
+/**
+ * Synthetic, obviously-fake credential material. Never a real hash. The
+ * sensitive-data regression suite searches serialized payloads for this exact
+ * string, so any path that leaks a User's credential field is caught by value
+ * as well as by field name.
+ */
+export const SYNTHETIC_PASSWORD_HASH = "scrypt$SYNTHETIC$not-a-real-hash";
+
+/** Session tokens are secrets too; same idea. */
+export const SYNTHETIC_SESSION_TOKEN_MARKER = "token_";
+
 function company(id: string, name: string) {
   return {
     id,
@@ -63,7 +74,7 @@ function user(id: string, companyId: string, name: string, email: string, role: 
     name,
     email,
     role,
-    passwordHash: "scrypt$fake$fake",
+    passwordHash: SYNTHETIC_PASSWORD_HASH,
     isActive: true,
     createdAt: new Date("2026-01-01T00:00:00Z"),
     updatedAt: new Date("2026-01-01T00:00:00Z"),
@@ -154,5 +165,20 @@ export function seedTwoTenants(db: FakeDb): void {
   db.seed("notification", [
     { id: ALPHA.notificationId, companyId: ALPHA.companyId, userId: ALPHA.salespersonId, title: "Alpha notice", body: null, isRead: false, createdAt: new Date() },
     { id: BETA.notificationId, companyId: BETA.companyId, userId: BETA.salespersonId, title: "Beta notice", body: null, isRead: false, createdAt: new Date() },
+  ]);
+}
+
+/**
+ * Activity timelines for both tenants, each authored by a real user so the
+ * `activities[].user` relation is actually populated.
+ *
+ * Deliberately NOT part of seedTwoTenants: most isolation tests assert that a
+ * refused mutation wrote no activity, and a pre-seeded timeline would make
+ * that assertion vacuous. Suites that need a populated timeline opt in.
+ */
+export function seedActivityHistory(db: FakeDb): void {
+  db.seed("activity", [
+    { id: "activity_alpha", leadId: ALPHA.leadId, userId: ALPHA.salespersonId, type: "NOTE", notes: "Called the buyer.", createdAt: new Date() },
+    { id: "activity_beta", leadId: BETA.leadId, userId: BETA.salespersonId, type: "NOTE", notes: "Sent the quotation.", createdAt: new Date() },
   ]);
 }
