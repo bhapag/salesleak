@@ -166,6 +166,18 @@ export async function scheduleFollowUp(
   if (!trimmedTitle) return { success: false, error: "Follow-up title is required." };
   if (!dueDate) return { success: false, error: "Due date is required." };
 
+  // The assignee must be a real user in the caller's own company — the same
+  // check assignSalesperson does for ownerId, which this previously missed.
+  // Server Actions are directly callable endpoints, so an assignedToId from
+  // another tenant can be supplied even though the UI only ever offers this
+  // company's own people. Task.assignedTo has no company column of its own
+  // (it points straight at User), so without this the foreign user would be
+  // joined into this company's work queue and their name rendered on it.
+  if (assignedToId) {
+    const assignee = await prisma.user.findFirst({ where: { id: assignedToId, companyId: session.companyId } });
+    if (!assignee) throw new ForbiddenError();
+  }
+
   await prisma.task.create({
     data: { leadId, title: trimmedTitle, dueDate: new Date(dueDate), assignedToId },
   });
