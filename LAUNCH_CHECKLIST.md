@@ -159,7 +159,7 @@ Everything here is either already true or a short human action.
 | Desktop + mobile sanity pass (375/768/1440) | ✅ no overflow on any screen |
 | Tenant isolation and permissions tested | ✅ 122 tests |
 | Support channel surfaced **and monitored** | ⚠️ surfaced; monitoring is yours |
-| A real backup taken before their data exists | ❌ **human action** |
+| A real backup taken before their data exists | ✅ taken 2026-09-09, validated |
 | Terms and Privacy published | ❌ **human action** |
 | Customer told plainly it is an early pilot | ❌ your call |
 

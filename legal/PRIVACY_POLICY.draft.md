@@ -20,9 +20,14 @@ Service is presented as "SalesLeak by NobleArc".
 
 Contact for privacy questions: **salesleak.support@gmail.com**
 
-[DECISION REQUIRED: PRIVACY CONTACT — whether a dedicated privacy address or
-named contact is required in your jurisdiction, and whether a Data Protection
-Officer must be appointed. Do not assert a DPO exists unless one does.]
+**Grievance Officer:** [DECISION REQUIRED: GRIEVANCE OFFICER NAME AND CONTACT]
+
+Researched, so this is no longer an open question: under the DPDP Rules 2025
+every Data Fiduciary must appoint a Grievance Officer and publish the contact.
+It can be any competent person in the organisation. A **Data Protection
+Officer is not required** — that obligation applies only to Significant Data
+Fiduciaries, and does not commence until 13 May 2027. Do not claim a DPO
+exists.
 
 ## 2. Two different kinds of people
 
@@ -121,11 +126,15 @@ So although SalesLeak is built for Indian businesses and defaults to Indian
 timezone and rupees, **the data is stored and processed in Singapore, not in
 India.**
 
-[DECISION REQUIRED: CROSS-BORDER TRANSFER — this is a real cross-border
-processing arrangement and needs legal review, particularly under India's
-Digital Personal Data Protection Act, 2023. Do not assert that any specific
-transfer mechanism, adequacy finding, or government notification applies until
-that has been confirmed.]
+This is permitted. Section 16 of India's Digital Personal Data Protection Act,
+2023 allows transfer to any country **except** those the Central Government
+specifically notifies as restricted, and as at the date of this draft no such
+restricted-country list has been notified. Sector-specific localisation rules
+(for example the Reserve Bank of India's payment-data mandate) would override
+that, but none applies here because SalesLeak stores no payment data.
+
+[DECISION REQUIRED: confirm the above with your lawyer before publication, and
+re-check whether a restricted-country list has since been notified.]
 
 ## 6. Who else can see it (subprocessors)
 
@@ -193,10 +202,14 @@ Practically, today:
 - **Deletion:** contact us at the support address. Deletion is currently a
   manual operation.
 
-[DECISION REQUIRED: RIGHTS AND RESPONSE TIMES — which statutory rights you are
-subject to, the response deadline you commit to, your verification process, and
-your grievance-redressal contact. India's DPDP Act requires a published
-grievance mechanism; do not claim one exists until it does.]
+**Raising a grievance.** Contact the Grievance Officer named in section 1. We
+will acknowledge your request promptly, aim to resolve it within **7 working
+days**, and complete redressal within **90 days** at the latest.
+
+[DECISION REQUIRED: confirm you can actually meet those timelines before
+publishing them — they reflect the DPDP Rules 2025 expectations, and a
+published commitment you cannot honour is worse than a longer honest one. Also
+confirm your identity-verification process for requests.]
 
 ## 10. Children
 
