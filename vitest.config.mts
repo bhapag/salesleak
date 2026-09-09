@@ -18,6 +18,12 @@ export default defineConfig({
     environment: "node",
     include: ["tests/**/*.test.ts"],
     setupFiles: ["tests/helpers/setup.ts"],
+    // Production runs on Vercel, which is UTC. A timezone-dependent bug in
+    // the IndiaMART connector (IST enquiry times parsed in the server's own
+    // zone) passed on an IST developer machine and only showed up against
+    // the deployed endpoint — so the suite pins the deployment's timezone
+    // rather than inheriting whoever's laptop is running it.
+    env: { TZ: "UTC" },
     // Each file gets a fresh module registry, so the per-file prisma/session
     // mocks below can't leak state between suites.
     isolate: true,

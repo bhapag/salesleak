@@ -82,16 +82,54 @@ describe("IndiaMART Push API adapter", () => {
     expect(result.input.rawData).toContain("SENDER_COUNTRY_ISO");
   });
 
-  it("reads QUERY_TIME's documented YYYY-MM-DD HH:mm:ss format as local time", () => {
+  /**
+   * Found by a live round-trip against the deployed webhook: QUERY_TIME was
+   * built with `new Date(y, m, d, …)`, i.e. in the *server's* timezone. That
+   * is only correct on an IST server; Vercel runs UTC, so a 14:32 IST enquiry
+   * was stored as 14:32 UTC — 5.5 hours in the future. Lead age, overdue
+   * detection and Money at Risk all key off that timestamp.
+   *
+   * These assertions compare absolute instants (UTC), so they fail on an
+   * IST machine too — the previous local-getter assertions passed on IST and
+   * were exactly what hid the bug.
+   */
+  it("reads QUERY_TIME as IST regardless of the server's own timezone", () => {
     const result = indiaMartAdapter.parse(pushEnvelope());
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    const received = result.input.receivedAt!;
-    expect(received.getFullYear()).toBe(2024);
-    expect(received.getMonth()).toBe(3); // April
-    expect(received.getDate()).toBe(10);
-    expect(received.getHours()).toBe(11);
+    // 2024-04-10 11:17:14 IST === 05:47:14 UTC
+    expect(result.input.receivedAt!.toISOString()).toBe("2024-04-10T05:47:14.000Z");
+  });
+
+  it("reads the legacy DD-MMM-YYYY format as IST too", () => {
+    const result = indiaMartAdapter.parse(pushEnvelope({ QUERY_TIME: "10-Apr-2024 11:17:14" }));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.input.receivedAt!.toISOString()).toBe("2024-04-10T05:47:14.000Z");
+  });
+
+  it("does not shift an enquiry into the future (the Vercel-UTC regression)", () => {
+    const result = indiaMartAdapter.parse(pushEnvelope({ QUERY_TIME: "2026-09-09 14:32:05" }));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    // The bug stored this as 14:32:05Z. Correct is 09:02:05Z.
+    expect(result.input.receivedAt!.toISOString()).toBe("2026-09-09T09:02:05.000Z");
+    expect(result.input.receivedAt!.toISOString()).not.toBe("2026-09-09T14:32:05.000Z");
+  });
+
+  it("round-trips its own sample payload's timestamp to within a few seconds of now", () => {
+    const sample = indiaMartAdapter.samplePayload();
+    const result = indiaMartAdapter.parse(sample);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    // Would be off by 5.5 hours in either direction if either the stamp or
+    // the parse assumed the server's timezone.
+    const skewMs = Math.abs(Date.now() - result.input.receivedAt!.getTime());
+    expect(skewMs).toBeLessThan(60_000);
   });
 
   it("falls back to the alternate phone/email fields when the primaries are absent", () => {

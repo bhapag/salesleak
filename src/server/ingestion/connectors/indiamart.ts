@@ -55,12 +55,31 @@ const MONTHS: Record<string, number> = {
 };
 
 /**
+ * IndiaMART's Lead Manager reports enquiry times in IST, with no offset in
+ * the string. IST is therefore part of the format, not a property of
+ * whoever is parsing it.
+ */
+const IST_OFFSET_MS = (5 * 60 + 30) * 60 * 1000;
+
+/** Builds the absolute instant for IST wall-clock components. */
+function fromIst(year: number, month: number, day: number, hour: number, min: number, sec: number): Date {
+  return new Date(Date.UTC(year, month, day, hour, min, sec) - IST_OFFSET_MS);
+}
+
+/**
  * The Push API documents QUERY_TIME as "YYYY-MM-DD HH:mm:ss" (e.g.
  * "2024-04-10 11:17:14"); older IndiaMART surfaces use "DD-MMM-YYYY
- * HH:mm:ss". Both are handled explicitly and read as local time — passing
- * the first form to `new Date()` is parsed as UTC by some engines, which
- * would shift every Indian enquiry by 5.5 hours. Anything else falls back to
- * native parsing.
+ * HH:mm:ss". Neither carries a timezone, and both are IST.
+ *
+ * Both were previously built with `new Date(y, m, d, …)`, which reads the
+ * components in the *server's* timezone. That is right only if the server
+ * happens to run on IST; on Vercel the runtime is UTC, so a live enquiry at
+ * 14:32 IST was stored as 14:32 UTC — 5.5 hours in the future. Lead age,
+ * overdue detection and Money at Risk all key off that timestamp, so every
+ * real enquiry would have looked newer than it was. The offset is applied
+ * explicitly now, which also makes parsing independent of where the code
+ * runs. Anything else falls back to native parsing, which handles the
+ * formats that do carry an explicit offset.
  */
 function parseIndiaMartTime(value: string | undefined): Date | undefined {
   if (!value) return undefined;
@@ -69,7 +88,7 @@ function parseIndiaMartTime(value: string | undefined): Date | undefined {
   const iso = /^(\d{4})-(\d{2})-(\d{2})[\sT](\d{1,2}):(\d{2}):(\d{2})$/.exec(trimmed);
   if (iso) {
     const [, year, month, day, hour, min, sec] = iso;
-    return new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(min), Number(sec));
+    return fromIst(Number(year), Number(month) - 1, Number(day), Number(hour), Number(min), Number(sec));
   }
 
   const match = /^(\d{1,2})-([A-Za-z]{3})-(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})$/.exec(trimmed);
@@ -77,7 +96,7 @@ function parseIndiaMartTime(value: string | undefined): Date | undefined {
     const [, day, monStr, year, hour, min, sec] = match;
     const month = MONTHS[monStr.toLowerCase()];
     if (month != null) {
-      return new Date(Number(year), month, Number(day), Number(hour), Number(min), Number(sec));
+      return fromIst(Number(year), month, Number(day), Number(hour), Number(min), Number(sec));
     }
   }
   const native = new Date(trimmed);
@@ -167,9 +186,12 @@ function parseIndiaMartPayload(raw: unknown): ParseResult {
  * exact shape IndiaMART puts on the wire rather than a convenient flat one.
  */
 function sampleIndiaMartPayload(): IndiaMartPayload {
-  const now = new Date();
+  // Stamped in IST, because that is what QUERY_TIME means — using the
+  // server's own wall-clock would make the sample round-trip to the wrong
+  // instant anywhere the runtime isn't on IST (Vercel is UTC).
+  const ist = new Date(Date.now() + IST_OFFSET_MS);
   const p = (n: number) => String(n).padStart(2, "0");
-  const stamp = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())} ${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}`;
+  const stamp = `${ist.getUTCFullYear()}-${p(ist.getUTCMonth() + 1)}-${p(ist.getUTCDate())} ${p(ist.getUTCHours())}:${p(ist.getUTCMinutes())}:${p(ist.getUTCSeconds())}`;
 
   return {
     CODE: 200,
