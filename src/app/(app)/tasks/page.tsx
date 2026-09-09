@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getWorkQueueForCompany } from "@/server/data/tasks";
 import { WorkQueueView } from "@/components/tasks/WorkQueueView";
+import { PageHeader } from "@/components/PageHeader";
 import { requireSession } from "@/server/auth/session";
 import { getOwnerScope } from "@/server/auth/permissions";
 
@@ -20,13 +21,15 @@ export default async function TasksPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Daily Work Queue</h1>
-        <p className="text-sm text-slate-500">
-          <span className="tabular-nums">{totalOpen}</span> open follow-up{totalOpen === 1 ? "" : "s"}
-          {ownerScope ? " assigned to you" : " across the team"} · {session.companyName}
-        </p>
-      </header>
+      <PageHeader
+        title="Daily Work Queue"
+        subtitle={
+          <>
+            <span className="tabular-nums">{totalOpen}</span> open follow-up{totalOpen === 1 ? "" : "s"}
+            {ownerScope ? " assigned to you" : " across the team"} · {session.companyName}
+          </>
+        }
+      />
 
       <main className="px-4 py-6 sm:px-8">
         <WorkQueueView workQueue={workQueue} users={users.map((u) => ({ id: u.id, name: u.name }))} actingUserId={session.userId} />

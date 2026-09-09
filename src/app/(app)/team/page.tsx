@@ -7,6 +7,7 @@ import { requireSession } from "@/server/auth/session";
 import { canManageTeam, canManageCompany } from "@/server/auth/permissions";
 import { NotAuthorized } from "@/components/auth/NotAuthorized";
 import { ManageTeamCard } from "@/components/team/ManageTeamCard";
+import { PageHeader } from "@/components/PageHeader";
 
 // A left rail, not a row wash — same pattern as Leads/Quotations/Customers.
 // Overdue follow-ups is the genuine red signal; missing-next-action or at-risk
@@ -34,10 +35,7 @@ export default async function TeamPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Team</h1>
-        <p className="text-sm text-slate-500">Where each salesperson stands — accountability, not surveillance.</p>
-      </header>
+      <PageHeader title="Team" subtitle="Where each salesperson stands — accountability, not surveillance." />
 
       <main className="flex flex-col gap-6 px-4 py-6 sm:px-8">
         {isOwner && (
@@ -47,7 +45,7 @@ export default async function TeamPage() {
           />
         )}
 
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-card">
+        <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-card md:block">
           <table className="w-full min-w-[1300px] text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500">
               <tr>
@@ -117,6 +115,56 @@ export default async function TeamPage() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile card view — same risk rail and row data as the desktop table,
+            reduced to the four figures Dashboard's own Team Snapshot already
+            treats as the essential subset (Active Leads, Overdue Follow-ups,
+            Open Quotation Value, Won Value), rather than cramming all eleven
+            columns into a card. */}
+        <div className="flex flex-col gap-3 md:hidden">
+          {sorted.map((row) => (
+            <Link
+              key={row.userId}
+              href={`/team/${row.userId}`}
+              className={`block rounded-xl border border-slate-200 bg-white p-4 shadow-card transition-colors duration-(--dur-micro) hover:border-slate-300 ${teamRiskRailClass(row)}`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <span className={`font-medium ${row.isActive ? "text-slate-900" : "text-slate-400"}`}>{row.name}</span>
+                  {!row.isActive && (
+                    <span className="ml-1.5 inline-flex items-center rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
+                      Inactive
+                    </span>
+                  )}
+                  <p className="text-xs text-slate-400">{labelize(row.role)}</p>
+                </div>
+                <span className="shrink-0 text-sm font-semibold tabular-nums text-emerald-600">{formatCurrency(row.wonValue)}</span>
+              </div>
+              <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <dt className="text-slate-400">Active leads</dt>
+                  <dd className="tabular-nums text-slate-700">{row.activeLeads}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-400">Overdue follow-ups</dt>
+                  <dd className={`tabular-nums ${row.overdueFollowUps > 0 ? "font-medium text-red-600" : "text-slate-700"}`}>
+                    {row.overdueFollowUps}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-slate-400">Open quotation value</dt>
+                  <dd className="tabular-nums text-slate-700">{formatCurrency(row.openQuotationValue)}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-400">Quotation value at risk</dt>
+                  <dd className={`tabular-nums ${row.quotationValueAtRisk > 0 ? "font-medium text-red-600" : "text-slate-700"}`}>
+                    {formatCurrency(row.quotationValueAtRisk)}
+                  </dd>
+                </div>
+              </dl>
+            </Link>
+          ))}
         </div>
       </main>
     </div>

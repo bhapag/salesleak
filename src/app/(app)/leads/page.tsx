@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getLeadsForCompany } from "@/server/data/leads";
 import { LeadsTable } from "@/components/leads/LeadsTable";
 import { AddLeadCard } from "@/components/leads/AddLeadCard";
+import { PageHeader } from "@/components/PageHeader";
 import { requireSession } from "@/server/auth/session";
 import { getOwnerScope } from "@/server/auth/permissions";
 import { getSubscriptionState } from "@/server/billing/entitlements";
@@ -25,12 +26,7 @@ export default async function LeadsPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Leads</h1>
-        <p className="text-sm text-slate-500">
-          {leads.length} lead{leads.length === 1 ? "" : "s"} · {session.companyName}
-        </p>
-      </header>
+      <PageHeader title="Leads" subtitle={`${leads.length} lead${leads.length === 1 ? "" : "s"} · ${session.companyName}`} />
 
       <main className="flex flex-col gap-4 px-4 py-6 sm:px-8">
         <AddLeadCard

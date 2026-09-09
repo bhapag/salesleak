@@ -5,6 +5,8 @@ import { TaskActionsCard } from "@/components/tasks/TaskActionsCard";
 import { StatusBadge, QuotationStatusBadge, RepeatOrderBadge } from "@/components/badges";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { requireSession } from "@/server/auth/session";
+import { PageHeader } from "@/components/PageHeader";
+import { AllClearIcon } from "@/components/metricIcons";
 
 export const metadata: Metadata = { title: "My Day" };
 
@@ -14,10 +16,7 @@ export default async function MyDayPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">My Day</h1>
-        <p className="text-sm text-slate-500">{session.name}</p>
-      </header>
+      <PageHeader title="My Day" subtitle={session.name} />
 
       <main className="flex flex-col gap-6 px-4 py-6 sm:px-8">
         <Section title="Overdue" tone="red" count={data.overdueTasks.length} emptyText="No overdue follow-ups. Nice work.">
@@ -146,7 +145,10 @@ function Section({
         </span>
       </div>
       {count === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center text-sm text-slate-500">{emptyText}</div>
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center">
+          <AllClearIcon className="h-6 w-6 text-emerald-400" aria-hidden="true" />
+          <p className="text-sm text-slate-500">{emptyText}</p>
+        </div>
       ) : (
         <div className="flex flex-col gap-3">{children}</div>
       )}
@@ -161,7 +163,14 @@ function ListCard({ title, count, emptyText, children }: { title: string; count:
         <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
         <span className="text-xs tabular-nums text-slate-400">{count}</span>
       </div>
-      {count === 0 ? <div className="px-5 py-8 text-center text-sm text-slate-500">{emptyText}</div> : <div className="divide-y divide-slate-100">{children}</div>}
+      {count === 0 ? (
+        <div className="flex flex-col items-center gap-2 px-5 py-8 text-center">
+          <AllClearIcon className="h-6 w-6 text-emerald-400" aria-hidden="true" />
+          <p className="text-sm text-slate-500">{emptyText}</p>
+        </div>
+      ) : (
+        <div className="divide-y divide-slate-100">{children}</div>
+      )}
     </div>
   );
 }

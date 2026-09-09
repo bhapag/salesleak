@@ -6,6 +6,7 @@ import { getIntegrationsForCompany, getIngestionHistory, getFailedIngestions } f
 import { IntegrationCard } from "@/components/integrations/IntegrationCard";
 import { FailedIngestionQueue } from "@/components/integrations/FailedIngestionQueue";
 import { formatSource, formatDateTime } from "@/lib/format";
+import { PageHeader } from "@/components/PageHeader";
 
 export const metadata: Metadata = { title: "Integrations" };
 
@@ -23,13 +24,10 @@ export default async function IntegrationsPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Integrations</h1>
-        <p className="text-sm text-slate-500">
-          Where enquiries can come from. Every source normalizes into the same lead — CSV import, manual entry, IndiaMART (test mode), and website
-          forms work today; the rest are on the way.
-        </p>
-      </header>
+      <PageHeader
+        title="Integrations"
+        subtitle="Where enquiries can come from. Every source normalizes into the same lead — CSV import, manual entry, IndiaMART (test mode), and website forms work today; the rest are on the way."
+      />
 
       <main className="flex flex-col gap-6 px-4 py-6 sm:px-8">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

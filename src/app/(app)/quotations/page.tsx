@@ -4,6 +4,7 @@ import { getQuotationsForCompany, getLeadPickerOptions, getSuggestedQuotationNum
 import { getProductsForCompany } from "@/server/data/products";
 import { QuotationsTable } from "@/components/quotations/QuotationsTable";
 import { CreateQuotationEntry } from "@/components/quotations/CreateQuotationEntry";
+import { PageHeader } from "@/components/PageHeader";
 import { requireSession } from "@/server/auth/session";
 import { getOwnerScope } from "@/server/auth/permissions";
 import { getSubscriptionState } from "@/server/billing/entitlements";
@@ -28,12 +29,7 @@ export default async function QuotationsPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Quotations</h1>
-        <p className="text-sm text-slate-500">
-          {quotations.length} quotation{quotations.length === 1 ? "" : "s"} · {session.companyName}
-        </p>
-      </header>
+      <PageHeader title="Quotations" subtitle={`${quotations.length} quotation${quotations.length === 1 ? "" : "s"} · ${session.companyName}`} />
 
       <main className="flex flex-col gap-4 px-4 py-6 sm:px-8">
         <CreateQuotationEntry

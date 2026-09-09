@@ -10,6 +10,7 @@ import { getOwnerScope } from "@/server/auth/permissions";
 import { AiSalesBrief, type SalesBriefData } from "@/components/ai/AiSalesBrief";
 import type { SalesBriefResult } from "@/server/ai/features/salesBrief";
 import { OverdueIcon, NextActionIcon, UncontactedIcon, QuotationOverdueIcon, AttentionIcon, AllClearIcon } from "@/components/metricIcons";
+import { PageHeader } from "@/components/PageHeader";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -74,12 +75,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Dashboard</h1>
-        <p className="mt-0.5 text-sm text-slate-500">
-          {session.companyName} · {ownerScope ? "Your pipeline" : "Whole company"}
-        </p>
-      </header>
+      <PageHeader title="Dashboard" subtitle={`${session.companyName} · ${ownerScope ? "Your pipeline" : "Whole company"}`} />
 
       <main className="flex flex-col gap-6 px-4 py-6 sm:px-8">
         {/* MONEY AT RISK — the single strongest signal on the page */}

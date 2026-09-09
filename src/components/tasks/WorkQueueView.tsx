@@ -5,6 +5,7 @@ import Link from "next/link";
 import { TaskActionsCard } from "./TaskActionsCard";
 import { inputClass, selectClass } from "@/components/ui";
 import { formatDate } from "@/lib/format";
+import { AllClearIcon, TodayWorkIcon } from "@/components/metricIcons";
 import type { WorkQueue, WorkQueueTask } from "@/server/data/tasks";
 
 export function WorkQueueView({
@@ -69,7 +70,10 @@ export function WorkQueueView({
         </div>
         <div className="rounded-xl border border-slate-200 bg-white shadow-card">
           {completed.length === 0 ? (
-            <div className="px-5 py-8 text-center text-sm text-slate-500">No completed follow-ups yet.</div>
+            <div className="flex flex-col items-center gap-2 px-5 py-8 text-center">
+              <TodayWorkIcon className="h-6 w-6 text-slate-300" aria-hidden="true" />
+              <p className="text-sm text-slate-500">No completed follow-ups yet.</p>
+            </div>
           ) : (
             <ul className="divide-y divide-slate-100">
               {completed.map((task) => (
@@ -106,7 +110,10 @@ function WorkQueueSection({
         </span>
       </div>
       {tasks.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center text-sm text-slate-500">{emptyText}</div>
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center">
+          <AllClearIcon className="h-6 w-6 text-emerald-400" aria-hidden="true" />
+          <p className="text-sm text-slate-500">{emptyText}</p>
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
           {tasks.map((task) => (

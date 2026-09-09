@@ -45,7 +45,11 @@ export function CreateQuotationEntry({
   }
 
   if (!open) {
-    return <PrimaryButton onClick={() => setOpen(true)}>+ Create Quotation</PrimaryButton>;
+    return (
+      <div>
+        <PrimaryButton onClick={() => setOpen(true)}>+ Create Quotation</PrimaryButton>
+      </div>
+    );
   }
 
   if (!leadId) {

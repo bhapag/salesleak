@@ -8,6 +8,7 @@ import { CompanySettingsForm } from "@/components/settings/CompanySettingsForm";
 import { ExportDataCard } from "@/components/settings/ExportDataCard";
 import { DemoResetCard } from "@/components/settings/DemoResetCard";
 import { Card } from "@/components/ui";
+import { PageHeader } from "@/components/PageHeader";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -21,10 +22,7 @@ export default async function CompanySettingsPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Company Settings</h1>
-        <p className="text-sm text-slate-500">Basic workspace information for {company.name}.</p>
-      </header>
+      <PageHeader title="Company Settings" subtitle={`Basic workspace information for ${company.name}.`} />
 
       <main className="px-4 py-6 sm:px-8">
         <div className="max-w-2xl">

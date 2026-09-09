@@ -6,6 +6,7 @@ import { NotAuthorized } from "@/components/auth/NotAuthorized";
 import { getPilotReadinessReport } from "@/server/data/pilotReadiness";
 import { Card } from "@/components/ui";
 import { formatCurrency } from "@/lib/format";
+import { PageHeader } from "@/components/PageHeader";
 
 export const metadata: Metadata = { title: "Pilot Readiness" };
 
@@ -20,14 +21,14 @@ export default async function PilotReadinessPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white px-4 py-6 sm:px-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Pilot Readiness</h1>
-        <p className="text-sm text-slate-500">
-          {outstanding === 0
+      <PageHeader
+        title="Pilot Readiness"
+        subtitle={
+          outstanding === 0
             ? "Setup looks complete — SalesLeak is ready for day-to-day use."
-            : `${outstanding} setup item${outstanding === 1 ? "" : "s"} worth a look before relying on SalesLeak day to day.`}
-        </p>
-      </header>
+            : `${outstanding} setup item${outstanding === 1 ? "" : "s"} worth a look before relying on SalesLeak day to day.`
+        }
+      />
 
       <main className="flex flex-col gap-4 px-4 py-6 sm:px-8">
         <Card>
