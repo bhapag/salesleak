@@ -7,6 +7,7 @@ import { QuotationStatusBadge, QuotationRiskBadges } from "@/components/badges";
 import { inputClass, selectClass, PrimaryButton } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { QUOTATION_DISPLAY_STATUSES } from "@/lib/constants";
+import { QuotationsIcon } from "@/components/Sidebar";
 
 type SortKey = "value" | "ageDays" | "followUpDate";
 type SortDir = "asc" | "desc";
@@ -337,6 +338,11 @@ function SortableHeader({
 function EmptyState({ hasFilters, onReset }: { hasFilters: boolean; onReset: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+      {!hasFilters && (
+        <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400" aria-hidden="true">
+          <QuotationsIcon className="h-5 w-5" />
+        </span>
+      )}
       <p className="text-sm font-medium text-slate-900">{hasFilters ? "No quotations match your filters" : "No quotations yet"}</p>
       <p className="mt-1 max-w-sm text-sm text-slate-500">
         {hasFilters

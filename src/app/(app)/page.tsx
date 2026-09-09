@@ -9,6 +9,7 @@ import { requireSession } from "@/server/auth/session";
 import { getOwnerScope } from "@/server/auth/permissions";
 import { AiSalesBrief, type SalesBriefData } from "@/components/ai/AiSalesBrief";
 import type { SalesBriefResult } from "@/server/ai/features/salesBrief";
+import { OverdueIcon, NextActionIcon, UncontactedIcon, QuotationOverdueIcon, AttentionIcon, AllClearIcon } from "@/components/metricIcons";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -36,10 +37,22 @@ export default async function Home() {
   // moment there's something to do, and stays a calm neutral at zero — a
   // clean queue should read as "on track," never as a broken/empty card.
   const riskCards = [
-    { label: "Overdue Follow-ups", value: stats.overdueFollowUps, href: "/tasks", risk: stats.overdueFollowUps > 0 },
-    { label: "Opportunities w/o Next Action", value: stats.opportunitiesWithoutNextAction, href: "/leads", risk: stats.opportunitiesWithoutNextAction > 0 },
-    { label: "Uncontacted Enquiries", value: stats.uncontactedEnquiries, href: "/leads", risk: stats.uncontactedEnquiries > 0 },
-    { label: "Quotation Value Overdue", value: formatCurrency(stats.quotationValueOverdue), href: "/quotations", risk: stats.quotationValueOverdue > 0 },
+    { label: "Overdue Follow-ups", value: stats.overdueFollowUps, href: "/tasks", risk: stats.overdueFollowUps > 0, icon: OverdueIcon },
+    {
+      label: "Opportunities w/o Next Action",
+      value: stats.opportunitiesWithoutNextAction,
+      href: "/leads",
+      risk: stats.opportunitiesWithoutNextAction > 0,
+      icon: NextActionIcon,
+    },
+    { label: "Uncontacted Enquiries", value: stats.uncontactedEnquiries, href: "/leads", risk: stats.uncontactedEnquiries > 0, icon: UncontactedIcon },
+    {
+      label: "Quotation Value Overdue",
+      value: formatCurrency(stats.quotationValueOverdue),
+      href: "/quotations",
+      risk: stats.quotationValueOverdue > 0,
+      icon: QuotationOverdueIcon,
+    },
   ];
 
   // Calmer, commercial context — still worth a glance, never competing
@@ -104,16 +117,29 @@ export default async function Home() {
           )}
         </section>
 
-        {/* PRIORITY KPI ROW — the risk/action tier */}
+        {/* PRIORITY KPI ROW — the risk/action tier. An icon badge per metric so
+            the row reads at a glance instead of as four identical number
+            boxes, and a risk-state left border so the eye catches which
+            cards need attention before it even reads the numbers. */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {riskCards.map((c) => (
             <Link
               key={c.label}
               href={c.href}
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-card transition-colors duration-(--dur-micro) hover:border-slate-300"
+              className={`flex items-start gap-3 rounded-xl border border-l-4 bg-white p-4 shadow-card transition-colors duration-(--dur-micro) ${
+                c.risk ? "border-slate-200 border-l-red-400 hover:border-slate-300" : "border-slate-200 border-l-slate-200 hover:border-slate-300"
+              }`}
             >
-              <p className="text-xs text-slate-500">{c.label}</p>
-              <p className={`mt-1 text-2xl tabular-nums font-semibold ${c.risk ? "text-red-600" : "text-slate-900"}`}>{c.value}</p>
+              <span
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${c.risk ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"}`}
+                aria-hidden="true"
+              >
+                <c.icon className="h-4.5 w-4.5" />
+              </span>
+              <div className="min-w-0 pt-0.5">
+                <p className="text-xs text-slate-500">{c.label}</p>
+                <p className={`mt-0.5 text-2xl tabular-nums font-semibold ${c.risk ? "text-red-600" : "text-slate-900"}`}>{c.value}</p>
+              </div>
             </Link>
           ))}
         </div>
@@ -123,14 +149,23 @@ export default async function Home() {
 
         {/* ATTENTION REQUIRED — the actionable list */}
         <section className="rounded-xl border border-slate-200 bg-white shadow-card">
-          <div className="border-b border-slate-200 px-5 py-4">
-            <h2 className="text-sm font-semibold text-slate-900">Attention Required</h2>
-            <p className="text-xs text-slate-500">The most urgent leads and quotations, ranked by severity and value.</p>
+          <div className="flex items-center gap-2 border-b border-slate-200 px-5 py-4">
+            <span
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${attentionItems.length > 0 ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}
+              aria-hidden="true"
+            >
+              {attentionItems.length > 0 ? <AttentionIcon className="h-4 w-4" /> : <AllClearIcon className="h-4 w-4" />}
+            </span>
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Attention Required</h2>
+              <p className="text-xs text-slate-500">The most urgent leads and quotations, ranked by severity and value.</p>
+            </div>
           </div>
 
           {attentionItems.length === 0 ? (
-            <div className="px-5 py-12 text-center text-sm text-slate-500">
-              Nothing needs attention right now — every active lead and open quotation is on track.
+            <div className="flex flex-col items-center gap-2 px-5 py-12 text-center">
+              <AllClearIcon className="h-8 w-8 text-emerald-400" aria-hidden="true" />
+              <p className="text-sm text-slate-500">Nothing needs attention right now — every active lead and open quotation is on track.</p>
             </div>
           ) : (
             <ul className="divide-y divide-slate-100">

@@ -185,7 +185,7 @@ function DashboardIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function LeadsIcon(props: React.SVGProps<SVGSVGElement>) {
+export function LeadsIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" {...props}>
       <path d="M3 5.5h14M3 10h14M3 14.5h9" strokeLinecap="round" />
@@ -193,7 +193,7 @@ function LeadsIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function QuotationsIcon(props: React.SVGProps<SVGSVGElement>) {
+export function QuotationsIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" {...props}>
       <path d="M5 3h7l3 3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z" strokeLinejoin="round" />
@@ -202,7 +202,7 @@ function QuotationsIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function CustomersIcon(props: React.SVGProps<SVGSVGElement>) {
+export function CustomersIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" {...props}>
       <circle cx="7.5" cy="6.5" r="2.5" />

@@ -7,6 +7,7 @@ import { CustomerStatusBadge, RepeatOrderBadge, CustomerSignalBadges } from "@/c
 import { inputClass, selectClass, PrimaryButton } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { CUSTOMER_STATUSES } from "@/lib/constants";
+import { CustomersIcon } from "@/components/Sidebar";
 
 type SortKey = "totalWonValue" | "lastActivityDate";
 type SortDir = "asc" | "desc";
@@ -333,6 +334,11 @@ function SortableHeader({
 function EmptyState({ hasFilters, onReset }: { hasFilters: boolean; onReset: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+      {!hasFilters && (
+        <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400" aria-hidden="true">
+          <CustomersIcon className="h-5 w-5" />
+        </span>
+      )}
       <p className="text-sm font-medium text-slate-900">{hasFilters ? "No customers match your filters" : "No customers yet"}</p>
       <p className="mt-1 max-w-sm text-sm text-slate-500">
         {hasFilters
