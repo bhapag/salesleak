@@ -161,7 +161,10 @@ export default async function Home() {
           {attentionItems.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-5 py-12 text-center">
               <AllClearIcon className="h-8 w-8 text-emerald-400" aria-hidden="true" />
-              <p className="text-sm text-slate-500">Nothing needs attention right now — every active lead and open quotation is on track.</p>
+              {/* Reuses the exact same computed message as the Money at Risk card
+                  above (same moneyAtRisk/attentionItems inputs) instead of its own
+                  hardcoded "on track" literal — one claim, one source of truth. */}
+              <p className="text-sm text-slate-500">{moneyAtRiskMessage}</p>
             </div>
           ) : (
             <ul className="divide-y divide-slate-100">

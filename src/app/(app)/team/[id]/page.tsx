@@ -7,6 +7,7 @@ import { TASK_BUCKET_LABEL } from "@/lib/taskRisk";
 import { requireSession } from "@/server/auth/session";
 import { canManageTeam } from "@/server/auth/permissions";
 import { NotAuthorized } from "@/components/auth/NotAuthorized";
+import { getMoneyAtRiskMessage } from "@/lib/moneyAtRiskCopy";
 
 export default async function SalespersonDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -54,7 +55,12 @@ function SalespersonDetailBody({ detail }: { detail: NonNullable<Awaited<ReturnT
       <main className="flex flex-col gap-4 px-4 py-6 sm:px-8">
         <Section title="Needs Attention" description="Leads and quotations that need this salesperson's attention right now.">
           {needsAttention.length === 0 ? (
-            <EmptyRow text="Nothing needs attention — every active lead and open quotation is on track." />
+            // Routed through the same shared helper as the Dashboard's Money at
+            // Risk card so this page can never drift into its own, differently
+            // worded "everything is fine" claim — see moneyAtRiskCopy.ts.
+            // needsAttention.length is already scoped to this one salesperson,
+            // not the company-wide count.
+            <EmptyRow text={getMoneyAtRiskMessage(moneyAtRisk, needsAttention.length)} />
           ) : (
             <ul className="divide-y divide-slate-100">
               {needsAttention.map((item) => (
