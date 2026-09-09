@@ -1,94 +1,181 @@
 # SalesLeak — Launch Checklist
 
-Phase 15 launch-readiness checklist. Each item is marked **READY**,
-**BLOCKED** (needs an action only you can take — an account, a payment, a
-legal decision), or **OPTIONAL LATER** (a real improvement, not required to
-onboard Customer #1). Nothing here is marked ready unless it was actually
-verified this phase — live in the browser, by direct code review, or both.
-See [DEPLOYMENT.md](DEPLOYMENT.md), [ARCHITECTURE.md](ARCHITECTURE.md), and
-[BACKUP_RECOVERY.md](BACKUP_RECOVERY.md) for the full detail behind each line.
+Reconciled against reality on **2026-09-09** at HEAD `3d241be`. Every line is
+one of:
+
+- **VERIFIED COMPLETE** — done, and checked against the running system or code
+- **EXTERNAL VERIFICATION PENDING** — built and believed correct, but not yet
+  proven against the real third party
+- **HUMAN ACTION REQUIRED** — only you can do it (account, payment, decision)
+- **BLOCKED** — waiting on something outside this repository
+- **DEFERRED** — deliberately postponed, with a reason
+- **NOT NEEDED** — considered and rejected for this stage
+
+Nothing is marked complete unless it was actually verified. Supporting detail:
+[DEPLOYMENT.md](DEPLOYMENT.md), [ARCHITECTURE.md](ARCHITECTURE.md),
+[BACKUP_RECOVERY.md](BACKUP_RECOVERY.md),
+[STRIPE_ACTIVATION.md](STRIPE_ACTIVATION.md), [PROJECT_STATE.md](PROJECT_STATE.md).
+
+## Engineering foundation
+
+- **VERIFIED COMPLETE** — 122 automated tests covering tenant isolation, role
+  permissions, session handling, ingestion and AI scoping, sensitive-field
+  exposure, and export limits. Proven non-vacuous by mutation testing: removing
+  a `companyId` scope fails 8 tests; widening an Owner-only permission fails 5.
+- **VERIFIED COMPLETE** — GitHub Actions CI on every push: install, Prisma
+  validate, lint, typecheck, tests, production build. Green on `main`.
+- **VERIFIED COMPLETE** — Two real security defects found and fixed with
+  regression coverage: a cross-tenant `scheduleFollowUp` assignment, and
+  `passwordHash` reaching client-bound RSC payloads on eight routes.
+- **VERIFIED COMPLETE** — Serverless functions co-located with the database in
+  `sin1`. Measured 13× improvement: pages went from ~2.27s to ~0.17s.
+- **DEFERRED** — Real-Postgres integration tests. See PROJECT_STATE.md; not a
+  launch blocker.
+- **DEFERRED** — Database-level RLS. App-level isolation is enforced at every
+  query and covered by tests. Revisit only with new evidence.
 
 ## Infrastructure
 
-- **READY** — Staging deployment live at `https://salesleak-theta.vercel.app`, deployed via Vercel CLI, verified working end-to-end this phase.
-- **READY** — Local/staging/production environment separation documented (DEPLOYMENT.md's "Environments" section) — same codebase, different databases and credentials per environment, no code branching on "which environment."
-- **BLOCKED** — Custom domain. Not purchased, not configured — see DEPLOYMENT.md's "Custom domain readiness" section for the exact steps once you own a domain. Staging continues running on the Vercel-assigned domain until then.
-- **OPTIONAL LATER** — A dedicated production Vercel project distinct from staging, if you'd rather not promote the same project. Reasonable to defer until real customer volume justifies the separation; today's single-project setup with environment-scoped credentials is enough for a first pilot customer.
+- **VERIFIED COMPLETE** — Production deployment on Vercel, healthy, with
+  `/api/health` returning `200`.
+- **VERIFIED COMPLETE** — Daily Vercel Cron pings `/api/health`, registered and
+  confirmed via `vercel crons ls`. Prevents free-tier inactivity pause. **Not
+  backup protection.**
+- **HUMAN ACTION REQUIRED** — Custom domain. Not purchased. Steps are in
+  DEPLOYMENT.md. Production runs on the Vercel-assigned domain until then.
+- **NOT NEEDED** — A separate production Vercel project. The current
+  single-project setup is adequate at this scale.
 
-## Environment variables
+## Data safety
 
-- **READY** — `DATABASE_URL`, `DIRECT_URL`, `APP_URL` configured on the existing Vercel staging project.
-- **READY (documented)** — Full variable-by-variable reference with required/optional status lives in DEPLOYMENT.md's env var table; nothing here is a guess.
-- **OPTIONAL LATER** — `ANTHROPIC_API_KEY` unset; every AI surface runs in an honestly-labeled mock mode. Set it whenever you want real AI calls — no code change needed either way, and this was deliberately left unset to avoid an unrequested paid service.
-- **BLOCKED (your decision)** — `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `STRIPE_PRICE_STARTER` / `STRIPE_PRICE_GROWTH` unset. See "Stripe / billing" below — not required to onboard a FOUNDING-plan pilot customer.
+- **HUMAN ACTION REQUIRED — highest priority** — Supabase is on the **free
+  tier**, confirmed by the 2026-09-08 auto-pause incident. There are **no
+  automatic backups**. If the database were lost today, the data would be
+  gone. Upgrading to Pro (~$25/mo) enables daily backups.
+- **HUMAN ACTION REQUIRED** — No restore has ever been tested. One rehearsal
+  restore into a scratch database is the highest-value item in
+  BACKUP_RECOVERY.md.
+- **VERIFIED COMPLETE** — CSV export for customers, leads and quotations,
+  Owner-only and tenant-scoped. Characterised by tests as **data portability,
+  not backup** — it carries no identifiers, no tasks or line items, and cannot
+  be re-imported to reconstruct a workspace.
+- **VERIFIED COMPLETE** — Seed/demo data cannot run against production
+  (`NODE_ENV` guard).
 
-## Domain
+## Security and access
 
-- **BLOCKED** — See "Infrastructure" above. This is the one item this phase was explicitly told to stop and hand back to you rather than act on.
+- **VERIFIED COMPLETE** — scrypt password hashing, DB-backed sessions,
+  deactivated-user login blocking, tenant isolation enforced in every query,
+  role gating (Owner / Sales Manager / Salesperson), last-Owner protection.
+  All covered by automated tests.
+- **VERIFIED COMPLETE** — No secrets reach the client; no `NEXT_PUBLIC_*` in
+  the codebase; production errors expose no stack traces.
+- **VERIFIED COMPLETE** — CSP, `X-Frame-Options`, `X-Content-Type-Options`,
+  `Referrer-Policy`, `Permissions-Policy` set in `next.config.ts`.
 
-## Database
+## Billing
 
-- **READY** — Schema fully migrated on the staging Postgres database (Supabase); `npx prisma migrate deploy` is the documented, safe, forward-only path for future schema changes.
-- **READY** — Demo/seed data is isolated to two clearly-fictional companies and cannot run against a production database (hard `NODE_ENV=production` guard, independent of who runs the command).
-- **OPTIONAL LATER (real recommendation)** — Automatic daily backups. The Supabase project's current plan (verify in the Supabase dashboard's Billing page) very likely does not include them — Supabase's free tier ships with **no automatic backups at all**. `BACKUP_RECOVERY.md` documents a manual `pg_dump` workaround that works today on any plan, but before real, non-test customer data accumulates, upgrading the production Supabase project to at least **Pro** (~$25/mo, includes 7-day daily backups) is a genuine, worthwhile recommendation — not something done automatically here since it costs money.
-
-## Authentication
-
-- **READY** — Hashed passwords (scrypt-based), DB-backed sessions, disabled-user login blocking (confirmed by direct code read of `getSession()`), tenant isolation verified live this phase via three separate direct-URL cross-company access attempts (lead/quotation/customer), all correctly blocked with generic "not found" responses (no existence leak).
-- **READY** — Role-based access re-verified live this phase: a Salesperson blocked from `/team` (server-side "Not authorized", not just a hidden nav link), a Sales Manager correctly retaining full team visibility, Owner-only pages (Billing, Company Settings, Pilot Readiness) all gated.
+- **HUMAN ACTION REQUIRED** — Stripe is not connected. Four environment
+  variables are unset; the Billing page honestly shows a not-connected state.
+  Full procedure: [STRIPE_ACTIVATION.md](STRIPE_ACTIVATION.md).
+- **VERIFIED COMPLETE (code)** — Webhook signature verification, idempotency,
+  out-of-order tolerance, status mapping, audit logging. Reviewed 2026-09-09;
+  no code blocker to activation.
+- **NOT NEEDED for a FOUNDING pilot** — A pilot customer is assigned via
+  `scripts/assignFoundingPlan.ts`; no checkout is involved.
 
 ## Integrations
 
-- **READY** — CSV import, manual entry, and Website Form connector are genuinely live and were exercised live this phase end-to-end (a real signup's manually-entered lead went all the way to Won).
-- **BLOCKED (your action, on IndiaMART's side)** — IndiaMART stays in honest **Test Mode**. To go live: you need an active **paid** IndiaMART seller account (the Push API is an add-on, not sold standalone), then in the seller panel (seller.indiamart.com → Lead Manager → Import/Export Leads → Push API) paste this workspace's webhook URL (shown on `/settings/integrations`, unique per company) as the "Integration URL" and confirm via the OTP sent to the account's registered mobile number. No IndiaMART-issued API key is ever entered into SalesLeak — the webhook URL's own random token is the only credential, and it's already generated. After the first real enquiry arrives, verify it lands correctly in the Failed Ingestion Queue or as a real lead, and correct field mapping there if IndiaMART's actual payload differs from what the adapter assumes.
-- **OPTIONAL LATER** — Justdial, ExportersIndia, TradeIndia, WhatsApp, Gmail. Deliberately out of scope per every phase's instructions; shown as "Coming Soon," never claimed as working.
+- **VERIFIED COMPLETE** — Manual entry, CSV import, and the Website Form
+  connector work end-to-end.
+- **BLOCKED (IndiaMART's side)** — Stays in honest Test Mode. Requires a paid
+  IndiaMART seller account, then pasting the workspace webhook URL into the
+  seller panel and confirming by OTP. No IndiaMART API key is ever entered
+  into SalesLeak.
+- **NOT NEEDED** — Justdial, ExportersIndia, TradeIndia, WhatsApp, Gmail.
+  Shown as "Coming Soon", never claimed as working.
 
-## Stripe / billing
+## Legal and trust
 
-- **BLOCKED (your action)** — No live Stripe account connected; Billing page honestly shows a "not connected" test/dev mode rather than faking payment. **Not required to onboard Customer #1** if they're a FOUNDING-plan pilot customer (assigned directly, no checkout involved). Needed only once you want a self-serve Starter/Growth customer to pay through the app. Exact checklist:
-  1. Create a Stripe account; use **test mode** keys first.
-  2. Developers → API keys → copy the **Secret key** → `STRIPE_SECRET_KEY`.
-  3. Create two Products (Starter, Growth), each with one recurring monthly Price → `STRIPE_PRICE_STARTER` / `STRIPE_PRICE_GROWTH`.
-  4. Register a webhook endpoint at `/api/webhooks/stripe` for `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed` → copy the signing secret → `STRIPE_WEBHOOK_SECRET`.
-  5. Add all four as Vercel environment variables, redeploy, and verify a test-mode checkout succeeds end-to-end **before** switching to live keys. Live Stripe usage costs standard per-transaction processing fees.
-- **READY (architecture)** — Provider abstraction, webhook signature verification (manual HMAC, constant-time comparison, replay tolerance), idempotent event processing, and audit logging of every billing event are all built and were code-reviewed again this phase; they activate automatically the moment real keys are added, no code change required.
+- **HUMAN ACTION REQUIRED** — `/terms` and `/privacy` exist as honest
+  "not yet published" holding pages. **The real legal content does not
+  exist.** This needs your decision or a lawyer's: legal entity name,
+  jurisdiction, governing law, retention periods, and DPDP Act 2023 posture
+  given the India-first defaults. Nothing here will be invented.
+- **VERIFIED COMPLETE** — Support address `salesleak.support@gmail.com` is
+  surfaced on login, signup, `/welcome`, and Company Settings.
+- **HUMAN ACTION REQUIRED** — That inbox must actually be monitored before a
+  real customer relies on it.
+- **VERIFIED COMPLETE** — `robots.ts` (default-deny, explicit allow) and
+  `sitemap.ts` covering only genuinely public pages.
 
-## Security
+## Brand
 
-- **READY** — Full final-pass this phase covered: cross-company data isolation (live-tested), role-based page/action gating (live-tested), Stripe subscription state proven server-side-only and unforgeable client-side (code review — no server action accepts client-supplied plan/status), webhook signature verification (code review, unchanged since Phase 8/13), integration secrets never reaching the client (zero `NEXT_PUBLIC_*` vars in the entire codebase), AI calls tenant-scoped (unchanged since Phase 9), CSV export scoped to the exporter's own company only (re-confirmed by code read), disabled-user login blocking (code-confirmed), and production error responses never including stack traces or internal messages (code-confirmed, `error.tsx` renders only a generic message + digest).
-- **Two real issues found and fixed this phase** (not just confirmed-clean — see ARCHITECTURE.md for detail):
-  1. The local-dev-only login page's "demo accounts" panel was querying *every* company in the database rather than the two genuinely-seeded fictional ones, so a company created through real `/signup` testing (this phase's "Vasant Industrial Fasteners," and an earlier phase's "Staging Test Industries") was incorrectly listed with a false shared-password claim. Fixed to a fixed allowlist of the two actual seed companies. Dev-only, never reachable in staging/production (gated by `NODE_ENV`), but was misleading and is fixed.
-  2. The Dashboard's home page showed every logged-in user — including Salespeople — company-wide figures and a named-peer performance table ("Team Snapshot": each teammate's individual won-value and open-quotation figures), even though the dedicated `/team` page explicitly blocks Salespeople from that same data. Fixed: the Dashboard now scopes to the caller's own records for Salespeople (matching every other list page in the app) and hides the Team Snapshot section entirely for that role, consistent with `/team`'s own access rule.
+- **HUMAN ACTION REQUIRED** — Both brand PNGs are fully opaque with a baked
+  navy background (`rgb(0,13,47)` / `rgb(4,17,50)`) that does not match the
+  app's navy (`rgb(11,23,57)`), so a faint rectangle is visible wherever a
+  logo sits on navy — most noticeably the login and signup logo at 190×95.
+  Needs a re-export with a transparent background. Not fixable in code; a CSS
+  blend workaround was tested and does not work.
 
-## First customer
+## Monitoring
 
-- **READY (procedurally)** — The complete funnel was run live this phase end-to-end on a brand-new real company created through actual `/signup`: signup → 14-day trial starts → 7-step onboarding wizard (company details, add teammate, workflow defaults, lead sources, follow-up defaults, "add leads manually") → landed on a clean `/leads` with correct trial banner → manual lead created → assigned to the new teammate → marked contacted → follow-up scheduled → quotation created and sent → moved to Negotiating → marked Won (with the optional lead-sync checkbox exercised) → customer correctly bucketed "Active Customer" → dashboard reflected the new Won Value. A second lead was also run through the Lost path, confirming the mandatory lost-reason requirement is actually enforced (a bare "Confirm Lost" click with no reason selected was correctly rejected). No developer or placeholder language appeared anywhere in this real flow.
-- **BLOCKED (your decision, only if relevant)** — If Customer #1 is a FOUNDING-plan pilot: run `npx tsx scripts/assignFoundingPlan.ts <their-owner-email>` after they've signed up (see DEPLOYMENT.md's "Assigning a real customer to the FOUNDING plan" section for the exact command and why it's the production-safe method — never the Billing page's dev-only button).
-- **BLOCKED (your action)** — IndiaMART and/or Stripe, only if Customer #1 needs either — see those sections above.
+- **VERIFIED COMPLETE** — `/api/health` returns `200`/`503` correctly.
+  Structured JSON logging with secret redaction across database, auth,
+  webhook, ingestion, AI and billing failures, visible in Vercel logs.
+- **HUMAN ACTION REQUIRED** — Nothing alerts you proactively; someone has to
+  look. A free uptime monitor (UptimeRobot, Better Stack) polling
+  `/api/health` closes this in minutes but needs a third-party account.
 
-## Support
+## Product validation
 
-- **BLOCKED (your action)** — There is currently no support contact surfaced anywhere in the product (no support email, no contact link, no in-app help). This isn't something to build automatically — before onboarding a real customer, decide on and add at least one real channel they can reach you through (a monitored email address is enough at pilot scale) so this checklist isn't misleading about what "launched" means.
+- **VERIFIED COMPLETE** — The full funnel has been exercised end-to-end:
+  signup → trial → onboarding → lead → assignment → follow-up → quotation →
+  Won, plus the Lost path with its mandatory reason.
+- **HUMAN ACTION REQUIRED** — No real customer has used SalesLeak. Nothing in
+  this repository can substitute for that.
 
-## Backups
+---
 
-- **READY** — `BACKUP_RECOVERY.md` written this phase: manual `pg_dump`/`pg_restore` procedure (works today, any Supabase plan), a disaster-recovery checklist, and a clear explanation of what backups are/aren't for (whole-database disaster recovery, not undoing a single mis-click — that's what the existing audit log and activity timelines are for).
-- **OPTIONAL LATER (real recommendation)** — See "Database" above: upgrading to Supabase Pro for automatic daily backups before real customer data accumulates.
+# Launch gate
 
-## Legal / basic policies
+Two distinct bars. Do not conflate them.
 
-- **BLOCKED (your decision — not something built here)** — No Terms of Service, Privacy Policy, or Cookie/consent notice exists anywhere in the product. This is a genuine gap for a real commercial launch, especially collecting business contact data (customer names, phone numbers, emails) under Indian jurisdiction (the product defaults to `Asia/Kolkata`/INR), which is plausibly in scope of India's DPDP Act 2023 depending on how you operate. Drafting binding legal text isn't something to generate speculatively — it needs your own review (or a lawyer's) before it's real. Flagging its absence honestly here rather than pretending a placeholder document would count.
+## Pilot-ready — a controlled first customer you know
 
-## Post-launch monitoring
+Everything here is either already true or a short human action.
 
-- **READY** — `/api/health` reachable and verified (returns `200`/`ok` when the database is reachable, `503` otherwise); structured logs cover database, auth, webhook, ingestion, AI, and billing failures (`src/lib/logger.ts`), all viewable in the Vercel dashboard's Logs tab.
-- **OPTIONAL LATER (recommended, low cost)** — Nothing currently pushes an alert to you proactively; someone has to look. A free external uptime monitor (UptimeRobot or Better Stack, both have workable free tiers) polling `/api/health` closes this gap in a few minutes once you're ready — see DEPLOYMENT.md's "Observability" section for specifics. Not set up automatically since it requires a third-party account.
+| Requirement | Status |
+|---|---|
+| Zero known P0 defects | ✅ none open |
+| Green CI on `main` | ✅ |
+| Production healthy, `/api/health` 200 | ✅ |
+| Core workflow verified end-to-end | ✅ |
+| Desktop + mobile sanity pass (375/768/1440) | ✅ no overflow on any screen |
+| Tenant isolation and permissions tested | ✅ 122 tests |
+| Support channel surfaced **and monitored** | ⚠️ surfaced; monitoring is yours |
+| A real backup taken before their data exists | ❌ **human action** |
+| Terms and Privacy published | ❌ **human action** |
+| Customer told plainly it is an early pilot | ❌ your call |
 
-## Summary
+**Verdict: pilot-ready once you take one `pg_dump`, publish real legal pages,
+and monitor the support inbox.** Stripe, custom domain, and IndiaMART are not
+required for a FOUNDING-plan pilot.
 
-Everything inside this codebase's control — the product itself, its security
-posture, its data-safety story, and its documentation — is **READY**. What
-remains before Customer #1 is genuinely onboarded is a short list of actions
-only you can take: a support channel, a decision on legal policies, and
-(only if that customer needs them) IndiaMART's seller-side webhook
-configuration or a live Stripe account. None of these require more code.
+## Paid-launch-ready — recurring payments and customers you don't know
+
+Everything above, plus:
+
+| Requirement | Status |
+|---|---|
+| Supabase Pro with automatic daily backups | ❌ human action |
+| A restore actually rehearsed and timed | ❌ human action |
+| Stripe live, verified per STRIPE_ACTIVATION.md §6 and §9 | ❌ human action |
+| Cancellation and failed-payment paths exercised | ❌ part of the above |
+| Uptime alerting that reaches you | ❌ human action |
+| Custom domain | ❌ human action |
+| Legal review of Terms/Privacy for paid B2B | ❌ human action |
+| At least one pilot customer's feedback incorporated | ❌ requires the pilot |
+
+**Verdict: not paid-launch-ready, and correctly so.** Every remaining item is
+an account, a payment, or a decision — none is code.

@@ -1,46 +1,101 @@
 # Project State
 
-_Living status file — current source of truth for build/verification state. Not a replacement for LAUNCH_CHECKLIST.md, ARCHITECTURE.md, ROADMAP.md, PRODUCT_SPEC.md, DEPLOYMENT.md, BACKUP_RECOVERY.md (all dated Aug 17) or PRE_MAX_HANDOFF.md (dated Aug 21) — those are stale relative to this HEAD._
+_The living operational source of truth. Start here._
+_Historical detail lives in Git history and the reference docs._
 
-## Current baseline
-- Branch: `main`
-- Working tree: clean
-- Last verified: 2026-09-09
+**Last verified: 2026-09-09**
 
-## Verified this pass (local, full network)
-- `npm ci` — PASS
-- `prisma generate` — PASS
-- `prisma validate` — PASS
-- `lint` — PASS
-- `tsc --noEmit` — PASS
-- `npm run typecheck` (`next typegen && tsc --noEmit`) — PASS
-- `npm test` — PASS, 116 tests
-- `build` — PASS
+## Current state
 
-## Known deferred items
-- npm audit reports 5 high-severity advisories (`deepmerge-ts`, `fast-uri`,
-  `mysql2`), all transitive devDependencies of the Prisma CLI and not in the
-  production runtime bundle. Deferred deliberately: `audit fix --force` would
-  force-downgrade `prisma`. Revisit on a normal Prisma version bump.
-- No database-level RLS. Deliberate — app-level tenant isolation is enforced
-  at every query and covered by automated tests.
-- Supabase remains on the free tier, so the project auto-pauses after
-  inactivity (this took production down once). A daily Vercel Cron now pings
-  `/api/health` to keep it warm; that is a mitigation, not a fix. Automatic
-  backups still require a paid tier.
-- Terms and Privacy are honest "not yet published" holding pages. Real legal
-  content is a human decision and must not be invented.
-- Brand logo PNGs (`salesleak-master-dark.png`, `salesleak-icon-master.png`)
-  are fully opaque with a baked-in navy that does not match `--brand-navy`
-  (`rgb(11,23,57)`), so a faint rectangle is visible wherever a logo sits on
-  navy — most noticeably the login/signup logo. Needs a re-export with a
-  transparent background; not fixable in code.
+| | |
+|---|---|
+| Branch | `main`, working tree clean |
+| Production | Deployed on Vercel, healthy |
+| `/api/health` | `200 {"status":"ok"}` |
+| Hosted CI | Green on `main` |
+| Vercel compute region | `sin1` (Singapore) |
+| Supabase region | `ap-southeast-1` (Singapore) — co-located |
+| Tests | 122 passing (Vitest) |
+| Local checks | lint, typecheck, test, build all pass |
 
-## Commercial-validation status
-Not yet started.
+Use `npm run typecheck` (not bare `tsc --noEmit`) — it runs `next typegen`
+first, which a clean checkout needs.
+
+## Completed engineering waves
+
+- **Product build (Phases 1–15)** — leads, quotations, customers, tasks, My
+  Day, team, ingestion, AI surfaces, billing scaffolding, onboarding.
+- **Visual system** — brand navy/gold, design-system primitives, responsive
+  passes. Verified: no horizontal overflow on any screen at 375/768/1440.
+- **Trust surfaces** — `/terms` and `/privacy` holding pages, `robots.ts`,
+  `sitemap.ts`, support address surfaced.
+- **Test safety net** — tenant isolation, role permissions, sessions,
+  ingestion/AI scoping, production-safety guards. Proven non-vacuous by
+  mutation testing.
+- **Security** — fixed a cross-tenant `scheduleFollowUp` assignment and
+  `passwordHash` reaching client-bound RSC payloads on eight routes; added
+  explicit safe User projections and regression coverage.
+- **Reliability** — daily keepalive cron, structured logging with redaction.
+- **Performance** — functions co-located with the database in `sin1`.
+  Measured 13×: pages ~2.27s → ~0.17s.
+- **Truth pass** — backup posture, export limits, Stripe runbook, launch gate.
+
+## Current mitigations, not fixes
+
+- **Supabase free tier auto-pause.** A daily Vercel Cron pings `/api/health`
+  (`vercel.json`), which runs a real `SELECT 1`. This prevents the inactivity
+  pause that took production down on 2026-09-08. **It is not backup
+  protection.** See [BACKUP_RECOVERY.md](BACKUP_RECOVERY.md).
+
+## Launch blockers (all human, none are code)
+
+In priority order:
+
+1. **Take a real backup** (`pg_dump`) before any real customer data exists —
+   there are currently no backups of any kind.
+2. **Publish real Terms and Privacy.** The routes exist as honest holding
+   pages; the legal content does not, and must not be invented.
+3. **Monitor the support inbox** (`salesleak.support@gmail.com`), already
+   surfaced in the product.
+4. **Supabase Pro** for automatic daily backups, then rehearse one restore.
+5. **Uptime monitoring** pointed at `/api/health` (needs an account).
+6. **Transparent logo re-export** — both brand PNGs are opaque with a
+   mismatched navy, leaving a visible rectangle on the auth screens.
+7. **Custom domain**, **Stripe activation**
+   ([STRIPE_ACTIVATION.md](STRIPE_ACTIVATION.md)), **IndiaMART credentials** —
+   only when a customer needs them.
+
+See [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md) for the full classification and
+the pilot-ready vs paid-launch-ready gate.
+
+## Deferred, with reasons
+
+- **Real-Postgres CI tests.** The suite uses an in-memory Prisma substitute
+  that genuinely evaluates `where` clauses, so it catches scoping regressions —
+  but it does not exercise real SQL, constraints, cascades or transactions.
+  Adding a disposable Postgres service container to CI is the right eventual
+  fix. Deferred because there is no Docker or local Postgres on the current
+  dev machine, so it could only be iterated through push-and-wait CI cycles,
+  and it is not a launch blocker. Not worth launch delay.
+- **Database-level RLS.** App-level isolation is enforced in every query and
+  covered by tests. Revisit only with new evidence.
+- **npm audit advisories (5 high).** All transitive devDependencies of the
+  Prisma CLI, not in the production runtime bundle. `audit fix --force` would
+  downgrade Prisma. Revisit on a normal version bump.
+- **My Day over-fetch.** Each helper loads the whole company's records and
+  filters in memory. Measured as *not* the latency bottleneck; it is a
+  bandwidth concern only at thousands of leads. Documented in
+  `src/server/data/myDay.ts`.
+
+## Known operational gotcha
+
+Vercel's build cache can silently skip newly added Tailwind classes — a new
+utility appears in the HTML but never in the compiled CSS. If a style seems not
+to apply in production, check the deployed stylesheet before suspecting the
+source. `vercel deploy --prod --force` rebuilds without cache and resolves it.
 
 ## Next recommended action
-Commercial validation — speak to the first 2-3 real prospects about whether
-SalesLeak beats their current process for catching missed follow-ups.
-Infrastructure items (custom domain, Stripe, IndiaMART activation, paid
-Supabase tier) stay queued behind that.
+
+Engineering is complete for this stage. Take one `pg_dump`, publish real legal
+pages, and put SalesLeak in front of 2–3 real prospects. Let their feedback —
+not further polishing — decide what gets built next.

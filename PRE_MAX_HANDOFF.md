@@ -1,5 +1,12 @@
 # SalesLeak pre-Max technical handoff
 
+> **Historical snapshot — superseded.** This describes the repository as it
+> stood at HEAD `1250dc9` on 2026-08-21 and is kept as a point-in-time record.
+> It is accurate for that commit and deliberately not updated. Several
+> statements are no longer true of the current tree — most notably that there
+> is no test suite and no CI workflow; both now exist. For current state see
+> [PROJECT_STATE.md](PROJECT_STATE.md).
+
 Mechanical repository inheritance snapshot only. This is not a launch-readiness, security, performance, architecture, or product audit.
 
 ## 1. Git baseline
