@@ -10,6 +10,7 @@ import { generateWebhookToken, generateSigningSecret } from "@/server/ingestion/
 import { getAdapterByType } from "@/server/ingestion/connectors/registry";
 import { processProviderPayload } from "@/server/ingestion/webhookHandler";
 import type { NormalizedLeadInput } from "@/server/ingestion/types";
+import { logger } from "@/lib/logger";
 import { ingestLead } from "@/server/ingestion/pipeline";
 
 function revalidateIntegrations() {
@@ -147,7 +148,7 @@ export async function sendTestPayload(type: IntegrationType): Promise<TestPayloa
 
 // ---------- Failed ingestion queue ----------
 
-function hydrateNormalizedInput(json: string | null): Partial<NormalizedLeadInput> {
+function hydrateNormalizedInput(json: string | null, context: { companyId: string; failedIngestionId: string }): Partial<NormalizedLeadInput> {
   if (!json) return {};
   try {
     const parsed = JSON.parse(json) as NormalizedLeadInput;
@@ -157,6 +158,14 @@ function hydrateNormalizedInput(json: string | null): Partial<NormalizedLeadInpu
       nextActionDeadline: parsed.nextActionDeadline ? new Date(parsed.nextActionDeadline) : undefined,
     };
   } catch {
+    // Falling back to an empty form is still the right behaviour — the retry
+    // works, the user just re-enters the details — but until now a corrupt
+    // stored payload produced silently blank fields with nothing to explain
+    // why. Ids only: the payload itself holds customer contact details.
+    logger.ingestionFailure("Stored payload for a failed ingestion could not be parsed; retry form will start empty.", {
+      companyId: context.companyId,
+      failedIngestionId: context.failedIngestionId,
+    });
     return {};
   }
 }
@@ -181,7 +190,7 @@ export async function retryFailedIngestion(
   const failure = await prisma.failedIngestion.findFirst({ where: { id, companyId: session.companyId } });
   if (!failure) throw new ForbiddenError();
 
-  const base = hydrateNormalizedInput(failure.normalizedPayload);
+  const base = hydrateNormalizedInput(failure.normalizedPayload, { companyId: session.companyId, failedIngestionId: failure.id });
   const value = corrections.estimatedValue?.trim();
 
   const input: NormalizedLeadInput = {
