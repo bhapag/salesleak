@@ -43,7 +43,11 @@ export function OverviewCard({ quotation }: { quotation: QuotationDetail }) {
           <p className="text-sm text-slate-500">No line items recorded.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[420px] text-left text-sm">
+            {/* 420px didn't fit inside the card at tablet or phone width, so
+                the Total column clipped and amounts rendered as "₹1,76,0".
+                260px fits the narrowest card (309px at 390px viewport); the
+                product description wraps instead of the money being cut off. */}
+            <table className="w-full min-w-[260px] text-left text-sm">
               <thead className="border-b border-slate-100 text-xs font-medium uppercase tracking-wide text-slate-400">
                 <tr>
                   <th className="py-1.5 pr-3">Product</th>
