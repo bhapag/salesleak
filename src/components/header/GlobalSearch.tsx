@@ -89,7 +89,12 @@ export function GlobalSearch() {
           // keyboard, but its reserved pr-14 was costing 56px of a 375px
           // field and truncating the placeholder to "Search customers, le".
           // Hidden below sm, and the padding released with it.
-          className="w-full rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-8 pr-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors duration-(--dur-micro) focus:border-brand-navy focus:bg-white focus:outline-none sm:pr-14"
+          //
+          // Written as base pr-14 with a max-sm override rather than pr-3 with
+          // an sm: override, so the failure mode is safe: if the variant is
+          // ever missing, every width keeps the original 56px and the badge
+          // still has its gutter, instead of desktop text running underneath it.
+          className="w-full rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-8 pr-14 text-sm text-slate-900 placeholder:text-slate-400 transition-colors duration-(--dur-micro) focus:border-brand-navy focus:bg-white focus:outline-none max-sm:pr-3"
         />
         <kbd className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-400 sm:block">
           Ctrl K
