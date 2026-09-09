@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getDashboardData } from "@/server/data/metrics";
 import { getCachedInsight } from "@/server/data/ai";
 import { formatCurrency } from "@/lib/format";
+import { getMoneyAtRiskMessage } from "@/lib/moneyAtRiskCopy";
 import { metricClass } from "@/components/ui";
 import { requireSession } from "@/server/auth/session";
 import { getOwnerScope } from "@/server/auth/permissions";
@@ -51,6 +52,12 @@ export default async function Home() {
   ];
 
   const isAllClear = moneyAtRisk.totalAtRiskValue === 0;
+  // ₹0 at risk is a real, correct number even when Attention Required isn't
+  // empty (an opportunity can need a next action while carrying no
+  // estimatedValue yet) — so the card's color/border still reflect the
+  // quantified figure, but the sentence next to it must not claim more than
+  // that figure actually means. See moneyAtRiskCopy.ts.
+  const moneyAtRiskMessage = getMoneyAtRiskMessage(moneyAtRisk.totalAtRiskValue, attentionItems.length);
 
   return (
     <div className="min-h-screen">
@@ -76,11 +83,7 @@ export default async function Home() {
                 {formatCurrency(moneyAtRisk.totalAtRiskValue)}
               </p>
             </div>
-            <p className="max-w-sm text-sm text-slate-500">
-              {isAllClear
-                ? "Nothing at risk right now — every active lead and open quotation is on track."
-                : "Revenue tied to leads or quotations that need action right now."}
-            </p>
+            <p className="max-w-sm text-sm text-slate-500">{moneyAtRiskMessage}</p>
           </div>
           {!isAllClear && (
             <div className="grid grid-cols-1 divide-y divide-slate-100 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
