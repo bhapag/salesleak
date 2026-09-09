@@ -61,6 +61,8 @@ function company(id: string, name: string) {
     defaultPriority: "MEDIUM",
     lostReasonPresets: null,
     activeLeadSources: null,
+    // Matches the schema's @default(0) — real rows are never NULL here.
+    lastQuotationSequence: 0,
     onboardedAt: new Date("2026-01-01T00:00:00Z"),
     createdAt: new Date("2026-01-01T00:00:00Z"),
     updatedAt: new Date("2026-01-01T00:00:00Z"),

@@ -94,36 +94,63 @@ export async function getLeadPickerOptions(companyId: string, ownerScope?: strin
 export type LeadPickerOption = Awaited<ReturnType<typeof getLeadPickerOptions>>[number];
 
 /**
- * A pre-filled quotation number the user can freely edit. The number is
- * reserved atomically here (via Company.lastQuotationSequence) rather than
- * merely "peeked" from a count — two concurrent page loads/creations always
- * get different numbers, at the cost of an occasional gap if a form is
- * abandoned without saving (the standard invoicing-system tradeoff). The DB's
- * @@unique([companyId, quotationNumber]) constraint is the actual source of
- * truth for uniqueness; this just makes collisions rare in the common case.
+ * A pre-filled quotation number the user can freely edit.
  *
- * Each candidate is checked against existing rows before being returned —
- * a defensive skip for the rare case where a manually-entered number happens
- * to already occupy the auto sequence's next value (concurrent siblings
- * never collide with each other here, since each gets its own atomically
- * incremented value; this only guards against pre-existing rows). Bounded so
- * a pathological run of manual collisions can't loop forever — if the bound
- * is ever hit, the last candidate is returned as-is and createQuotation's
- * P2002 handling remains the actual backstop.
+ * This is a pure preview — it reads Company.lastQuotationSequence but never
+ * writes it. It used to reserve the number atomically (increment-on-read),
+ * but both call sites (the Quotations page and every Lead detail page) load
+ * this on every server render, not just when a user opens the create form.
+ * Worse, any server action on the lead detail page — changing status,
+ * scheduling a follow-up, adding a note, none of them related to quotations
+ * at all — triggers a revalidation that re-renders the page and so
+ * re-invokes this. In one QA session, three unrelated actions on a lead
+ * left the very first quotation created suggested as "QT-2026-0003". A
+ * sequence meant to track quotations actually created was advancing on
+ * page views instead. See createQuotation, which now does the actual
+ * reservation at the point a quotation is genuinely saved.
+ *
+ * Collision candidates are still checked against existing rows before being
+ * returned, for the rare case where a manually-entered number already
+ * occupies the next value in sequence. The DB's
+ * @@unique([companyId, quotationNumber]) constraint remains the real source
+ * of truth for uniqueness; this just makes collisions rare in the common
+ * case. Bounded so a pathological run of manual collisions can't loop
+ * forever — if the bound is ever hit, the last candidate is returned as-is
+ * and createQuotation's P2002 handling remains the actual backstop.
  */
 export async function getSuggestedQuotationNumber(companyId: string): Promise<string> {
   const year = new Date().getFullYear();
   const MAX_ATTEMPTS = 50;
+  const company = await prisma.company.findFirstOrThrow({ where: { id: companyId }, select: { lastQuotationSequence: true } });
   let candidate = "";
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const company = await prisma.company.update({
-      where: { id: companyId },
-      data: { lastQuotationSequence: { increment: 1 } },
-      select: { lastQuotationSequence: true },
-    });
-    candidate = `QT-${year}-${String(company.lastQuotationSequence).padStart(4, "0")}`;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const seq = company.lastQuotationSequence + attempt;
+    candidate = `QT-${year}-${String(seq).padStart(4, "0")}`;
     const collision = await prisma.quotation.findFirst({ where: { companyId, quotationNumber: candidate }, select: { id: true } });
     if (!collision) return candidate;
   }
   return candidate;
+}
+
+/** `QT-<year>-<sequence>` — the auto-suggested format createQuotation checks for below, to keep the counter caught up only when that format was actually used. */
+const AUTO_QUOTATION_NUMBER_RE = /^QT-\d{4}-(\d+)$/;
+
+/**
+ * Advances Company.lastQuotationSequence to at least the sequence just used,
+ * so the next suggestion continues from here — the reservation
+ * getSuggestedQuotationNumber used to do on every render, now done exactly
+ * once, at the point a quotation is actually created. A plain conditional
+ * update (`lt` guard), not an increment, so two concurrent creations can
+ * never stomp each other back down to a lower value; whichever finishes last
+ * wins, which is exactly what "at least this high" requires.
+ *
+ * A no-op for hand-typed numbers that don't match the auto format — those
+ * were never reserved from this sequence, so there's nothing to catch up to.
+ */
+export async function advanceQuotationSequence(companyId: string, quotationNumber: string): Promise<void> {
+  const match = AUTO_QUOTATION_NUMBER_RE.exec(quotationNumber);
+  if (!match) return;
+  const usedSequence = Number(match[1]);
+  if (!Number.isFinite(usedSequence)) return;
+  await prisma.company.updateMany({ where: { id: companyId, lastQuotationSequence: { lt: usedSequence } }, data: { lastQuotationSequence: usedSequence } });
 }

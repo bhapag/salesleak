@@ -11,6 +11,7 @@ import { ForbiddenError } from "@/server/auth/permissions";
 import type { AuthSession } from "@/server/auth/session";
 import { markWon as markLeadWon, markLost as markLeadLost } from "@/server/actions/leads";
 import { assertMutationAllowed } from "@/server/billing/entitlements";
+import { advanceQuotationSequence } from "@/server/data/quotations";
 
 // Quotation actions write their activity onto the linked Lead's timeline —
 // Quotation has no activity log of its own, and the product requirement is
@@ -148,6 +149,13 @@ export async function createQuotation(input: CreateQuotationInput, _actingUserId
     }
     throw e;
   }
+
+  // Reservation now happens here, once, at the point a quotation is actually
+  // saved — see getSuggestedQuotationNumber's doc comment for why it no
+  // longer reserves on every page render. A no-op if the number doesn't
+  // match the auto-suggested format (hand-typed numbers were never drawn
+  // from this sequence).
+  await advanceQuotationSequence(session.companyId, quotationNumber);
 
   const notes = input.notes?.trim();
   await logOnLead(
