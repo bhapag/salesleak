@@ -27,7 +27,7 @@ export default async function CompanySettingsPage() {
       <SettingsNav role={session.role} />
 
       <main className="px-4 py-6 sm:px-8">
-        <div className="max-w-2xl">
+        <div className="max-w-4xl">
           <Card>
             <CompanySettingsForm
               initial={{

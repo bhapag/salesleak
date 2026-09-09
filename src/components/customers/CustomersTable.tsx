@@ -137,8 +137,8 @@ export function CustomersTable({ customers, users }: { customers: CustomerSummar
         <EmptyState hasFilters={activeFilterCount > 0 || search.length > 0} onReset={resetFilters} />
       ) : (
         <>
-          <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card md:block">
-            <table className="w-full min-w-[1100px] text-left text-sm">
+          <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card xl:block">
+            <table className="w-full min-w-[960px] text-left text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-4 py-3">Customer</th>
@@ -170,7 +170,7 @@ export function CustomersTable({ customers, users }: { customers: CustomerSummar
             </table>
           </div>
 
-          <div className="flex flex-col gap-3 md:hidden">
+          <div className="flex flex-col gap-3 xl:hidden">
             {filtered.map((customer) => (
               <CustomerCard key={customer.id} customer={customer} />
             ))}

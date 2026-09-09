@@ -45,8 +45,8 @@ export default async function TeamPage() {
           />
         )}
 
-        <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card md:block">
-          <table className="w-full min-w-[1300px] text-left text-sm">
+        <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card xl:block">
+          <table className="w-full min-w-[1040px] text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-4 py-3">Salesperson</th>
@@ -122,7 +122,7 @@ export default async function TeamPage() {
             treats as the essential subset (Active Leads, Overdue Follow-ups,
             Open Quotation Value, Won Value), rather than cramming all eleven
             columns into a card. */}
-        <div className="flex flex-col gap-3 md:hidden">
+        <div className="flex flex-col gap-3 xl:hidden">
           {sorted.map((row) => (
             <Link
               key={row.userId}

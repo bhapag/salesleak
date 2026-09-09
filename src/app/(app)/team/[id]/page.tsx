@@ -8,6 +8,7 @@ import { requireSession } from "@/server/auth/session";
 import { canManageTeam } from "@/server/auth/permissions";
 import { NotAuthorized } from "@/components/auth/NotAuthorized";
 import { getMoneyAtRiskMessage } from "@/lib/moneyAtRiskCopy";
+import { AllClearIcon } from "@/components/metricIcons";
 
 export default async function SalespersonDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -31,10 +32,13 @@ function SalespersonDetailBody({ detail }: { detail: NonNullable<Awaited<ReturnT
         <Link href="/team" className="text-sm font-medium text-slate-500 transition-colors duration-(--dur-micro) hover:text-slate-900">
           ← Back to Team
         </Link>
-        <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
+        {/* Same header shape as Lead Detail and Quotation Detail — name on the
+            left, the one figure that matters on the right — so a salesperson
+            page doesn't read as a different kind of screen from the rest. */}
+        <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{user.name}</h1>
-            <p className="text-sm text-slate-500">
+            <p className="mt-0.5 text-sm text-slate-500">
               {labelize(user.role)}
               {!user.isActive && (
                 <span className="ml-1.5 inline-flex items-center rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
@@ -43,11 +47,11 @@ function SalespersonDetailBody({ detail }: { detail: NonNullable<Awaited<ReturnT
               )}
             </p>
           </div>
-          <div className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-right">
-            <p className="text-xs text-slate-400">Money at risk</p>
-            <p className={`text-lg font-semibold tabular-nums ${moneyAtRisk > 0 ? "text-red-600" : "text-slate-900"}`}>
+          <div className="shrink-0 sm:text-right">
+            <p className={`text-2xl font-semibold tabular-nums ${moneyAtRisk > 0 ? "text-red-600" : "text-brand-navy"}`}>
               {formatCurrency(moneyAtRisk)}
             </p>
+            <p className="text-xs text-slate-500">Money at risk</p>
           </div>
         </div>
       </header>
@@ -217,7 +221,14 @@ function Section({ title, description, children }: { title: string; description:
 }
 
 function EmptyRow({ text }: { text: string }) {
-  return <div className="px-5 py-8 text-center text-sm text-slate-500">{text}</div>;
+  return (
+    <div className="flex flex-col items-center gap-3 px-5 py-8 text-center">
+      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50" aria-hidden="true">
+        <AllClearIcon className="h-5 w-5 text-emerald-500" />
+      </span>
+      <p className="text-sm text-slate-500">{text}</p>
+    </div>
+  );
 }
 
 type TaskWithLead = {

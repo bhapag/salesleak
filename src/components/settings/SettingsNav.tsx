@@ -28,7 +28,13 @@ export function SettingsNav({ role }: { role: Role }) {
 
   return (
     <div className="border-b border-slate-200 bg-white px-4 sm:px-8">
-      <nav className="flex items-center gap-1 overflow-x-auto" aria-label="Settings">
+      {/* Scrollable rather than wrapping so the strip stays one line at every
+          width, with the scrollbar itself hidden — a visible grey track under
+          the tabs read as a rendering artifact on tablet widths. */}
+      <nav
+        className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        aria-label="Settings"
+      >
         {visible.map((tab) => {
           const active = pathname === tab.href;
           return (

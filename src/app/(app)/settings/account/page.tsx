@@ -22,7 +22,7 @@ export default async function AccountSettingsPage() {
       <SettingsNav role={session.role} />
 
       <main className="px-4 py-6 sm:px-8">
-        <div className="max-w-2xl">
+        <div className="max-w-4xl">
           <Card title="Your account" description="Managed by your workspace Owner — contact them to change your name, email, or role.">
             <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
