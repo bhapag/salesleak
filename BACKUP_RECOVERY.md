@@ -84,20 +84,68 @@ hostage." Use it for that. Do not use it as a recovery plan.
 
 ## Taking a real backup today
 
-`pg_dump` against the **direct** connection (`DIRECT_URL`, port `5432` — not
-the pooled `DATABASE_URL`, since transaction-mode pooling doesn't reliably
-support what `pg_dump` needs):
+Two things have to be true first, and neither was true on the dev machine as
+of 2026-09-09. Both were established by actually attempting the backup.
 
-```bash
-pg_dump "$DIRECT_URL" --format=custom --file="salesleak-backup-$(date +%Y%m%d).dump"
+### 1. You need `pg_dump`, version 17 or newer
+
+The production server reports **PostgreSQL 17.6** (verified by query).
+`pg_dump` refuses to dump a server newer than itself, so a v15 or v16 client
+will fail.
+
+Nothing in this project provides it. Install the PostgreSQL client tools for
+your OS — on Windows, the EnterpriseDB installer can install **Command Line
+Tools only**, without running a local database server.
+
+Verify with `pg_dump --version` before continuing.
+
+### 2. Use the session pooler, not `DIRECT_URL`
+
+**This is the part that will otherwise waste your afternoon.** The direct host
+(`db.<project-ref>.supabase.co`) now resolves to an **IPv6 address only** — no
+A record. On any IPv4-only network the connection fails before it starts, with
+a misleading `getaddrinfo ENOENT` that looks like the database is down. It is
+not; it is unreachable from that network. Supabase sells IPv4 for direct
+connections as a paid add-on.
+
+Confirmed on 2026-09-09: `DIRECT_URL` failed with exactly that error, while
+the pooler connected on the first attempt.
+
+Use the **session-mode pooler** instead. It is the same host as
+`DATABASE_URL` but on **port 5432** rather than 6543, and it is reachable over
+IPv4:
+
+```
+postgresql://postgres.<project-ref>:<password>@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres
 ```
 
-Store the `.dump` somewhere durable and **not** in this repository — it will
-contain real customer data once real customers exist.
+Port 6543 is transaction mode and will not work for `pg_dump`. Port 5432 on
+the pooler host is session mode and will. Both connection strings are in the
+Supabase dashboard under Project Settings → Database.
 
-This is manual. Nothing runs it for you. If you want it automatic without
-upgrading Supabase, a scheduled GitHub Action running the command above
-against a stored connection string is the cheapest option.
+### The command
+
+```bash
+pg_dump "postgresql://postgres.<project-ref>:<password>@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres" \
+  --format=custom \
+  --no-owner \
+  --file="salesleak-backup-$(date +%Y%m%d-%H%M%S).dump"
+```
+
+Then confirm the file is a valid archive — this checks readability, **not**
+that a restore works:
+
+```bash
+pg_restore --list salesleak-backup-YYYYMMDD-HHMMSS.dump | head -40
+```
+
+Store the `.dump` somewhere durable and **outside this repository** — it will
+contain real customer data. As of 2026-09-09 production holds 8 companies,
+15 users and 32 leads, so this is no longer only test data.
+
+Nothing runs this for you. If you want it automatic without upgrading
+Supabase, a scheduled GitHub Action running the command above against a
+stored connection secret is the cheapest option.
 
 ## Restoring
 
@@ -164,17 +212,46 @@ and it is what happened on 2026-09-08.
 6. Redeploy only if environment variables changed; otherwise the running
    deployment reconnects on its own.
 
-## Once Supabase Pro is enabled
+## Upgrading Supabase — what a paid tier actually changes
 
-Pro (~$25/mo) adds **daily backups retained 7 days**, restorable from the
-dashboard. PITR is a further paid add-on. When that upgrade happens:
+If you have not dealt with Supabase plans before, this is the short version.
+Supabase is the managed PostgreSQL provider hosting SalesLeak's only database.
+The plan you are on decides what protection you get. Check the current plan in
+the Supabase dashboard under **Organization → Billing**.
 
-1. Confirm in Database → Backups that a backup has actually appeared.
-2. Do one rehearsal restore into a scratch project and time it.
-3. Update the "Current reality" section above — it will be wrong the moment
-   the plan changes.
-4. Reassess whether the keepalive cron is still needed; paid projects do not
-   auto-pause, so it becomes redundant rather than load-bearing.
+Today, on the free tier, three things are true and all three are problems:
 
-Until then, this project's honest recovery posture is: **manual `pg_dump`
-only, never yet tested.**
+1. **No automatic backups.** Nothing is snapshotting the database.
+2. **The project pauses itself after inactivity.** This already took production
+   down on 2026-09-08. The daily cron mitigates it but does not remove it.
+3. **Direct connections are IPv6-only**, which is why the backup command above
+   has to go through the pooler.
+
+Moving to a paid production tier changes all three: automatic daily backups
+appear, projects no longer auto-pause, and an IPv4 add-on becomes available for
+direct connections. Point-in-time recovery — rewinding to a specific second
+rather than the last daily snapshot — is a further paid add-on on top of that,
+and is not needed at pilot scale.
+
+Pricing is not quoted here on purpose; check the current figure on Supabase's
+pricing page rather than trusting a number written down months earlier.
+
+**This is a purchase decision and nothing in this repository will make it.**
+
+### After upgrading — do these four things
+
+1. **Confirm a backup actually exists.** Database → Backups should show one
+   within a day. A plan change alone proves nothing.
+2. **Rehearse a restore.** Restore the latest backup into a *scratch* project,
+   run `npx prisma migrate deploy`, and sign in to confirm the data is really
+   there. Time it, and write the number down — during a real incident you will
+   need to tell someone how long recovery takes. **Never rehearse against
+   production.**
+3. **Update the "Current reality" section above.** It becomes wrong the moment
+   the plan changes, and a stale backup document is worse than none.
+4. **Reconsider the keepalive cron.** Paid projects do not auto-pause, so it
+   stops being load-bearing. Keeping it is harmless — it doubles as a cheap
+   liveness signal — but it is no longer protecting you from anything.
+
+Until all of that is done, this project's honest recovery posture is: **manual
+`pg_dump` only, and never yet tested.**

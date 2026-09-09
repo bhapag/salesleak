@@ -47,26 +47,32 @@ first, which a clean checkout needs.
   pause that took production down on 2026-09-08. **It is not backup
   protection.** See [BACKUP_RECOVERY.md](BACKUP_RECOVERY.md).
 
-## Launch blockers (all human, none are code)
+## External activation status
 
-In priority order:
+Engineering is frozen. Everything below is an account, a payment, a legal
+decision, or a design asset — none of it is code.
 
-1. **Take a real backup** (`pg_dump`) before any real customer data exists —
-   there are currently no backups of any kind.
-2. **Publish real Terms and Privacy.** The routes exist as honest holding
-   pages; the legal content does not, and must not be invented.
-3. **Monitor the support inbox** (`salesleak.support@gmail.com`), already
-   surfaced in the product.
-4. **Supabase Pro** for automatic daily backups, then rehearse one restore.
-5. **Uptime monitoring** pointed at `/api/health` (needs an account).
-6. **Transparent logo re-export** — both brand PNGs are opaque with a
-   mismatched navy, leaving a visible rectangle on the auth screens.
-7. **Custom domain**, **Stripe activation**
-   ([STRIPE_ACTIVATION.md](STRIPE_ACTIVATION.md)), **IndiaMART credentials** —
-   only when a customer needs them.
+| Item | Status | What is prepared | What you must do |
+|---|---|---|---|
+| **Production backup** | ❌ **None exists** | Corrected, tested connection procedure in [BACKUP_RECOVERY.md](BACKUP_RECOVERY.md) | Install PostgreSQL client tools **v17+**, run the documented `pg_dump`. `pg_dump` is not installed on the dev machine, which is why this could not be completed automatically |
+| **Terms of Service** | 🟡 Draft ready, not published | [legal/TERMS_OF_SERVICE.draft.md](legal/TERMS_OF_SERVICE.draft.md) | Resolve markers, get legal review, then replace the holding page |
+| **Privacy Policy** | 🟡 Draft ready, not published | [legal/PRIVACY_POLICY.draft.md](legal/PRIVACY_POLICY.draft.md) | Same |
+| **Legal decisions** | ❌ Unresolved | [legal/DECISIONS_REQUIRED.md](legal/DECISIONS_REQUIRED.md) | Answer section A first — it unblocks the rest |
+| **Support mailbox** | 🟡 Referenced, existence unverified | `salesleak.support@gmail.com` appears in 6 places in the product | Create the Gmail account if it does not exist, and monitor it |
+| **Supabase paid tier** | ❌ Free tier | Explanation and post-upgrade steps in BACKUP_RECOVERY.md | Upgrade the existing project, then rehearse one restore |
+| **Uptime monitoring** | ❌ Not set up | Exact monitor configuration in [DEPLOYMENT.md](DEPLOYMENT.md) → Observability | Create a free UptimeRobot/Better Stack account and paste the config |
+| **Logo assets** | ❌ Blocked on artwork | Verified: all five brand PNGs are colour type 2 (RGB) with **no alpha channel at all** — transparency is not merely absent, the files cannot represent it | Re-export the master logo and icon with transparent backgrounds, preserving the existing design |
+| **Custom domain** | ✅ Code-ready | No hardcoded Vercel URLs anywhere; everything uses `getAppBaseUrl()` / `APP_URL`. Steps in DEPLOYMENT.md | Buy a domain, add it in Vercel, update `APP_URL` |
+| **Stripe** | ✅ Code-ready | [STRIPE_ACTIVATION.md](STRIPE_ACTIVATION.md), re-verified against the code | Follow the runbook, test mode first |
+| **IndiaMART** | ✅ Code-ready | Connector follows the published Push API; the webhook URL's own token is the only credential — no IndiaMART API key is ever entered into SalesLeak | Paid IndiaMART seller account, paste the workspace webhook URL into the seller panel, confirm by OTP |
 
-See [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md) for the full classification and
-the pilot-ready vs paid-launch-ready gate.
+**Pilot-ready:** ❌ not yet — blocked on a backup, published legal pages, and a
+monitored inbox. Everything technical is green.
+
+**Paid-launch-ready:** ❌ not yet — additionally needs Supabase paid tier with
+a rehearsed restore, Stripe verified live, uptime alerting, and a domain.
+
+See [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md) for the full gate.
 
 ## Deferred, with reasons
 

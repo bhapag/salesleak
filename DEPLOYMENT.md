@@ -342,6 +342,32 @@ requires creating a third-party account, which is your decision (and
 possibly eventually your subscription) to make, not something done on your
 behalf here.
 
+### The exact configuration to use
+
+Whichever service you pick, these are the settings for SalesLeak. Copy them
+in; do not improvise.
+
+| Setting | Value | Why |
+|---|---|---|
+| Monitor type | HTTP(S) | — |
+| URL | `https://salesleak-theta.vercel.app/api/health` (swap in the custom domain once it exists) | The only endpoint that proves the app *and* its database are both alive |
+| Method | `GET` | The route answers GET; POST is not accepted |
+| Expected status | `200` | The route returns `503` whenever the database is unreachable, which is precisely the failure worth waking up for |
+| Expected body contains | `"status":"ok"` | Optional but better than status alone — it fails the check even if something ever returned a `200` with an error payload |
+| Check interval | **5 minutes** | Matches the free tiers, and is well inside the window that matters. The failure this guards against — a paused database — lasts until someone acts, so detecting it in 5 minutes versus 1 changes nothing |
+| Failure threshold | **2 consecutive failures** before alerting | One failure is usually a cold start or a transient blip. Two in a row is real, and this avoids the alert fatigue that makes people ignore monitors |
+| Timeout | 30 seconds | A cold serverless start plus a database round trip can legitimately take several seconds |
+| Alert destination | The email you actually read — realistically the same inbox as `salesleak.support@gmail.com` | An alert nobody sees is not monitoring |
+| Recovery notification | **Enabled** | You need to know it came back without having to check manually |
+
+**Do not** point the monitor at `/`, `/welcome`, or `/login`. Those render
+without touching the database, so they would stay green through exactly the
+outage you are trying to catch. `/api/health` runs a real `SELECT 1`.
+
+Setting this up is roughly five minutes and closes the single largest
+operational gap: today, **nothing tells you production is down except you
+noticing.**
+
 ## Common deployment failures
 
 - **Build fails with a Prisma "environment variable not found" error** —

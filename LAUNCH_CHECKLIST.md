@@ -1,6 +1,6 @@
 # SalesLeak — Launch Checklist
 
-Reconciled against reality on **2026-09-09** at HEAD `3d241be`. Every line is
+Reconciled against reality on **2026-09-09**. Every line is
 one of:
 
 - **VERIFIED COMPLETE** — done, and checked against the running system or code
@@ -51,7 +51,8 @@ Nothing is marked complete unless it was actually verified. Supporting detail:
 - **HUMAN ACTION REQUIRED — highest priority** — Supabase is on the **free
   tier**, confirmed by the 2026-09-08 auto-pause incident. There are **no
   automatic backups**. If the database were lost today, the data would be
-  gone. Upgrading to Pro (~$25/mo) enables daily backups.
+  gone. A paid Supabase tier enables automatic daily backups — see
+  BACKUP_RECOVERY.md for what changes and what to do after upgrading.
 - **HUMAN ACTION REQUIRED** — No restore has ever been tested. One rehearsal
   restore into a scratch database is the highest-value item in
   BACKUP_RECOVERY.md.
@@ -97,11 +98,13 @@ Nothing is marked complete unless it was actually verified. Supporting detail:
 
 ## Legal and trust
 
-- **HUMAN ACTION REQUIRED** — `/terms` and `/privacy` exist as honest
-  "not yet published" holding pages. **The real legal content does not
-  exist.** This needs your decision or a lawyer's: legal entity name,
-  jurisdiction, governing law, retention periods, and DPDP Act 2023 posture
-  given the India-first defaults. Nothing here will be invented.
+- **HUMAN ACTION REQUIRED** — `/terms` and `/privacy` remain honest "not yet
+  published" holding pages. **Serious drafts now exist**, grounded in verified
+  product behaviour: [legal/TERMS_OF_SERVICE.draft.md](legal/TERMS_OF_SERVICE.draft.md)
+  and [legal/PRIVACY_POLICY.draft.md](legal/PRIVACY_POLICY.draft.md). They are
+  not published because unresolved legal facts remain — every one is listed in
+  [legal/DECISIONS_REQUIRED.md](legal/DECISIONS_REQUIRED.md). Answer those,
+  get legal review, then replace the holding pages.
 - **VERIFIED COMPLETE** — Support address `salesleak.support@gmail.com` is
   surfaced on login, signup, `/welcome`, and Company Settings.
 - **HUMAN ACTION REQUIRED** — That inbox must actually be monitored before a
@@ -111,12 +114,14 @@ Nothing is marked complete unless it was actually verified. Supporting detail:
 
 ## Brand
 
-- **HUMAN ACTION REQUIRED** — Both brand PNGs are fully opaque with a baked
-  navy background (`rgb(0,13,47)` / `rgb(4,17,50)`) that does not match the
-  app's navy (`rgb(11,23,57)`), so a faint rectangle is visible wherever a
-  logo sits on navy — most noticeably the login and signup logo at 190×95.
-  Needs a re-export with a transparent background. Not fixable in code; a CSS
-  blend workaround was tested and does not work.
+- **HUMAN ACTION REQUIRED** — All five brand PNGs are PNG **colour type 2
+  (RGB), with no alpha channel at all** — transparency is not merely absent,
+  the files cannot represent it. Their baked navy (`rgb(0,13,47)` /
+  `rgb(4,17,50)`) does not match the app's `rgb(11,23,57)`, so a faint
+  rectangle shows wherever a logo sits on navy, most visibly the 190×95 logo
+  on login and signup. No transparent or vector variant exists in the repo.
+  Needs a re-export from the source artwork, preserving the existing design.
+  Not fixable in code; a CSS blend workaround was tested and does not work.
 
 ## Monitoring
 
@@ -168,7 +173,7 @@ Everything above, plus:
 
 | Requirement | Status |
 |---|---|
-| Supabase Pro with automatic daily backups | ❌ human action |
+| Supabase paid tier with automatic daily backups | ❌ human action |
 | A restore actually rehearsed and timed | ❌ human action |
 | Stripe live, verified per STRIPE_ACTIVATION.md §6 and §9 | ❌ human action |
 | Cancellation and failed-payment paths exercised | ❌ part of the above |
