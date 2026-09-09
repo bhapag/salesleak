@@ -112,17 +112,20 @@ export default async function WelcomePage() {
         />
 
         <div className="relative mx-auto flex max-w-6xl flex-col px-6 py-6 sm:px-8">
-          <nav className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          {/* gap-4 plus dropping the "by NobleArc" suffix on the narrowest
+              screens — at 390px the lockup and the nav actions have no room
+              to sit apart, and "Log in" collided with the suffix. */}
+          <nav className="flex items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-2">
               <Image src="/brand/salesleak/salesleak-icon-master.png" alt="SalesLeak" width={26} height={26} className="shrink-0 rounded-[7px]" />
               <div className="flex items-baseline gap-1.5">
                 <span className="text-lg font-semibold tracking-tight text-brand-warm-white">SalesLeak</span>
-                <span className="text-[10px] text-brand-warm-white/45">
+                <span className="hidden text-[10px] text-brand-warm-white/45 sm:inline">
                   by <span className="text-brand-gold">NobleArc</span>
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex shrink-0 items-center gap-4">
               <Link href="/login" className="text-sm font-medium text-brand-warm-white/80 transition-colors duration-(--dur-micro) hover:text-brand-warm-white">
                 Log in
               </Link>
