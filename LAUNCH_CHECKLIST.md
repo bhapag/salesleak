@@ -107,8 +107,11 @@ Nothing is marked complete unless it was actually verified. Supporting detail:
   get legal review, then replace the holding pages.
 - **VERIFIED COMPLETE** — Support address `salesleak.support@gmail.com` is
   surfaced on login, signup, `/welcome`, and Company Settings.
-- **HUMAN ACTION REQUIRED** — That inbox must actually be monitored before a
-  real customer relies on it.
+- **VERIFIED COMPLETE** — The mailbox is live. Confirmed 2026-09-09 on normal
+  free Gmail (no Workspace subscription), with a send/receive round-trip test
+  landing in both Sent and Inbox.
+- **HUMAN ACTION REQUIRED** — It must actually be *read*. A working mailbox
+  nobody monitors is not a support channel.
 - **VERIFIED COMPLETE** — `robots.ts` (default-deny, explicit allow) and
   `sitemap.ts` covering only genuinely public pages.
 
@@ -158,7 +161,7 @@ Everything here is either already true or a short human action.
 | Core workflow verified end-to-end | ✅ |
 | Desktop + mobile sanity pass (375/768/1440) | ✅ no overflow on any screen |
 | Tenant isolation and permissions tested | ✅ 122 tests |
-| Support channel surfaced **and monitored** | ⚠️ surfaced; monitoring is yours |
+| Support channel surfaced **and monitored** | ✅ live + verified; monitoring is yours |
 | A real backup taken before their data exists | ✅ taken 2026-09-09, validated |
 | Terms and Privacy published | ❌ **human action** |
 | Customer told plainly it is an early pilot | ❌ your call |

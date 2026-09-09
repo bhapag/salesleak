@@ -58,16 +58,17 @@ decision, or a design asset — none of it is code.
 | **Terms of Service** | 🟡 Draft ready, not published | [legal/TERMS_OF_SERVICE.draft.md](legal/TERMS_OF_SERVICE.draft.md) | Resolve markers, get legal review, then replace the holding page |
 | **Privacy Policy** | 🟡 Draft ready, not published | [legal/PRIVACY_POLICY.draft.md](legal/PRIVACY_POLICY.draft.md) | Same |
 | **Legal decisions** | 🟡 Narrowed by research | [legal/DECISIONS_REQUIRED.md](legal/DECISIONS_REQUIRED.md). DPDP Rules 2025 research closed several questions: Singapore hosting is **permitted**, a DPO is **not required**, and no statutory retention period applies. Still required: a **Grievance Officer** and **≥1 year log retention** | Answer section A, then take the drafts to a lawyer |
-| **Support mailbox** | ❌ Existence unverified | `salesleak.support@gmail.com` appears in 6 places in the product | **Create the Gmail account and monitor it.** Account creation cannot be performed on your behalf |
-| **Supabase paid tier** | ❌ Free Plan — confirmed in dashboard | Dashboard states verbatim: *"Free Plan does not include project backups."* Pro is **from $25/mo**, includes **daily backups retained 7 days**. Free projects pause after 1 week of inactivity — the documented cause of the 2026-09-08 outage | Approve the upgrade, then rehearse a restore |
+| **Support mailbox** | ✅ **Live and verified 2026-09-09** | Account exists on **normal free Gmail** (15 GB quota, no Workspace subscription). Send/receive round-trip tested: message sent 17:11 appeared in both Sent and Inbox. Address matches the 6 references in the product | **Actually read it.** A working mailbox nobody monitors is not support |
+| **Supabase paid tier** | ❌ Free Plan — confirmed in dashboard ([billing page](https://supabase.com/dashboard/org/zxtfvrdhvytmsfsfinia/billing)) | Dashboard states verbatim: *"Free Plan does not include project backups."* Pro is **from $25/mo**, includes **daily backups retained 7 days**. Free projects pause after 1 week of inactivity — the documented cause of the 2026-09-08 outage | Approve the upgrade, then rehearse a restore |
 | **Uptime monitoring** | ❌ Not set up | Exact monitor configuration in [DEPLOYMENT.md](DEPLOYMENT.md) → Observability | Create a free UptimeRobot/Better Stack account and paste the config |
 | **Logo assets** | ❌ Blocked on artwork | All five brand PNGs are colour type 2 (RGB) with **no alpha channel at all**. Searched Desktop, Downloads, Documents, Pictures and OneDrive: **no `.ai`, `.svg`, `.psd`, `.fig` or transparent variant exists anywhere** — the Downloads copies are the same flattened exports | Re-export master logo + icon with transparent backgrounds from wherever the artwork originated |
 | **Custom domain** | ✅ Code-ready | No hardcoded Vercel URLs anywhere; everything uses `getAppBaseUrl()` / `APP_URL`. Steps in DEPLOYMENT.md | Buy a domain, add it in Vercel, update `APP_URL` |
 | **Stripe** | ✅ Code-ready | [STRIPE_ACTIVATION.md](STRIPE_ACTIVATION.md), re-verified against the code | Follow the runbook, test mode first |
 | **IndiaMART** | ✅ Code-ready | Connector follows the published Push API; the webhook URL's own token is the only credential — no IndiaMART API key is ever entered into SalesLeak | Paid IndiaMART seller account, paste the workspace webhook URL into the seller panel, confirm by OTP |
 
-**Pilot-ready:** ❌ not yet — the backup now exists, so what remains is published
-legal pages and a monitored support inbox. Everything technical is green.
+**Pilot-ready:** 🟡 close — the backup exists and the support mailbox is live and
+verified. **Published legal pages are the only remaining blocker.** Everything
+technical is green.
 
 **Paid-launch-ready:** ❌ not yet — additionally needs Supabase paid tier with
 a rehearsed restore, Stripe verified live, uptime alerting, and a domain.
@@ -102,7 +103,9 @@ source. `vercel deploy --prod --force` rebuilds without cache and resolves it.
 
 ## Next recommended action
 
-Engineering is complete for this stage and the first real backup now exists.
-Create and monitor the support mailbox, get the legal drafts reviewed, and put
-SalesLeak in front of 2–3 real prospects. Let their feedback — not further
-polishing — decide what gets built next.
+Engineering is complete for this stage. The first real backup exists and the
+support mailbox is live and verified. **Getting the legal drafts reviewed is
+now the only thing standing between SalesLeak and a pilot customer** — take
+`legal/DECISIONS_REQUIRED.md` to a lawyer, then put SalesLeak in front of 2–3
+real prospects. Let their feedback, not further polishing, decide what gets
+built next.
