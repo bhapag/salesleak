@@ -20,6 +20,14 @@
   --color-brand-gold-dark: #9b742e;
   --color-brand-gold-highlight: #e0c17a;
   --color-brand-gold-secondary: #b58a3c;
+
+  /* The app shell's page canvas — a warm, slightly deeper neutral than the
+     white cards that sit on it. Previously the shell used bg-slate-50,
+     which is close enough to white that cards barely registered as a
+     separate surface. This is a deliberate second layer, not a new brand
+     color: same warm family as --color-brand-warm-white, just dialed to
+     work as a large background wash instead of text-on-navy. */
+  --color-brand-canvas: #f5f2ea;
 }
 
 body {
@@ -152,7 +160,10 @@ body {
    utilities the way it does for colors, so these are applied directly.
 --------------------------------------------------------------------- */
 .shadow-card {
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 14px -6px rgba(15, 23, 42, 0.1);
+}
+.shadow-card-hover {
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.06), 0 16px 32px -12px rgba(15, 23, 42, 0.16);
 }
 .shadow-dropdown {
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);

@@ -7,6 +7,7 @@ import { getPilotReadinessReport } from "@/server/data/pilotReadiness";
 import { Card } from "@/components/ui";
 import { formatCurrency } from "@/lib/format";
 import { PageHeader } from "@/components/PageHeader";
+import { SettingsNav } from "@/components/settings/SettingsNav";
 
 export const metadata: Metadata = { title: "Pilot Readiness" };
 
@@ -29,6 +30,7 @@ export default async function PilotReadinessPage() {
             : `${outstanding} setup item${outstanding === 1 ? "" : "s"} worth a look before relying on SalesLeak day to day.`
         }
       />
+      <SettingsNav role={session.role} />
 
       <main className="flex flex-col gap-4 px-4 py-6 sm:px-8">
         <Card>

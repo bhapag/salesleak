@@ -10,6 +10,7 @@ import { Card } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { UpgradeButton, ManageBillingButton, AssignFoundingDevButton } from "@/components/billing/BillingActions";
 import { PageHeader } from "@/components/PageHeader";
+import { SettingsNav } from "@/components/settings/SettingsNav";
 
 export const metadata: Metadata = { title: "Billing" };
 
@@ -55,6 +56,7 @@ export default async function BillingPage() {
           </>
         }
       />
+      <SettingsNav role={session.role} />
 
       <main className="flex flex-col gap-6 px-4 py-6 sm:px-8">
         <Card title="Current plan">

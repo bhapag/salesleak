@@ -79,8 +79,8 @@ export default async function Home() {
 
       <main className="flex flex-col gap-6 px-4 py-6 sm:px-8">
         {/* MONEY AT RISK — the single strongest signal on the page */}
-        <section className={`rounded-xl border bg-white shadow-card ${isAllClear ? "border-slate-200" : "border-red-200"}`}>
-          <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-end sm:justify-between">
+        <section className={`rounded-2xl border bg-white shadow-card ${isAllClear ? "border-slate-200" : "border-red-200"}`}>
+          <div className="flex flex-col gap-4 border-b border-slate-100 px-6 py-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="flex items-center gap-2">
                 <span className={`h-2 w-2 shrink-0 rounded-full ${isAllClear ? "bg-emerald-500" : "bg-red-500"}`} aria-hidden="true" />
@@ -88,7 +88,7 @@ export default async function Home() {
                   Money at Risk
                 </h2>
               </div>
-              <p className={`mt-1 text-4xl font-semibold tracking-tight tabular-nums ${isAllClear ? "text-slate-900" : "text-red-700"}`}>
+              <p className={`mt-2 text-5xl font-semibold tracking-tight tabular-nums ${isAllClear ? "text-slate-900" : "text-red-700"}`}>
                 {formatCurrency(moneyAtRisk.totalAtRiskValue)}
               </p>
             </div>
@@ -100,7 +100,7 @@ export default async function Home() {
                 <Link
                   key={row.label}
                   href={row.href}
-                  className="flex flex-col gap-1 px-5 py-4 transition-colors duration-(--dur-micro) hover:bg-slate-50"
+                  className="flex flex-col gap-1 px-6 py-5 transition-colors duration-(--dur-micro) hover:bg-slate-50"
                 >
                   <p className="text-xs text-slate-500">{row.label}</p>
                   <p className="text-lg tabular-nums font-semibold text-slate-900">{formatCurrency(row.value)}</p>
@@ -122,15 +122,15 @@ export default async function Home() {
             <Link
               key={c.label}
               href={c.href}
-              className={`flex items-start gap-3 rounded-xl border border-l-4 bg-white p-4 shadow-card transition-colors duration-(--dur-micro) ${
+              className={`flex items-start gap-3 rounded-2xl border border-l-4 bg-white p-5 shadow-card transition-all duration-(--dur-micro) hover:shadow-card-hover ${
                 c.risk ? "border-slate-200 border-l-red-400 hover:border-slate-300" : "border-slate-200 border-l-slate-200 hover:border-slate-300"
               }`}
             >
               <span
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${c.risk ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"}`}
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${c.risk ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"}`}
                 aria-hidden="true"
               >
-                <c.icon className="h-4.5 w-4.5" />
+                <c.icon className="h-5 w-5" />
               </span>
               <div className="min-w-0 pt-0.5">
                 <p className="text-xs text-slate-500">{c.label}</p>
@@ -144,8 +144,8 @@ export default async function Home() {
         <AiSalesBrief initial={initialBrief} />
 
         {/* ATTENTION REQUIRED — the actionable list */}
-        <section className="rounded-xl border border-slate-200 bg-white shadow-card">
-          <div className="flex items-center gap-2 border-b border-slate-200 px-5 py-4">
+        <section className="rounded-2xl border border-slate-200 bg-white shadow-card">
+          <div className="flex items-center gap-2 border-b border-slate-200 px-6 py-5">
             <span
               className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${attentionItems.length > 0 ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}
               aria-hidden="true"
@@ -199,48 +199,62 @@ export default async function Home() {
           )}
         </section>
 
-        {/* SECONDARY METRICS — today's work + calmer commercial context, one flat
-            strip rather than eight separate boxed cards, so the hero and the
-            risk tier above keep the visual weight. */}
-        <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-          <Link href="/my-day" className="flex flex-col gap-1 border-t-2 border-slate-200 pt-3 transition-colors duration-(--dur-micro) hover:border-slate-400">
-            <p className="text-xs text-slate-500">Today&apos;s Work</p>
-            <p className={`text-lg tabular-nums ${metricClass}`}>{workToday.todaysWorkCount}</p>
-          </Link>
-          <Link href="/tasks" className="flex flex-col gap-1 border-t-2 border-slate-200 pt-3 transition-colors duration-(--dur-micro) hover:border-slate-400">
-            <p className="text-xs text-slate-500">{ownerScope ? "Overdue Follow-ups" : "Overdue Across Team"}</p>
-            <p className={`text-lg font-semibold tabular-nums ${workToday.teamOverdueCount > 0 ? "text-red-600" : "text-slate-900"}`}>
-              {workToday.teamOverdueCount}
-            </p>
-          </Link>
-          {!ownerScope && (
-            <Link href="/team" className="flex flex-col gap-1 border-t-2 border-slate-200 pt-3 transition-colors duration-(--dur-micro) hover:border-slate-400">
-              <p className="text-xs text-slate-500">Team Workload</p>
-              <p className={`text-lg ${metricClass}`}>{teamSnapshot.length} people →</p>
-            </Link>
-          )}
-          <div className="flex flex-col gap-1 border-t-2 border-slate-200 pt-3">
-            <p className="text-xs text-slate-500">Unread Notifications</p>
-            <p className={`text-lg font-semibold tabular-nums ${workToday.unreadNotificationCount > 0 ? "text-blue-600" : "text-slate-900"}`}>
-              {workToday.unreadNotificationCount}
-            </p>
-          </div>
-          {contextCards.map((c) => (
+        {/* PIPELINE SNAPSHOT — today's work + calmer commercial context. Proper
+            stat cards rather than a bare text strip, so this reads as a real
+            section of the page instead of dead space under the action tier
+            above — while staying visually quieter than the risk cards (no
+            icon badges, no colored borders, just clean numbers). */}
+        <section>
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Pipeline Snapshot</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Link
-              key={c.label}
-              href={c.href}
-              className="flex flex-col gap-1 border-t-2 border-slate-200 pt-3 transition-colors duration-(--dur-micro) hover:border-slate-400"
+              href="/my-day"
+              className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-4 shadow-card transition-all duration-(--dur-micro) hover:shadow-card-hover"
             >
-              <p className="text-xs text-slate-500">{c.label}</p>
-              <p className={`text-lg font-semibold tabular-nums ${c.success ? "text-emerald-600" : "text-brand-navy"}`}>{c.value}</p>
+              <p className="text-xs text-slate-500">Today&apos;s Work</p>
+              <p className={`text-2xl tabular-nums ${metricClass}`}>{workToday.todaysWorkCount}</p>
             </Link>
-          ))}
-        </div>
+            <Link
+              href="/tasks"
+              className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-4 shadow-card transition-all duration-(--dur-micro) hover:shadow-card-hover"
+            >
+              <p className="text-xs text-slate-500">{ownerScope ? "Overdue Follow-ups" : "Overdue Across Team"}</p>
+              <p className={`text-2xl font-semibold tabular-nums ${workToday.teamOverdueCount > 0 ? "text-red-600" : "text-slate-900"}`}>
+                {workToday.teamOverdueCount}
+              </p>
+            </Link>
+            {!ownerScope && (
+              <Link
+                href="/team"
+                className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-4 shadow-card transition-all duration-(--dur-micro) hover:shadow-card-hover"
+              >
+                <p className="text-xs text-slate-500">Team Workload</p>
+                <p className={`text-2xl ${metricClass}`}>{teamSnapshot.length} people →</p>
+              </Link>
+            )}
+            <div className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-4 shadow-card">
+              <p className="text-xs text-slate-500">Unread Notifications</p>
+              <p className={`text-2xl font-semibold tabular-nums ${workToday.unreadNotificationCount > 0 ? "text-blue-600" : "text-slate-900"}`}>
+                {workToday.unreadNotificationCount}
+              </p>
+            </div>
+            {contextCards.map((c) => (
+              <Link
+                key={c.label}
+                href={c.href}
+                className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-4 shadow-card transition-all duration-(--dur-micro) hover:shadow-card-hover"
+              >
+                <p className="text-xs text-slate-500">{c.label}</p>
+                <p className={`text-2xl font-semibold tabular-nums ${c.success ? "text-emerald-600" : "text-brand-navy"}`}>{c.value}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         {/* REPEAT REVENUE OPPORTUNITIES */}
         {repeatOpportunities.length > 0 && (
-          <section className="rounded-xl border border-slate-200 bg-white shadow-card">
-            <div className="border-b border-slate-200 px-5 py-4">
+          <section className="rounded-2xl border border-slate-200 bg-white shadow-card">
+            <div className="border-b border-slate-200 px-6 py-5">
               <h2 className="text-sm font-semibold text-slate-900">Repeat Revenue Opportunities</h2>
               <p className="text-xs text-slate-500">
                 Customers who may be due for another order, based on their past ordering pattern — an estimate, not a guarantee.
@@ -279,8 +293,8 @@ export default async function Home() {
 
         {/* TEAM SNAPSHOT — Owner/Sales Manager only, matching /team's own access rule */}
         {!ownerScope && (
-          <section className="rounded-xl border border-slate-200 bg-white shadow-card">
-            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+          <section className="rounded-2xl border border-slate-200 bg-white shadow-card">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
               <div>
                 <h2 className="text-sm font-semibold text-slate-900">Team Snapshot</h2>
                 <p className="text-xs text-slate-500">Where each salesperson stands right now.</p>

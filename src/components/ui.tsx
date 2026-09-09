@@ -1,6 +1,6 @@
 export function Card({ title, description, children, className = "" }: { title?: string; description?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-slate-200 bg-white p-5 shadow-card ${className}`}>
+    <div className={`rounded-2xl border border-slate-200 bg-white p-6 shadow-card ${className}`}>
       {title && (
         <div className="mb-4">
           <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
@@ -78,7 +78,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { loading?: b
 export function PrimaryButton({ children, className = "", loading = false, disabled, ...props }: ButtonProps) {
   return (
     <button
-      className={`${buttonBase} bg-brand-navy text-brand-warm-white hover:bg-brand-navy-hover ${className}`}
+      className={`${buttonBase} bg-brand-navy text-brand-warm-white shadow-[0_1px_2px_rgba(11,23,57,0.05),0_2px_8px_-2px_rgba(11,23,57,0.35)] hover:bg-brand-navy-hover hover:shadow-[0_1px_2px_rgba(11,23,57,0.06),0_4px_14px_-2px_rgba(11,23,57,0.4)] ${className}`}
       disabled={disabled || loading}
       {...props}
     >

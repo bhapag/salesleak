@@ -145,8 +145,10 @@ function Section({
         </span>
       </div>
       {count === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center">
-          <AllClearIcon className="h-6 w-6 text-emerald-400" aria-hidden="true" />
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50" aria-hidden="true">
+            <AllClearIcon className="h-5 w-5 text-emerald-500" />
+          </span>
           <p className="text-sm text-slate-500">{emptyText}</p>
         </div>
       ) : (
@@ -158,14 +160,16 @@ function Section({
 
 function ListCard({ title, count, emptyText, children }: { title: string; count: number; emptyText: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-card">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-card">
       <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
         <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
         <span className="text-xs tabular-nums text-slate-400">{count}</span>
       </div>
       {count === 0 ? (
-        <div className="flex flex-col items-center gap-2 px-5 py-8 text-center">
-          <AllClearIcon className="h-6 w-6 text-emerald-400" aria-hidden="true" />
+        <div className="flex flex-col items-center gap-3 px-5 py-8 text-center">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50" aria-hidden="true">
+            <AllClearIcon className="h-5 w-5 text-emerald-500" />
+          </span>
           <p className="text-sm text-slate-500">{emptyText}</p>
         </div>
       ) : (

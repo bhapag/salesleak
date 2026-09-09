@@ -9,9 +9,10 @@ type Role = "OWNER" | "SALES_MANAGER" | "SALESPERSON";
 
 const MANAGEMENT_ROLES: Role[] = ["OWNER", "SALES_MANAGER"];
 
-// `group` drives the quiet section dividers below — daily work / core sales
-// objects / oversight / configuration. Purely a presentation grouping over
-// the existing order; it does not change destinations, order, or roles.
+// `group` drives the quiet section dividers + labels below — daily work /
+// core sales objects / oversight / configuration. Purely a presentation
+// grouping over the existing order; it does not change destinations, order,
+// or roles.
 const navItems = [
   { href: "/", label: "Dashboard", icon: DashboardIcon, group: 1 },
   { href: "/my-day", label: "My Day", icon: MyDayIcon, group: 1 },
@@ -26,6 +27,12 @@ const navItems = [
   { href: "/settings/billing", label: "Billing", icon: BillingIcon, roles: ["OWNER"] as Role[], group: 4 },
   { href: "/settings/company", label: "Settings", icon: SettingsIcon, roles: ["OWNER"] as Role[], group: 4 },
 ];
+
+const GROUP_LABEL: Record<number, string> = {
+  2: "Pipeline",
+  3: "Team",
+  4: "Configuration",
+};
 
 function BrandMark() {
   return (
@@ -94,21 +101,36 @@ export function Sidebar({ companyName, role }: { companyName: string; role: Role
       <nav className="on-dark flex flex-1 flex-col gap-1 px-3" aria-label="Primary">
         {visibleItems.map((item, i) => {
           const active = isActive(item.href);
-          const showDivider = i > 0 && item.group !== visibleItems[i - 1].group;
+          const isNewGroup = i > 0 && item.group !== visibleItems[i - 1].group;
+          const groupLabel = isNewGroup ? GROUP_LABEL[item.group] : undefined;
           return (
             <Fragment key={item.href}>
-              {showDivider && <div className="my-2 border-t border-white/10" aria-hidden="true" />}
+              {isNewGroup && (
+                <div className={`px-3 ${groupLabel ? "pb-1 pt-4" : "py-2"}`} aria-hidden={!groupLabel}>
+                  {groupLabel ? (
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-brand-warm-white/35">{groupLabel}</span>
+                  ) : (
+                    <div className="border-t border-white/10" />
+                  )}
+                </div>
+              )}
               <Link
                 href={item.href}
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-3 rounded-lg border-l-2 px-3 py-2 text-sm font-medium transition-colors duration-(--dur-micro) ${
+                className={`group flex items-center gap-3 rounded-lg border-l-2 px-3 py-2 text-sm transition-colors duration-(--dur-micro) ${
                   active
-                    ? "border-l-brand-gold bg-white/10 text-brand-warm-white"
-                    : "border-l-transparent text-brand-warm-white/65 hover:bg-white/5 hover:text-brand-warm-white"
+                    ? "border-l-brand-gold bg-white/[0.08] font-semibold text-brand-warm-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                    : "border-l-transparent font-medium text-brand-warm-white/60 hover:bg-white/5 hover:text-brand-warm-white"
                 }`}
               >
-                <item.icon className="h-4 w-4 shrink-0" />
+                <span
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors duration-(--dur-micro) ${
+                    active ? "bg-white/10 text-brand-gold-highlight" : "text-brand-warm-white/50 group-hover:text-brand-warm-white/80"
+                  }`}
+                >
+                  <item.icon className="h-4 w-4 shrink-0" />
+                </span>
                 {item.label}
               </Link>
             </Fragment>
@@ -169,6 +191,15 @@ export function Sidebar({ companyName, role }: { companyName: string; role: Role
           <span className="truncate text-xs text-brand-warm-white/45">{companyName}</span>
         </div>
         {renderNavLinks()}
+        <div className="on-dark px-3 pb-5 pt-3">
+          <a
+            href="mailto:salesleak.support@gmail.com"
+            className="flex items-center gap-3 rounded-lg border-l-2 border-l-transparent px-3 py-2 text-sm font-medium text-brand-warm-white/50 transition-colors duration-(--dur-micro) hover:bg-white/5 hover:text-brand-warm-white"
+          >
+            <SupportIcon className="h-4 w-4 shrink-0" />
+            Support
+          </a>
+        </div>
       </aside>
     </>
   );
@@ -286,6 +317,16 @@ function SettingsIcon(props: React.SVGProps<SVGSVGElement>) {
         d="M10 3v1.7M10 15.3V17M17 10h-1.7M4.7 10H3M14.9 5.1l-1.2 1.2M6.3 13.7l-1.2 1.2M14.9 14.9l-1.2-1.2M6.3 6.3L5.1 5.1"
         strokeLinecap="round"
       />
+    </svg>
+  );
+}
+
+function SupportIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" {...props}>
+      <circle cx="10" cy="10" r="7" />
+      <path d="M7.6 7.9a2.4 2.4 0 014.5 1.1c0 1.6-2.1 1.6-2.1 3.3" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="10" cy="14.7" r="0.15" fill="currentColor" stroke="none" />
     </svg>
   );
 }

@@ -9,6 +9,7 @@ import { ExportDataCard } from "@/components/settings/ExportDataCard";
 import { DemoResetCard } from "@/components/settings/DemoResetCard";
 import { Card } from "@/components/ui";
 import { PageHeader } from "@/components/PageHeader";
+import { SettingsNav } from "@/components/settings/SettingsNav";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -22,7 +23,8 @@ export default async function CompanySettingsPage() {
 
   return (
     <div className="min-h-screen">
-      <PageHeader title="Company Settings" subtitle={`Basic workspace information for ${company.name}.`} />
+      <PageHeader title="Settings" subtitle={`Workspace and sales-process configuration for ${company.name}.`} />
+      <SettingsNav role={session.role} />
 
       <main className="px-4 py-6 sm:px-8">
         <div className="max-w-2xl">

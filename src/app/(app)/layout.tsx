@@ -17,7 +17,7 @@ export default async function AppShellLayout({ children }: { children: React.Rea
   const subscriptionState = await getSubscriptionState(session.companyId);
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 md:flex-row">
+    <div className="flex min-h-screen flex-col bg-brand-canvas md:flex-row">
       <a
         href="#main-content"
         className="fixed left-2 top-2 z-[60] -translate-y-16 rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-brand-warm-white transition-transform duration-(--dur-micro) focus-visible:translate-y-0"

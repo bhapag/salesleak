@@ -7,6 +7,7 @@ import { IntegrationCard } from "@/components/integrations/IntegrationCard";
 import { FailedIngestionQueue } from "@/components/integrations/FailedIngestionQueue";
 import { formatSource, formatDateTime } from "@/lib/format";
 import { PageHeader } from "@/components/PageHeader";
+import { SettingsNav } from "@/components/settings/SettingsNav";
 
 export const metadata: Metadata = { title: "Integrations" };
 
@@ -28,6 +29,7 @@ export default async function IntegrationsPage() {
         title="Integrations"
         subtitle="Where enquiries can come from. Every source normalizes into the same lead — CSV import, manual entry, IndiaMART (test mode), and website forms work today; the rest are on the way."
       />
+      <SettingsNav role={session.role} />
 
       <main className="flex flex-col gap-6 px-4 py-6 sm:px-8">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
