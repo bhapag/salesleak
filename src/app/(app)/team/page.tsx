@@ -45,7 +45,7 @@ export default async function TeamPage() {
           />
         )}
 
-        <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-card md:block">
+        <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card md:block">
           <table className="w-full min-w-[1300px] text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500">
               <tr>
@@ -127,7 +127,7 @@ export default async function TeamPage() {
             <Link
               key={row.userId}
               href={`/team/${row.userId}`}
-              className={`block rounded-xl border border-slate-200 bg-white p-4 shadow-card transition-colors duration-(--dur-micro) hover:border-slate-300 ${teamRiskRailClass(row)}`}
+              className={`block rounded-2xl border border-slate-200 bg-white p-4 shadow-card transition-all duration-(--dur-micro) hover:shadow-card-hover hover:border-slate-300 ${teamRiskRailClass(row)}`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">

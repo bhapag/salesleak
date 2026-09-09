@@ -39,7 +39,7 @@ export function WorkQueueView({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
         <input
           type="text"
           value={search}
@@ -68,10 +68,12 @@ export function WorkQueueView({
             {completed.length}
           </span>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white shadow-card">
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-card">
           {completed.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 px-5 py-8 text-center">
-              <TodayWorkIcon className="h-6 w-6 text-slate-300" aria-hidden="true" />
+            <div className="flex flex-col items-center gap-3 px-5 py-8 text-center">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100" aria-hidden="true">
+                <TodayWorkIcon className="h-5 w-5 text-slate-400" />
+              </span>
               <p className="text-sm text-slate-500">No completed follow-ups yet.</p>
             </div>
           ) : (
@@ -110,8 +112,10 @@ function WorkQueueSection({
         </span>
       </div>
       {tasks.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center">
-          <AllClearIcon className="h-6 w-6 text-emerald-400" aria-hidden="true" />
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50" aria-hidden="true">
+            <AllClearIcon className="h-5 w-5 text-emerald-500" />
+          </span>
           <p className="text-sm text-slate-500">{emptyText}</p>
         </div>
       ) : (

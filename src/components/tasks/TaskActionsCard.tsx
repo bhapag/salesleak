@@ -108,7 +108,7 @@ export function TaskActionsCard({ task, actingUserId }: { task: WorkQueueTask; a
   }
 
   return (
-    <div className={`rounded-xl border border-slate-200 bg-white p-4 shadow-card ${riskRailClass(task.risk)}`}>
+    <div className={`rounded-2xl border border-slate-200 bg-white p-4 shadow-card ${riskRailClass(task.risk)}`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-sm font-medium text-slate-900">{task.title}</p>

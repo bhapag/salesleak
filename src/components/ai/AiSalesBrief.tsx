@@ -26,7 +26,7 @@ export function AiSalesBrief({ initial }: { initial: SalesBriefData | null }) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-card">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-card">
       <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-5 py-4">
         <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-navy/5 text-brand-navy" aria-hidden="true">

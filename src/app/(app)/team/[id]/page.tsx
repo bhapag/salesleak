@@ -206,7 +206,7 @@ function SalespersonDetailBody({ detail }: { detail: NonNullable<Awaited<ReturnT
 
 function Section({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-card">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-card">
       <div className="border-b border-slate-200 px-5 py-4">
         <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
         <p className="text-xs text-slate-500">{description}</p>

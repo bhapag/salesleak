@@ -98,7 +98,7 @@ export function QuotationsTable({ quotations, users }: { quotations: QuotationWi
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-card lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-card lg:flex-row lg:items-center lg:justify-between">
         <div className="relative w-full lg:max-w-xs">
           <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -173,7 +173,7 @@ export function QuotationsTable({ quotations, users }: { quotations: QuotationWi
         <EmptyState hasFilters={activeFilterCount > 0 || search.length > 0} onReset={resetFilters} />
       ) : (
         <>
-          <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-card md:block">
+          <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card md:block">
             <table className="w-full min-w-[1150px] text-left text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500">
                 <tr>
@@ -263,7 +263,7 @@ function QuotationCard({ quotation }: { quotation: QuotationWithRisk }) {
   return (
     <Link
       href={`/quotations/${quotation.id}`}
-      className={`block rounded-xl border bg-white p-4 shadow-card transition-colors duration-(--dur-micro) hover:border-slate-300 ${
+      className={`block rounded-2xl border bg-white p-4 shadow-card transition-all duration-(--dur-micro) hover:shadow-card-hover hover:border-slate-300 ${
         quotation.risk.isHighRiskOpportunity ? "border-red-200" : quotation.risk.needsAttention ? "border-amber-200" : "border-slate-200"
       }`}
     >
@@ -337,7 +337,7 @@ function SortableHeader({
 
 function EmptyState({ hasFilters, onReset }: { hasFilters: boolean; onReset: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
       {!hasFilters && (
         <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400" aria-hidden="true">
           <QuotationsIcon className="h-5 w-5" />

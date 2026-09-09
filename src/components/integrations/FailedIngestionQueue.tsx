@@ -22,7 +22,7 @@ export function FailedIngestionQueue({ entries }: { entries: FailedIngestionEntr
   if (entries.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-amber-200 bg-white shadow-card">
+    <div className="rounded-2xl border border-amber-200 bg-white shadow-card">
       <div className="border-b border-amber-100 px-5 py-4">
         <h2 className="text-sm font-semibold text-slate-900">Failed Ingestion Queue</h2>
         <p className="text-xs text-slate-500">

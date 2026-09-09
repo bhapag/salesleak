@@ -40,7 +40,7 @@ export default async function IntegrationsPage() {
 
         <FailedIngestionQueue entries={failedIngestions} />
 
-        <div className="rounded-xl border border-slate-200 bg-white shadow-card">
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-card">
           <div className="border-b border-slate-200 px-5 py-4">
             <h2 className="text-sm font-semibold text-slate-900">Import History</h2>
             <p className="text-xs text-slate-500">Every CSV import, manual add, and webhook delivery, most recent first.</p>
