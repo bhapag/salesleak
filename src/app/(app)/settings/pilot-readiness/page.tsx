@@ -60,7 +60,10 @@ export default async function PilotReadinessPage() {
                   {check.href && (
                     <Link
                       href={check.href}
-                      className="mt-1.5 inline-block text-xs font-medium text-slate-600 transition-colors duration-(--dur-micro) hover:text-slate-900 hover:underline"
+                      // py-1 lifts the tap target to 24px tall; mt-1.5 drops to
+                      // mt-0.5 so the visible gap above is unchanged. This is
+                      // the only way to act on a check, so it has to be hittable.
+                      className="mt-0.5 inline-block py-1 text-xs font-medium text-slate-600 transition-colors duration-(--dur-micro) hover:text-slate-900 hover:underline"
                     >
                       {check.ok ? "Review →" : "Fix this →"}
                     </Link>

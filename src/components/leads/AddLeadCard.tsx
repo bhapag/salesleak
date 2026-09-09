@@ -7,6 +7,7 @@ import { Card, Field, PrimaryButton, SecondaryButton, ErrorText, inputClass, sel
 import { LEAD_SOURCES, LEAD_PRIORITIES } from "@/lib/constants";
 import { formatSource, labelize } from "@/lib/format";
 import { AiEnquiryExtractor } from "@/components/ai/AiEnquiryExtractor";
+import { ReadOnlyActionNotice } from "@/components/billing/ReadOnlyActionNotice";
 import type { ExtractedEnquiry } from "@/server/ai/features/enquiryExtraction";
 
 const URGENCY_TO_PRIORITY: Record<string, ManualLeadFormInput["priority"]> = {
@@ -42,10 +43,14 @@ export function AddLeadCard({
   users,
   defaultPriority = "MEDIUM",
   defaultFollowUpDays = 3,
+  isReadOnly = false,
+  isOwner = false,
 }: {
   users: { id: string; name: string }[];
   defaultPriority?: ManualLeadFormInput["priority"];
   defaultFollowUpDays?: number;
+  isReadOnly?: boolean;
+  isOwner?: boolean;
 }) {
   const EMPTY_FORM = buildEmptyForm(defaultPriority, defaultFollowUpDays);
   const [open, setOpen] = useState(false);
@@ -93,6 +98,13 @@ export function AddLeadCard({
       }
       setErrors(result.errors);
     });
+  }
+
+  // Both controls here start a mutation, so neither can succeed while the
+  // workspace is read-only. Saying so up front beats letting someone fill in
+  // the whole form first. The server still enforces this independently.
+  if (isReadOnly) {
+    return <ReadOnlyActionNotice action="Adding leads" isOwner={isOwner} />;
   }
 
   if (!open) {

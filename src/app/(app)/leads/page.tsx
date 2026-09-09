@@ -5,6 +5,7 @@ import { LeadsTable } from "@/components/leads/LeadsTable";
 import { AddLeadCard } from "@/components/leads/AddLeadCard";
 import { requireSession } from "@/server/auth/session";
 import { getOwnerScope } from "@/server/auth/permissions";
+import { getSubscriptionState } from "@/server/billing/entitlements";
 
 export const metadata: Metadata = { title: "Leads" };
 
@@ -12,10 +13,11 @@ export default async function LeadsPage() {
   const session = await requireSession();
   const ownerScope = getOwnerScope(session);
 
-  const [allLeads, users, company] = await Promise.all([
+  const [allLeads, users, company, subscription] = await Promise.all([
     getLeadsForCompany(session.companyId),
     prisma.user.findMany({ where: { companyId: session.companyId }, orderBy: { name: "asc" } }),
     prisma.company.findFirstOrThrow({ where: { id: session.companyId }, select: { defaultPriority: true, defaultFollowUpDays: true } }),
+    getSubscriptionState(session.companyId),
   ]);
 
   // Salespeople see only their own leads; Owner/Sales Manager see everyone's.
@@ -35,6 +37,8 @@ export default async function LeadsPage() {
           users={users.map((u) => ({ id: u.id, name: u.name }))}
           defaultPriority={company.defaultPriority}
           defaultFollowUpDays={company.defaultFollowUpDays}
+          isReadOnly={subscription.isReadOnly}
+          isOwner={session.role === "OWNER"}
         />
         <LeadsTable leads={leads} users={users.map((u) => ({ id: u.id, name: u.name }))} />
       </main>

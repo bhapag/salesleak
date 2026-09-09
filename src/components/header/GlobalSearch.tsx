@@ -85,9 +85,13 @@ export function GlobalSearch() {
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           onKeyDown={handleKeyDown}
           placeholder="Search customers, leads, quotations…"
-          className="w-full rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-8 pr-14 text-sm text-slate-900 placeholder:text-slate-400 transition-colors duration-(--dur-micro) focus:border-brand-navy focus:bg-white focus:outline-none"
+          // The Ctrl K hint only means something where there is a physical
+          // keyboard, but its reserved pr-14 was costing 56px of a 375px
+          // field and truncating the placeholder to "Search customers, le".
+          // Hidden below sm, and the padding released with it.
+          className="w-full rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-8 pr-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors duration-(--dur-micro) focus:border-brand-navy focus:bg-white focus:outline-none sm:pr-14"
         />
-        <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
+        <kbd className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-400 sm:block">
           Ctrl K
         </kbd>
       </div>

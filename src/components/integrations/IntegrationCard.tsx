@@ -174,7 +174,9 @@ export function IntegrationCard({ connector }: { connector: ConnectorView }) {
               type="button"
               onClick={handleToggle}
               disabled={pending}
-              className="text-xs font-medium text-slate-500 transition-colors duration-(--dur-micro) hover:text-slate-900 disabled:opacity-50"
+              // Negative margin absorbs the added padding, so the hit target
+              // reaches 24px without changing the row's height.
+              className="-my-1 py-1 text-xs font-medium text-slate-500 transition-colors duration-(--dur-micro) hover:text-slate-900 disabled:opacity-50"
             >
               {connector.enabled ? "Disable" : "Enable"}
             </button>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card, PrimaryButton, SecondaryButton, selectClass } from "@/components/ui";
 import { CreateQuotationForm } from "@/components/quotations/CreateQuotationForm";
+import { ReadOnlyActionNotice } from "@/components/billing/ReadOnlyActionNotice";
 import { labelize } from "@/lib/format";
 import type { LeadPickerOption } from "@/server/data/quotations";
 import type { ProductOption } from "@/server/data/products";
@@ -17,11 +18,15 @@ export function CreateQuotationEntry({
   products,
   suggestedQuotationNumber,
   actingUserId,
+  isReadOnly = false,
+  isOwner = false,
 }: {
   leads: LeadPickerOption[];
   products: ProductOption[];
   suggestedQuotationNumber: string;
   actingUserId: string | null;
+  isReadOnly?: boolean;
+  isOwner?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [leadId, setLeadId] = useState("");
@@ -29,6 +34,14 @@ export function CreateQuotationEntry({
   function close() {
     setOpen(false);
     setLeadId("");
+  }
+
+  // Worth stopping earlier here than anywhere else: createQuotation throws on
+  // a read-only workspace, and Next.js redacts thrown Server Action messages
+  // in production, so submitting a fully built quotation ended in a generic
+  // error with no explanation. Server enforcement is unchanged.
+  if (isReadOnly) {
+    return <ReadOnlyActionNotice action="Creating quotations" isOwner={isOwner} />;
   }
 
   if (!open) {
